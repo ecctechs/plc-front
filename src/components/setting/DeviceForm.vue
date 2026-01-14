@@ -21,38 +21,48 @@
         </select>
       </div>
 
-      <!-- PLC Address -->
+      <!-- Display Type -->
       <div class="mb-3">
-        <label class="form-label">PLC Address</label>
-        <input
-          v-model="form.plc_address"
-          class="form-control"
-          placeholder="M0, D10"
-        />
+        <label class="form-label">Data Display Type</label>
+        <select v-model="form.data_display_type" class="form-select">
+          <option value="onoff">ON / OFF</option>
+          <option value="number">Number</option>
+          <option value="number_gauge">Number Gauge</option>
+          <option value="level">Level</option>
+        </select>
       </div>
 
-      <!-- Refresh Rate -->
-      <div class="mb-4">
-        <label class="form-label">Refresh Rate</label>
-        <div class="row g-2">
-          <div class="col-8">
-            <input
-              type="number"
-              min="1"
-              v-model.number="refreshValue"
-              class="form-control"
-            />
-          </div>
-          <div class="col-4">
-            <select v-model="refreshUnit" class="form-select">
-              <option value="sec">sec</option>
-              <option value="ms">ms</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <!-- Address -->
+      <AddressForm
+        v-model:address="form.plc_address"
+        v-model:refresh="form.refresh_rate_ms"
+        :dataDisplayType="form.data_display_type"
+      />
 
-      <!-- PLC DEBUG -->
+      <!-- Display Config -->
+      <DisplayOnOff
+        v-if="form.data_display_type === 'onoff'"
+      />
+
+      <DisplayNumber
+        v-if="form.data_display_type === 'number'"
+        v-model="form.numberConfig"
+        :showMinMax="false"
+      />
+      
+      <DisplayNumber
+        v-if="form.data_display_type === 'number_gauge'"
+        v-model="form.numberConfig"
+        :showMinMax="true"
+      />
+
+
+      <DisplayLevel
+        v-if="form.data_display_type === 'level'"
+        v-model="form.level"
+      />
+
+      <!-- PLC Debug -->
       <PlcDebugForm />
 
       <!-- Error -->
@@ -63,11 +73,18 @@
       <!-- Save -->
       <button
         class="btn btn-primary w-100"
-        :disabled="loading"
+        :disabled="loading || isNumberConfigInvalid"
         @click="save"
       >
         {{ loading ? "Saving..." : "Save Device" }}
       </button>
+
+      <div
+        v-if="form.data_display_type === 'number_gauge' && isNumberConfigInvalid"
+        class="text-danger small mt-2 text-center"
+      >
+        กรุณากำหนด Min Value &lt; Max Value ให้ถูกต้อง
+      </div>
 
     </div>
   </div>
@@ -75,14 +92,22 @@
 
 <script>
 import Swal from "sweetalert2";
+
+import AddressForm from "./AddressForm.vue";
+import DisplayOnOff from "./DisplayOnOff.vue";
+import DisplayNumber from "./DisplayNumber.vue";
+import DisplayLevel from "./DisplayLevel.vue";
 import PlcDebugForm from "./PlcDebugForm.vue";
 
 const API = import.meta.env.VITE_API_BASE_URL + "/api/devices";
 
-
 export default {
   name: "DeviceForm",
   components: {
+    AddressForm,
+    DisplayOnOff,
+    DisplayNumber,
+    DisplayLevel,
     PlcDebugForm,
   },
 
@@ -93,12 +118,24 @@ export default {
       form: {
         name: "",
         device_type: "lamp",
+        data_display_type: "onoff",
         plc_address: "M0",
         refresh_rate_ms: 1000,
-      },
 
-      refreshValue: 1,
-      refreshUnit: "sec",
+        numberConfig: {
+          decimal_places: 0,
+          scale: 1,
+          offset: 0,
+          min_value: null,
+          max_value: null,
+          unit: ''
+        },
+
+        level: {
+          mode: "exact",
+          exactValues: "0,1,2",
+        },
+      },
 
       loading: false,
       error: "",
@@ -106,64 +143,107 @@ export default {
   },
 
   methods: {
-    toMs(value, unit) {
-      return unit === "sec" ? value * 1000 : value;
-    },
+  async save() {
+    this.error = "";
 
-    async save() {
-      this.error = "";
+    if (!this.form.name) {
+      this.error = "กรุณากรอก Device Name";
+      return;
+    }
 
-      if (!this.form.name) {
-        this.error = "กรุณากรอก Device Name";
-        return;
+    try {
+      this.loading = true;
+
+      /* ===============================
+      * 1️⃣ Save Device
+      * =============================== */
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: this.form.name,
+          device_type: this.form.device_type,
+          data_display_type: this.form.data_display_type,
+          plc_address: this.form.plc_address,
+          refresh_rate_ms: this.form.refresh_rate_ms,
+        }),
+      });
+
+      const device = await res.json();
+
+      if (!res.ok) {
+        throw new Error(device.message || "Save device failed");
       }
 
-      this.form.refresh_rate_ms = this.toMs(
-        this.refreshValue,
-        this.refreshUnit
-      );
+      /* ===============================
+      * 2️⃣ Save Number Config (ถ้ามี)
+      * =============================== */
+      if (
+        this.form.data_display_type === "number" ||
+        this.form.data_display_type === "number_gauge"
+      ) {
+        const cfgRes = await fetch(
+          `${API}/${device.id}/number-config`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(this.form.numberConfig),
+          }
+        );
 
-      try {
-        this.loading = true;
+        const cfgData = await cfgRes.json();
+        console.log(this.form.numberConfig)
+        console.log('Saved device type:', device.data_display_type);
 
-        const res = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(this.form),
-        });
-
-        const data = await res.json(); 
-
-        if (!res.ok) {
-          console.error("API ERROR:", data.message);
-          throw new Error(data.message || "Save failed");
+        if (!cfgRes.ok) {
+          throw new Error(cfgData.message || "Save number config failed");
         }
-
-        // data = object ที่ backend ส่งกลับมา
-        this.$emit("saved", data);
-
-        Swal.fire({
-          icon: "success",
-          title: "Saved",
-          text: "Device saved to server",
-          timer: 1200,
-          showConfirmButton: false,
-        });
-
-        // reset
-        this.form.name = "";
-        this.form.plc_address = "M0";
-        this.refreshValue = 1;
-        this.refreshUnit = "sec";
-
-      } catch (err) {
-        console.error(err);
-        this.error = err.message || "ไม่สามารถบันทึกข้อมูลได้";
-      } finally {
-        this.loading = false;
       }
-    },
+
+      /* ===============================
+      * Success
+      * =============================== */
+      this.$emit("saved", device);
+
+      Swal.fire({
+        icon: "success",
+        title: "Saved",
+        text: "Device saved to server",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
+      // reset form
+      this.form.name = "";
+      this.form.plc_address = "M0";
+
+    } catch (err) {
+      this.error = err.message;
+    } finally {
+      this.loading = false;
+    }
   },
+},
+
+  computed: {
+    isNumberConfigInvalid() {
+      if (this.form.data_display_type !== 'number_gauge') {
+        return false;
+      }
+
+      const cfg = this.form.numberConfig;
+
+      if (cfg.min_value == null || cfg.max_value == null) {
+        return true;
+      }
+
+      if (cfg.min_value >= cfg.max_value) {
+        return true;
+      }
+
+      return false;
+    }
+  }
 };
 </script>
 

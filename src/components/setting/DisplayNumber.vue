@@ -1,54 +1,98 @@
 <template>
   <div class="border rounded p-3 mb-3">
-    <h6>Number Display Setting</h6>
+    <h6 class="mb-3">Number Setting</h6>
 
-    <!-- Decimal -->
+    <!-- ===== Row 1: Decimal / Scale / Offset ===== -->
     <div class="row g-2 mb-3">
       <div class="col-4">
-        <label class="form-label">Decimal</label>
+        <label class="form-label small">Decimal</label>
         <input
           type="number"
           min="0"
-          v-model.number="local.decimal"
+          v-model.number="model.decimal_places"
           class="form-control"
         />
       </div>
 
       <div class="col-4">
-        <label class="form-label">Scale (×)</label>
+        <label class="form-label small">Scale (×)</label>
         <input
           type="number"
-          v-model.number="local.scale"
+          step="any"
+          v-model.number="model.scale"
           class="form-control"
         />
       </div>
 
       <div class="col-4">
-        <label class="form-label">Offset (+)</label>
+        <label class="form-label small">Offset (+)</label>
         <input
           type="number"
-          v-model.number="local.offset"
+          step="any"
+          v-model.number="model.offset"
           class="form-control"
         />
       </div>
     </div>
 
-    <!-- Unit -->
-    <div class="mb-3">
-      <label class="form-label">Unit</label>
-      <input
-        type="text"
-        v-model="local.unit"
-        class="form-control"
-        placeholder="°C, bar, rpm"
-      />
+    <!-- ===== Row 2: Min / Max / Unit ===== -->
+    <div
+      v-if="showMinMax"
+      class="row g-2 mb-3"
+    >
+      <div class="col-4">
+        <label class="form-label small">Min Value</label>
+        <input
+          type="number"
+          step="any"
+          v-model.number="model.min_value"
+          class="form-control"
+        />
+      </div>
+
+      <div class="col-4">
+        <label class="form-label small">Max Value</label>
+        <input
+          type="number"
+          step="any"
+          v-model.number="model.max_value"
+          class="form-control"
+        />
+      </div>
+
+      <div class="col-4">
+        <label class="form-label small">Unit</label>
+        <input
+          type="text"
+          v-model="model.unit"
+          class="form-control"
+          placeholder="rpm, °C, bar"
+        />
+      </div>
     </div>
 
-    <!-- Preview -->
-    <div class="bg-light rounded p-2">
-      <small class="text-muted">Preview</small>
-      <div class="fw-bold">
+    <!-- ===== Validation Hint ===== -->
+    <div
+      v-if="minMaxInvalid"
+      class="text-danger small mb-2"
+    >
+      Min value ต้องน้อยกว่า Max value
+    </div>
+
+    <!-- ===== Preview ===== -->
+    <div class="bg-light rounded p-2 text-center">
+      <div class="small text-muted">Preview</div>
+
+      <div class="fs-5 fw-bold">
         {{ previewValue }}
+        <span v-if="model.unit" class="fs-6">
+          {{ model.unit }}
+        </span>
+      </div>
+
+      <div class="small text-muted">
+        raw {{ rawValue }} →
+        (× {{ model.scale ?? 1 }} + {{ model.offset ?? 0 }})
       </div>
     </div>
   </div>
@@ -63,49 +107,50 @@ export default {
       type: Object,
       required: true,
     },
-  },
 
-  emits: ["update:modelValue"],
-
-  data() {
-    return {
-      local: JSON.parse(JSON.stringify(this.modelValue)),
-
-      // mock raw value
-      rawValue: 12.3456,
-    };
+    showMinMax: {
+      type: Boolean,
+      default: false
+    }
+    
   },
 
   computed: {
+    // ===== v-model bridge =====
+    model: {
+      get() {
+        return this.modelValue;
+      },
+      set(v) {
+        this.$emit("update:modelValue", v);
+      },
+    },
+
+    // mock raw value (แทนค่า PLC)
+    rawValue() {
+      return 123;
+    },
+
     previewValue() {
-      let v = this.rawValue;
+      const scale = this.model.scale ?? 1;
+      const offset = this.model.offset ?? 0;
+      const decimal = this.model.decimal_places ?? 0;
 
-      if (typeof this.local.scale === "number") {
-        v = v * this.local.scale;
-      }
-
-      if (typeof this.local.offset === "number") {
-        v = v + this.local.offset;
-      }
-
-      const d = this.local.decimal ?? 0;
-      return `${v.toFixed(d)} ${this.local.unit || ""}`;
-    },
-  },
-
-  watch: {
-    local: {
-      deep: true,
-      handler(val) {
-        this.$emit("update:modelValue", val);
-      },
+      const scaled = this.rawValue * scale + offset;
+      return Number(scaled).toFixed(decimal);
     },
 
-    modelValue: {
-      deep: true,
-      handler(val) {
-        this.local = JSON.parse(JSON.stringify(val));
-      },
+    minMaxInvalid() {
+
+      if (!this.showMinMax) return false;
+
+      if (
+        this.model.min_value !== null &&
+        this.model.max_value !== null
+      ) {
+        return this.model.min_value >= this.model.max_value;
+      }
+      return false;
     },
   },
 };

@@ -1,48 +1,40 @@
 <template>
   <div class="border rounded p-3 mb-3">
-    <h6>PLC Address</h6>
+    <h6 class="mb-3">PLC Address</h6>
 
-    <div class="row g-2">
+    <div class="row g-2 align-items-end">
 
-      <!-- Type -->
-      <div class="col-4">
-        <label class="form-label">Type</label>
-        <input
-          type="text"
-          class="form-control"
-          v-model="local.type"
-          readonly
-        />
+      <!-- Address -->
+      <div class="col-7">
+        <label class="form-label small">Address</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            {{ addressPrefix }}
+          </span>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            :value="addressNumber"
+            @input="onAddressChange($event.target.value)"
+            placeholder="0"
+          />
+        </div>
       </div>
 
-      <!-- Start -->
-      <div class="col-4">
-        <label class="form-label">Start</label>
+      <!-- Refresh -->
+      <div class="col-5">
+        <label class="form-label small">Refresh Rate (ms)</label>
         <input
           type="number"
-          min="0"
+          min="500"
           class="form-control"
-          v-model.number="local.start"
-        />
-      </div>
-
-      <!-- Length -->
-      <div class="col-4">
-        <label class="form-label">Length</label>
-        <input
-          type="number"
-          min="1"
-          class="form-control"
-          v-model.number="local.length"
+          :value="refresh"
+          @input="$emit('update:refresh', +$event.target.value)"
         />
       </div>
 
     </div>
-
-    <!-- Hint -->
-    <small class="text-muted d-block mt-2">
-      Type จะถูกกำหนดอัตโนมัติตาม Data Display Type
-    </small>
   </div>
 </template>
 
@@ -51,54 +43,50 @@ export default {
   name: "AddressForm",
 
   props: {
-    modelValue: {
-      type: Object,
-      required: true,
-    },
-    displayType: {
+    address: {
       type: String,
       required: true,
     },
+    refresh: {
+      type: Number,
+      required: true,
+    },
+    dataDisplayType: {
+      type: String,
+      required: true, // onoff | number
+    },
   },
 
-  emits: ["update:modelValue"],
+  computed: {
+    // fix prefix ตาม display type
+    addressPrefix() {
+      return this.dataDisplayType === "onoff" ? "M" : "D";
+    },
 
-  data() {
-    return {
-      local: JSON.parse(JSON.stringify(this.modelValue)),
-    };
+    // ดึงเฉพาะตัวเลขจาก M0 / D10
+    addressNumber() {
+      return Number(this.address.replace(/[^\d]/g, "")) || 0;
+    },
   },
 
   watch: {
-    // ปรับ Type อัตโนมัติเมื่อ displayType เปลี่ยน
-    displayType: {
+    // ถ้าเปลี่ยน display type → force address ใหม่
+    dataDisplayType: {
       immediate: true,
-      handler(type) {
-        if (type === "onoff") {
-          this.local.type = "M";
-          this.local.length = 1;
-        } else {
-          this.local.type = "D";
-          if (!this.local.length || this.local.length < 1) {
-            this.local.length = 1;
-          }
-        }
+      handler() {
+        this.emitAddress(this.addressNumber);
       },
+    },
+  },
+
+  methods: {
+    onAddressChange(num) {
+      this.emitAddress(num);
     },
 
-    // emit กลับ DeviceForm
-    local: {
-      deep: true,
-      handler(val) {
-        this.$emit("update:modelValue", val);
-      },
-    },
-    // sync จาก parent
-    modelValue: {
-      deep: true,
-      handler(val) {
-        this.local = JSON.parse(JSON.stringify(val));
-      },
+    emitAddress(num) {
+      const value = `${this.addressPrefix}${num}`;
+      this.$emit("update:address", value);
     },
   },
 };
