@@ -90,11 +90,16 @@ export default {
         name: d.name,
         plc_address: d.plc_address,
         refresh_rate_ms: d.refresh_rate_ms,
+        data_display_type: d.data_display_type,
 
-        value: false,
-        connected: false,
-        updated_at: null,
-        expand: false,
+        numberConfig: d.numberConfig ?? {
+          decimal_places: 0,
+          scale: 1,
+          offset: 0,
+          min_value: null,
+          max_value: null,
+          unit: ''
+        }
       }));
     },
 
