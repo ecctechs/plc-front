@@ -38,6 +38,7 @@
     <Dashboard
       v-if="tab === 'dashboard'"
       :devices="devices"
+      :simulate="isSimulate"
     />
 
     <Setting
@@ -48,6 +49,9 @@
     <Demo
       v-if="tab === 'demo'"
       :devices="devices"
+      @update-device="handleDeviceUpdate"
+      :model="isSimulate"
+      @update="isSimulate = $event"
     />
 
   </div>
@@ -73,6 +77,7 @@ export default {
     return {
       tab: "dashboard",
       devices: [],
+      isSimulate: false
     };
   },
 
@@ -81,6 +86,15 @@ export default {
   },
 
   methods: {
+      handleDeviceUpdate(updatedDevice) {
+      // หา index ของ device ตัวที่ถูกแก้ไข
+      const index = this.devices.findIndex(d => d.id === updatedDevice.id);
+      
+      if (index !== -1) {
+        // อัปเดตข้อมูลใน Array (ใช้การกระจาย Object เพื่อให้ Vue รับรู้การเปลี่ยนแปลง)
+        this.devices[index] = { ...updatedDevice };
+      }
+    },
     async loadDevices() {
       const res = await fetch(`${BASE_API}/api/devices`);
       const data = await res.json();

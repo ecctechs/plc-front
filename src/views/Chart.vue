@@ -33,8 +33,24 @@
       </div>
     </div>
 
-    <div class="chart-area border rounded p-3">
+    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'onoff'">
       <OnOffChart 
+          :device="device" 
+          :start-date="startDate" 
+          :end-date="endDate" 
+        />
+    </div>
+
+    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'number'">
+      <NumberChart 
+          :device="device" 
+          :start-date="startDate" 
+          :end-date="endDate" 
+        />
+    </div>
+
+    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'number_gauge'">
+      <NumberGaugeChart 
           :device="device" 
           :start-date="startDate" 
           :end-date="endDate" 
@@ -46,11 +62,15 @@
 <script>
 // นำเข้า OnOffChart จากโฟลเดอร์ components
 import OnOffChart from '../components/chart/OnOffChart.vue';
+import NumberChart from '../components/chart/NumberChart.vue';
+import NumberGaugeChart from '../components/chart/NumberGaugeChart.vue';
 
 export default {
   name: "Chart",
   components: {
-    OnOffChart
+    OnOffChart,
+    NumberChart,
+    NumberGaugeChart
   },
   props: {
     device: {

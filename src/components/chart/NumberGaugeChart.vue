@@ -24,7 +24,7 @@
     <!-- ===== Charts ===== -->
     <div v-show="!loading && !isEmpty" class="row g-3">
 
-      <div class="col-lg-8">
+      <div class="col-lg-12">
         <div class="card h-100 shadow-sm border-0">
           <div class="card-body">
             <h6 class="card-title text-center fw-bold mb-3">
@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <div class="col-lg-4">
+      <div class="col-lg-4" style="display:none">
         <div class="card h-100 shadow-sm border-0">
           <div class="card-body text-center d-flex flex-column justify-content-between">
             <h6 class="card-title fw-bold">สัดส่วน ON/OFF</h6>
@@ -99,7 +99,7 @@ import 'chartjs-adapter-date-fns'
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export default {
-  name: "OnOffChart",
+  name: "NumberGaugeChart",
 
   props: {
     device: { type: Object, required: true },
@@ -163,7 +163,7 @@ export default {
         const endUTC = new Date(this.endDate).toISOString();
 
         const res = await fetch(
-          `${baseUrl}/api/devices/${this.device.id}/chart/onoff?start=${startUTC}&end=${endUTC}`
+          `${baseUrl}/api/devices/${this.device.id}/chart/number?start=${startUTC}&end=${endUTC}`
         )
         const data = await res.json()
 
@@ -203,7 +203,7 @@ export default {
         this.$refs.lineCanvas,
         data.map(d => ({ x: new Date(d.y), y: d.x })),
         '#3b82f6',
-        ['OFF', 'ON']
+        null
       )
 
       this.charts.pie = this.createPie(
@@ -237,8 +237,8 @@ export default {
             borderColor: color,
             backgroundColor: color + '10',
             fill: true,
-            stepped: true,
-            pointRadius: 0
+            stepped: labels ? true : false,
+            pointRadius: 1
           }]
         },
         options: {
@@ -260,12 +260,13 @@ export default {
               ticks: { maxTicksLimit: 4, autoSkip: true }
             },
             y: {
-              min: -0.1,
-              max: 1.1,
-              ticks: {
-                stepSize: 1,
-                callback: v => labels[v] || ''
-              }
+                // ถ้ามี labels (กรณี ON/OFF หรือ Connect/Disconnect) ให้ใช้ Callback เดิม
+                // ถ้าไม่มี labels (กรณีค่า x เป็นตัวเลข) ให้ Chart.js คำนวณ Scale อัตโนมัติ
+                beginAtZero: true,
+                ticks: labels ? {
+                    stepSize: 1,
+                    callback: v => labels[v] || ''
+                } : {} 
             }
           },
           plugins: {

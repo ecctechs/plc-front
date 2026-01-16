@@ -116,6 +116,10 @@ export default {
   components: { Chart },
   props: {
     devices: { type: Array, required: true },
+    simulate: {
+      type: Boolean,
+      required: true
+    }
   },
   data() {
     return {
@@ -133,6 +137,17 @@ export default {
     },
   },
   watch: {
+    simulate(newVal) {
+      if (newVal) {
+        // ✅ เข้า simulate → หยุด polling
+        console.log("SIMULATE MODE → stop polling");
+        this.stopStatusPolling();
+      } else {
+        // ✅ ออกจาก simulate → กลับมา polling จริง
+        console.log("REAL MODE → start polling");
+        this.startStatusPolling();
+      }
+    },
     devices: {
       deep: true,
       handler(newDevices) {
@@ -146,7 +161,9 @@ export default {
     }
   },
   mounted() {
-    this.startStatusPolling();
+    if (!this.simulate) {
+      this.startStatusPolling();
+    }
     this.initAllGauges();
   },
   updated() {
@@ -269,10 +286,20 @@ export default {
       this.selectedDevice = null;
     },
     startStatusPolling() {
+      if (this.statusTimer) return; 
+
       this.loadStatus();
       this.statusTimer = setInterval(this.loadStatus, 1000);
     },
+    stopStatusPolling() {
+      if (this.statusTimer) {
+        clearInterval(this.statusTimer);
+        this.statusTimer = null;
+      }
+    },
     async loadStatus() {
+      if (this.simulate) return
+      
       try {
         const res = await fetch(`${BASE_API}/api/devices/status`);
         if (!res.ok) return;
