@@ -30,8 +30,48 @@
             <h6 class="card-title text-center fw-bold mb-3">
               ค่า Number ตามช่วงเวลา
             </h6>
+
+            <div class="d-flex justify-content-center gap-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="showMax" id="checkMax" @change="renderAllCharts(lastData)">
+                <label class="form-check-label small text-danger fw-bold" for="checkMax">แสดง Max (Limit)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="showMin" id="checkMin" @change="renderAllCharts(lastData)">
+                <label class="form-check-label small text-success fw-bold" for="checkMin">แสดง Min (Limit)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="showAvg" id="checkAvg" @change="renderAllCharts(lastData)">
+                <label class="form-check-label small text-warning fw-bold" for="checkAvg" style="color: #ff9800 !important;">แสดง Average</label>
+              </div>
+            </div>
+
             <div style="height: 280px;">
               <canvas ref="lineCanvas"></canvas>
+            </div>
+
+            <div class="d-flex flex-column align-items-center">
+              <div class="d-flex gap-2 align-items-center justify-content-center">
+                <span class="small fw-bold text-muted">Scale Y:</span>
+                <input type="number" 
+                      class="form-control form-control-sm" 
+                      :class="{'is-invalid': isScaleInvalid}" 
+                      style="width: 100px;" 
+                      v-model.number="limitLower" 
+                      @input="handleScaleChange" 
+                      placeholder="Lower">
+                <span class="text-muted">to</span>
+                <input type="number" 
+                      class="form-control form-control-sm" 
+                      :class="{'is-invalid': isScaleInvalid}" 
+                      style="width: 100px;" 
+                      v-model.number="limitUpper" 
+                      @input="handleScaleChange" 
+                      placeholder="Upper">
+              </div>
+              <small v-if="isScaleInvalid" class="text-danger mt-1" style="font-size: 11px;">
+                * ค่า Upper ต้องมากกว่า Lower
+              </small>
             </div>
           </div>
         </div>
@@ -112,6 +152,14 @@ export default {
       isEmpty: false,
       charts: {},
       loading: false,
+      showMax: false, 
+      showMin: false, 
+      limitUpper: null, 
+      limitLower: null, 
+      isScaleInvalid: false,
+      showAvg: false, 
+      avgValue: 0,
+      lastData: [],   // เก็บข้อมูลไว้ re-render
       stats: {
         on: 0,
         off: 0,
@@ -167,6 +215,8 @@ export default {
         )
         const data = await res.json()
 
+        this.lastData = data;
+
         this.isEmpty = !data || data.length === 0
 
         if (!this.isEmpty) {
@@ -187,6 +237,15 @@ export default {
       this.stats.connected = data.filter(d => d.connected === true).length
       this.stats.disconnected = data.filter(d => d.connected === false).length
 
+      const numericValues = data.map(d => Number(d.x)).filter(val => !isNaN(val));
+
+      if (numericValues.length > 0) {
+        const sum = numericValues.reduce((a, b) => a + b, 0);
+        this.avgValue = sum / numericValues.length; // เก็บค่าเฉลี่ยลงใน data()
+      } else {
+        this.avgValue = 0;
+      }
+
       const totalSec = this.stats.on * (this.device.refresh_rate_ms / 1000)
       this.totalRuntime =
         `${Math.floor(totalSec / 3600)}h ` +
@@ -194,38 +253,146 @@ export default {
         `${Math.floor(totalSec % 60)}s`
     },
 
+    handleScaleChange() {
+      // ตรวจสอบเงื่อนไข: ถ้ามีการกรอกทั้งสองช่อง และ Upper <= Lower
+      if (
+        this.limitUpper !== null && this.limitUpper !== '' &&
+        this.limitLower !== null && this.limitLower !== '' &&
+        this.limitUpper <= this.limitLower
+      ) {
+        this.isScaleInvalid = true;
+        // ไม่ต้องสั่ง render ใหม่ หรือสั่ง render ด้วยสเกล Auto เพื่อป้องกันกราฟพัง
+      } else {
+        this.isScaleInvalid = false;
+        this.renderAllCharts(this.lastData);
+      }
+    },
+
     renderAllCharts(data) {
-      Object.values(this.charts).forEach(c => c?.destroy())
+        // ล้างกราฟเก่า
+        if (this.charts) {
+          Object.values(this.charts).forEach(c => c?.destroy());
+        }
+        this.charts = {}; // ล้างตัวแปรอ้างอิง
 
-      if (!this.$refs.lineCanvas || !this.$refs.pieCanvas) return
+        if (!this.$refs.lineCanvas || !data) return;
 
-      this.charts.line = this.createLine(
-        this.$refs.lineCanvas,
-        data.map(d => ({ x: new Date(d.y), y: d.x })),
-        '#3b82f6',
-        null
-      )
+        // 1. ดึงค่าจาก Config สำหรับตีเส้น Reference
+        const configMax = this.device.numberConfig?.max_value;
+        const configMin = this.device.numberConfig?.min_value;
 
-      this.charts.pie = this.createPie(
-        this.$refs.pieCanvas,
-        [this.stats.on, this.stats.off],
-        ['ON', 'OFF'],
-        ['#3b82f6', '#f43f5e']
-      )
+        // 2. Plugin สำหรับตีเส้น Reference (Max/Min จาก Config)
+        const referenceLinesPlugin = {
+          id: 'referenceLines',
+          afterDraw: (chart) => {
+            const { ctx, scales: { y, x } } = chart;
+            ctx.save();
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1.5;
 
+            // เส้น Max จาก Config
+            if (this.showMax && configMax !== null && configMax !== undefined) {
+              const yPos = y.getPixelForValue(configMax);
+              // วาดเฉพาะถ้าตำแหน่ง Y อยู่ในช่วงที่มองเห็นบนสเกล
+              if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
+                ctx.strokeStyle = '#dc3545'; // สีแดง
+                ctx.beginPath();
+                ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
+                ctx.fillStyle = '#dc3545';
+                ctx.fillText(`Max Limit: ${configMax}`, x.left + 5, yPos - 5);
+              }
+            }
+
+            // เส้น Min จาก Config
+            if (this.showMin && configMin !== null && configMin !== undefined) {
+              const yPos = y.getPixelForValue(configMin);
+              if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
+                ctx.strokeStyle = '#198754'; // สีเขียว
+                ctx.beginPath();
+                ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
+                ctx.fillStyle = '#198754';
+                ctx.fillText(`Min Limit: ${configMin}`, x.left + 5, yPos + 15);
+              }
+            }
+
+          if (this.showAvg && this.avgValue != null) {
+            const yPos = y.getPixelForValue(this.avgValue);
+            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
+              ctx.strokeStyle = '#ff9800'; // สีส้ม
+              ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
+              ctx.fillStyle = '#ff9800'; 
+              ctx.fillText(`Avg: ${this.avgValue.toFixed(2)}`, x.right - 70, yPos - 5);
+            }
+          }
+            ctx.restore();
+          }
+        };
+
+        this.charts.line = new Chart(this.$refs.lineCanvas.getContext('2d'), {
+          type: 'line',
+          plugins: [referenceLinesPlugin],
+          data: {
+            datasets: [{
+              label: 'Value',
+              data: data.map(d => ({ x: new Date(d.y), y: d.x })),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              pointRadius: 1,
+              tension: 0.1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+             scales: {
+            x: {
+              type: 'time',
+              time: {
+                tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
+                displayFormats: {
+                  millisecond: 'dd-MM-yyyy HH:mm:ss',
+                  second: 'dd-MM-yyyy HH:mm:ss',
+                  minute: 'dd-MM-yyyy HH:mm:ss',
+                  hour: 'dd-MM-yyyy HH:mm:ss'
+                }
+              },
+              ticks: { maxTicksLimit: 4, autoSkip: true }
+            },
+              y: { 
+                // ปรับปรุงการส่งค่า min/max ให้ชัวร์ว่าเป็นตัวเลขหรือ undefined
+                min: (this.limitLower !== null && this.limitLower !== '' && !this.isScaleInvalid) 
+                      ? Number(this.limitLower) : undefined,
+                max: (this.limitUpper !== null && this.limitUpper !== '' && !this.isScaleInvalid) 
+                      ? Number(this.limitUpper) : undefined,
+                ticks: { beginAtZero: false }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              clip: true // สำคัญมาก: ป้องกันเส้นกราฟทะลุออกไปนอกกรอบเวลาล็อคสเกล
+            }
+          }
+        });
+
+      // --- [กราฟที่ 2: สถานะการเชื่อมต่อ (Stepped Line)] ---
       this.charts.lineConn = this.createLine(
         this.$refs.lineCanvas_Conn,
         data.map(d => ({ x: new Date(d.y), y: d.connected ? 1 : 0 })),
         '#10b981',
         ['Disconnect', 'Connect']
-      )
+      );
 
+      // --- [กราฟที่ 3: สัดส่วน Connection (Pie Chart)] ---
       this.charts.pieConn = this.createPie(
         this.$refs.pieCanvas_Conn,
         [this.stats.connected, this.stats.disconnected],
         ['Connect', 'Disconnect'],
         ['#10b981', '#6c757d']
-      )
+      );
+
+      // หมายเหตุ: ส่วนของ charts.pie เดิมที่ถูกซ่อนไว้ (display:none) สามารถเรียกใช้ createPie ได้เช่นกัน
     },
 
     createLine(el, data, color, labels) {

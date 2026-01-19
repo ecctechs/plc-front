@@ -59,7 +59,7 @@
 
       <DisplayLevel
         v-if="form.data_display_type === 'level'"
-        v-model="form.level"
+        v-model="form.levels"
       />
 
       <!-- PLC Debug -->
@@ -125,6 +125,7 @@ export default {
         data_display_type: "onoff",
         plc_address: "M0",
         refresh_rate_ms: 1000,
+        levels: [],
 
         numberConfig: {
           decimal_places: 0,
@@ -201,6 +202,28 @@ export default {
 
         if (!cfgRes.ok) {
           throw new Error(cfgData.message || "Save number config failed");
+        }
+      }
+
+      if (this.form.data_display_type === "level" || this.form.data_display_type === "number_gauge") {
+        // แก้ไข URL ตรงนี้: ตัด /api/devices ออกเพราะมีอยู่ในตัวแปร API แล้ว
+        const url = `${API}/${device.id}/levels`; 
+        
+        // ตรวจสอบว่ามีข้อมูล levels หรือไม่
+        if (this.form.levels.length > 0) {
+          // วนลูปส่งข้อมูลทีละรายการตามโครงสร้าง JSON ที่คุณให้มา (หรือส่งทั้ง Array ถ้า API รองรับ)
+          for (const levelData of this.form.levels) {
+            const levelRes = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(levelData),
+            });
+
+            if (!levelRes.ok) {
+              const errData = await levelRes.json();
+              throw new Error(errData.message || "Save levels failed");
+            }
+          }
         }
       }
 
