@@ -47,7 +47,7 @@
       <DisplayNumber
         v-if="form.data_display_type === 'number'"
         v-model="form.numberConfig"
-        :showMinMax="false"
+        :showMinMax="true"
       />
       
       <DisplayNumber
@@ -78,9 +78,13 @@
       >
         {{ loading ? "Saving..." : "Save Device" }}
       </button>
-
+      
       <div
-        v-if="form.data_display_type === 'number_gauge' && isNumberConfigInvalid"
+        v-if="
+          (form.data_display_type === 'number' ||
+          form.data_display_type === 'number_gauge') &&
+          isNumberConfigInvalid
+        "
         class="text-danger small mt-2 text-center"
       >
         กรุณากำหนด Min Value &lt; Max Value ให้ถูกต้อง
@@ -227,7 +231,7 @@ export default {
 
   computed: {
     isNumberConfigInvalid() {
-      if (this.form.data_display_type !== 'number_gauge') {
+      if (this.form.data_display_type !== 'number' && this.form.data_display_type !== 'number_gauge') {
         return false;
       }
 

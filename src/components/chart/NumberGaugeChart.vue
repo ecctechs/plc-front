@@ -28,7 +28,7 @@
         <div class="card h-100 shadow-sm border-0">
           <div class="card-body">
             <h6 class="card-title text-center fw-bold mb-3">
-              สถานะการทำงาน (ON/OFF)
+              ค่า Number Gauge ตามช่วงเวลา
             </h6>
             <div style="height: 280px;">
               <canvas ref="lineCanvas"></canvas>
