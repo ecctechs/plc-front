@@ -20,7 +20,7 @@
               </div>
             </div>
 
-            <div v-else-if="device.data_display_type === 'number'" class="w-100 py-4">
+            <div v-else-if="device.data_display_type === 'number' || device.data_display_type === 'level'" class="w-100 py-4">
               <div class="display-value fw-bold text-primary">
                 {{ getDisplayValue(device) }}
               </div>
@@ -132,7 +132,7 @@ export default {
   },
   computed: {
     displayDevices() {
-      const allowedTypes = ["onoff", "number", "number_gauge"];
+      const allowedTypes = ["onoff", "number", "number_gauge" , "level"];
       return (this.devices || []).filter(d => d && allowedTypes.includes(d.data_display_type));
     },
   },
