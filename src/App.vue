@@ -113,7 +113,28 @@ export default {
           min_value: null,
           max_value: null,
           unit: ''
-        }
+        },
+
+         // ===== Level Config =====
+      levels: Array.isArray(d.levels)
+      ? d.levels.map(l => ({
+          id: l.id,
+          level_index: l.level_index,
+          label: l.label,
+          mode: l.mode,                // exact | criteria
+
+          // exact
+          exact_values: l.exact_values ?? [],
+
+          // criteria
+          condition_type: l.condition_type ?? null,
+          min_value: l.min_value ?? null,
+          max_value: l.max_value ?? null,
+          include_min: l.include_min ?? true,
+          include_max: l.include_max ?? true
+        }))
+      : []
+
       }));
     },
 

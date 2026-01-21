@@ -56,6 +56,14 @@
           :end-date="endDate" 
         />
     </div>
+
+    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'level'">
+      <LevelChart 
+          :device="device" 
+          :start-date="startDate" 
+          :end-date="endDate" 
+        />
+    </div>
   </div>
 </template>
 
@@ -64,13 +72,15 @@
 import OnOffChart from '../components/chart/OnOffChart.vue';
 import NumberChart from '../components/chart/NumberChart.vue';
 import NumberGaugeChart from '../components/chart/NumberGaugeChart.vue';
+import LevelChart from '../components/chart/LevelChart.vue';
 
 export default {
   name: "Chart",
   components: {
     OnOffChart,
     NumberChart,
-    NumberGaugeChart
+    NumberGaugeChart,
+    LevelChart
   },
   props: {
     device: {

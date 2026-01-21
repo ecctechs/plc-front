@@ -32,8 +32,8 @@
           <template v-else>
             <option value="LT">&lt;</option>
             <option value="LTE">&le;</option>
-            <option value="GT">&gt;</option>
-            <option value="GTE">&ge;</option>
+            <option value="MT">&gt;</option>
+            <option value="MTE">&ge;</option>
             <option value="BTW">Between</option>
           </template>
         </select>
@@ -93,8 +93,8 @@ export default {
         const nextMin = next.min_value;
         if (currMax !== nextMin) return `รอยต่อไม่ต่อเนื่องที่ค่า ${currMax}`;
         
-        const currHasEqual = curr.condition_type === 'BTW' ? curr.include_max : (curr.condition_type === 'LTE' || curr.condition_type === 'GTE');
-        const nextHasEqual = next.condition_type === 'BTW' ? next.include_min : (next.condition_type === 'LTE' || next.condition_type === 'GTE');
+        const currHasEqual = curr.condition_type === 'BTW' ? curr.include_max : (curr.condition_type === 'LTE' || curr.condition_type === 'MTE');
+        const nextHasEqual = next.condition_type === 'BTW' ? next.include_min : (next.condition_type === 'LTE' || next.condition_type === 'MTE');
         if (currHasEqual === nextHasEqual) return `ค่า ${currMax} ซ้อนทับหรือขาดหาย (เลือก Include ฝั่งเดียว)`;
       }
       return null;
@@ -115,8 +115,8 @@ export default {
       newList.splice(index, 1);
       this.$emit("update:modelValue", newList);
     },
-    usesMin(l) { return ["GT", "GTE", "BTW"].includes(l.condition_type); },
-    isMinCondition(l) { return ["GT", "GTE", "BTW"].includes(l.condition_type); },
+    usesMin(l) { return ["MT", "MTE", "BTW"].includes(l.condition_type); },
+    isMinCondition(l) { return ["MT", "MTE", "BTW"].includes(l.condition_type); },
     isMaxCondition(l) { return ["LT", "LTE", "BTW"].includes(l.condition_type); }
   },
   watch: { validationError: { immediate: true, handler(v) { this.$emit("validate", v); } } }
