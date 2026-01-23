@@ -48,6 +48,8 @@
 
       <PlcDebugForm />
 
+      <AlertForm v-model="form.alarms"/>
+
       <div v-if="error" class="alert alert-danger py-2 mt-3 small">{{ error }}</div>
 
       <div v-if="isFormInvalid && !loading" class="alert alert-warning py-2 mt-2 small text-center">
@@ -74,12 +76,13 @@ import AddressForm from "./AddressForm.vue";
 import DisplayNumber from "./DisplayNumber.vue";
 import DisplayLevel from "./DisplayLevel.vue";
 import PlcDebugForm from "./PlcDebugForm.vue";
+import AlertForm from "./AlertForm.vue";
 
 const API = import.meta.env.VITE_API_BASE_URL + "/api/devices";
 
 export default {
   name: "DeviceForm",
-  components: { AddressForm, DisplayNumber, DisplayLevel, PlcDebugForm },
+  components: { AddressForm, DisplayNumber, DisplayLevel, PlcDebugForm , AlertForm },
   data() {
     return {
       form: {
@@ -89,7 +92,8 @@ export default {
         plc_address: "M0",
         refresh_rate_ms: 1000,
         levels: [],
-        numberConfig: { min_value: null, max_value: null, scale: 1, offset: 0, decimal_places: 0, unit: '' }
+        numberConfig: { min_value: null, max_value: null, scale: 1, offset: 0, decimal_places: 0, unit: '' },
+        alarms: []
       },
       levelError: null,
       loading: false,
@@ -175,6 +179,18 @@ export default {
           await this.postData(`${API}/${device.id}/levels`, levelData);
         }
       }
+
+      // --- ขั้นตอนที่ 3: บันทึก Alarms (ถ้ามีการเปิดใช้งาน) ---
+    if (this.form.alarms.length > 0) {
+      const alarmPromises = this.form.alarms.map(alarm => {
+        return this.postData(`${API}/${device.id}/alarms`, {
+          ...alarm,
+          data_type: this.form.data_display_type // ผูก data_type ตาม device
+        });
+      });
+      
+      await Promise.all(alarmPromises); // รอให้บันทึกครบทุก Alarm
+    }
 
       // --- สำเร็จทั้งหมด ---
       Swal.fire({ icon: "success", title: "Saved", timer: 1200, showConfirmButton: false });

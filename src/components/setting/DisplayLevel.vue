@@ -1,7 +1,7 @@
 <template>
   <div class="border rounded p-3 mb-3 bg-white shadow-sm">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="m-0 fw-bold text-primary">Level & Alarm Setting (Table View)</h6>
+      <h6 class="m-0 fw-bold text-primary">Level</h6>
       <button class="btn btn-sm btn-primary" @click="addLevel">+ Add Item</button>
     </div>
 

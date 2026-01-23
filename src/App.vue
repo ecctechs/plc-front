@@ -32,6 +32,12 @@
           Demo
         </button>
       </li>
+
+      <li class="nav-item">
+        <button class="nav-link" :class="{ active: tab === 'alarmhistory' }" @click="tab = 'alarmhistory'">
+          Alarm History
+        </button>
+      </li>
     </ul>
 
     <!-- Pages -->
@@ -54,6 +60,8 @@
       @update="isSimulate = $event"
     />
 
+    <AlarmHistory v-if="tab === 'alarmhistory'" :devices="devices" />
+
   </div>
 </template>
 
@@ -61,6 +69,7 @@
 import Dashboard from "./views/Dashboard.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
+import AlarmHistory from "./views/AlarmHistory.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
@@ -71,6 +80,7 @@ export default {
     Dashboard,
     Setting,
     Demo,
+    AlarmHistory
   },
 
   data() {

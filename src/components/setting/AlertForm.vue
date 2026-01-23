@@ -1,127 +1,116 @@
 <template>
-  <div class="border rounded p-3 mb-3">
-    <h6>Alert Setting</h6>
-
-    <!-- Enable -->
-    <div class="form-check mb-3">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        v-model="local.enabled"
-        id="alertEnable"
-      />
-      <label class="form-check-label" for="alertEnable">
-        Enable Alert
-      </label>
-    </div>
-
-    <div v-if="local.enabled">
-
-      <!-- ON / OFF -->
-      <div v-if="displayType === 'onoff'">
-        <label class="form-label">OFF Duration (minute)</label>
-        <input
-          type="number"
-          min="1"
-          v-model.number="local.offDuration"
-          class="form-control mb-2"
-        />
-
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            v-model="local.onlyWorkingTime"
-            id="onlyWorking"
-          />
-          <label class="form-check-label" for="onlyWorking">
-            Alert only in working time
-          </label>
-        </div>
+  <div class="card bg-light border-0 mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-bell-fill me-2"></i>Alarm Settings
+        </h6>
+        <button type="button" class="btn btn-outline-primary btn-sm" @click="addAlarm">
+          + เพิ่มเงื่อนไขการเตือน
+        </button>
       </div>
 
-      <!-- NUMBER / GAUGE -->
-      <div
-        v-if="displayType === 'number' || displayType === 'gauge'"
-      >
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="form-label">Lower</label>
-            <input
-              type="number"
-              v-model.number="local.lower"
-              class="form-control"
-            />
+      <div v-for="(alarm, index) in modelValue" :key="index" class="border-bottom pb-3 mb-3 position-relative">
+        <button @click="removeAlarm(index)" class="btn-close position-absolute end-0 top-0" style="font-size: 0.7rem;"></button>
+
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Alarm Name</label>
+            <input v-model="alarm.name" type="text" class="form-control form-control-sm" placeholder="เช่น High Temp">
           </div>
-          <div class="col-6">
-            <label class="form-label">Upper</label>
-            <input
-              type="number"
-              v-model.number="local.upper"
-              class="form-control"
-            />
+
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Condition</label>
+            <select v-model="alarm.condition_type" class="form-select form-select-sm">
+              <option value="EXACT">Equal (==)</option>
+              <option value="MT">More Than (> )</option>
+              <option value="MTE">More Than or Equal (>=)</option>
+              <option value="LT">Less Than (< )</option>
+              <option value="LTE">Less Than or Equal (<=)</option>
+              <option value="BTW">Between (In Range)</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Threshold Value</label>
+            <div class="input-group input-group-sm">
+              <input 
+                v-if="alarm.condition_type !== 'LT' && alarm.condition_type !== 'LTE'"
+                v-model.number="alarm.min_value" 
+                type="number" 
+                class="form-control" 
+                :placeholder="alarm.condition_type === 'BTW' ? 'Min' : 'Value'"
+              >
+              
+              <span v-if="alarm.condition_type === 'BTW'" class="input-group-text">-</span>
+
+              <input 
+                v-if="['LT', 'LTE', 'BTW'].includes(alarm.condition_type)"
+                v-model.number="alarm.max_value" 
+                type="number" 
+                class="form-control" 
+                placeholder="Max"
+              >
+            </div>
+          </div>
+
+          <div class="col-md-12 d-flex align-items-center gap-3 mt-1" >
+             <!-- <div class="d-flex align-items-center">
+                <span class="small me-2">Severity:</span>
+                <select v-model="alarm.severity" class="form-select form-select-sm w-auto">
+                  <option value="info">Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="critical">Critical</option>
+                </select>
+             </div> -->
+             
+             <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" v-model="alarm.notify_email">
+              <label class="form-check-label small">Email Notify</label>
+            </div>
+
+            <input 
+              v-if="alarm.notify_email"
+              type="text" 
+              class="form-control form-control-sm flex-grow-1" 
+              placeholder=""
+              :value="alarm.email_recipients.join(', ')"
+              @input="(e) => updateEmails(index, e.target.value)"
+            >
           </div>
         </div>
-
-        <label class="form-label">Duration (sec)</label>
-        <input
-          type="number"
-          min="0"
-          v-model.number="local.duration"
-          class="form-control"
-        />
       </div>
-
-      <!-- EMAIL -->
-      <label class="form-label mt-2">Email</label>
-      <input
-        type="text"
-        v-model="local.emails"
-        class="form-control"
-        placeholder="admin@email.com, support@email.com"
-      />
-
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "AlertForm",
-
-  props: {
-    modelValue: {
-      type: Object,
-      required: true,
+  props: ['modelValue'],
+  emits: ['update:modelValue'],
+  methods: {
+    addAlarm() {
+      const newList = [...this.modelValue, {
+        name: "",
+        condition_type: "MTE",
+        min_value: 0,
+        max_value: 0,
+        severity: "critical",
+        notify_email: false,
+        email_recipients: [],
+        is_active: true
+      }];
+      this.$emit('update:modelValue', newList);
     },
-    displayType: {
-      type: String,
-      required: true,
+    removeAlarm(index) {
+      const newList = this.modelValue.filter((_, i) => i !== index);
+      this.$emit('update:modelValue', newList);
     },
-  },
-
-  emits: ["update:modelValue"],
-
-  data() {
-    return {
-      local: JSON.parse(JSON.stringify(this.modelValue)),
-    };
-  },
-
-  watch: {
-    local: {
-      deep: true,
-      handler(val) {
-        this.$emit("update:modelValue", val);
-      },
-    },
-
-    modelValue: {
-      deep: true,
-      handler(val) {
-        this.local = JSON.parse(JSON.stringify(val));
-      },
-    },
-  },
-};
+    updateEmails(index, value) {
+      const newList = JSON.parse(JSON.stringify(this.modelValue));
+      newList[index].email_recipients = value.split(',').map(s => s.trim()).filter(s => s !== "");
+      this.$emit('update:modelValue', newList);
+    }
+  }
+}
 </script>
