@@ -23,7 +23,7 @@
         <thead class="table-dark">
           <tr>
             <th>Device Name</th>
-            <th>Rule Name</th>
+            <th>Alarm Name</th>
             <th>Condition Type</th>
             <th>Value</th>
             <th>Threshold Value</th> <th>Event Type</th>
