@@ -1,9 +1,14 @@
 <template>
-  <div class="card p-3 shadow-sm">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0 text-primary"><i class="bi bi-clock-history"></i> ประวัติการแจ้งเตือน</h5>
+  <div class="card p-4 shadow-sm border-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+      <div>
+        <h5 class="mb-1 text-primary fw-bold">
+          <i class="bi bi-clock-history me-2"></i>ประวัติการแจ้งเตือน
+        </h5>
+        <p class="text-muted small mb-0">แสดงประวัติเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC</p>
+      </div>
       
-      <div class="d-flex gap-2 align-items-end">
+      <div class="d-flex flex-wrap gap-2 align-items-end">
         <div class="filter-group">
           <label class="form-label small fw-bold">จากวันที่</label>
           <input type="date" v-model="filter.startDate" class="form-control form-control-sm">
@@ -12,58 +17,71 @@
           <label class="form-label small fw-bold">ถึงวันที่</label>
           <input type="date" v-model="filter.endDate" class="form-control form-control-sm">
         </div>
-        <button @click="fetchHistory" class="btn btn-primary btn-sm px-3">
-          <i class="bi bi-search"></i> ค้นหา
+        <button @click="fetchHistory" :disabled="loading" class="btn btn-primary btn-sm px-4">
+          <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
+          <i v-else class="bi bi-search me-1"></i> ค้นหา
         </button>
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle">
+    <div class="table-responsive rounded-3 border">
+      <table class="table table-striped table-hover align-middle mb-0">
         <thead class="table-dark">
           <tr>
-            <th>Device Name</th>
+            <th class="ps-3">Device Name</th>
             <th>Alarm Name</th>
-            <th>Condition Type</th>
-            <th>Value</th>
-            <th>Threshold Value</th> <th>Event Type</th>
-            <th>Created At</th>
+            <th class="text-center">Condition</th>
+            <th class="text-center">Threshold</th>
+            <th class="text-center">Actual Value</th> 
+            <th class="text-center">Event Type</th>
+            <th class="pe-3">Time Stamp</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in history" :key="item.id">
-            <td><strong>{{ item.device?.name }}</strong></td>
+          <tr v-if="loading">
+            <td colspan="7" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status"></div>
+            </td>
+          </tr>
+
+          <tr v-for="item in history" :key="item.id" v-else-if="history.length > 0">
+            <td class="ps-3"><strong>{{ item.device?.name }}</strong></td>
             <td>{{ item.rule?.name }}</td>
-            <td>
-              <span class="badge bg-light text-dark border">{{ item.rule?.condition_type }}</span>
+            <td class="text-center">
+              <span class="badge bg-light text-dark border fw-normal">{{ item.rule?.condition_type }}</span>
             </td>
-             <td>
-              <span>{{ item.value }}</span>
+            
+            <td class="text-center fw-bold text-primary">
+              <span v-if="item.rule?.condition_type === 'EXACT'">= {{ item.rule?.min_value }}</span>
+              <span v-else-if="item.rule?.condition_type === 'BTW'">{{ item.rule?.min_value }} - {{ item.rule?.max_value }}</span>
+              <span v-else-if="item.rule?.condition_type === 'MT'">&gt; {{ item.rule?.min_value }}</span>
+              <span v-else-if="item.rule?.condition_type === 'MTE'">&ge; {{ item.rule?.min_value }}</span>
+              <span v-else-if="item.rule?.condition_type === 'LT'">&lt; {{ item.rule?.max_value || item.rule?.min_value }}</span>
+              <span v-else-if="item.rule?.condition_type === 'LTE'">&le; {{ item.rule?.max_value || item.rule?.min_value }}</span>
+              <span v-else>-</span>
             </td>
-            <td>
-              <div v-if="item.rule?.condition_type === 'BETWEEN'">
-                {{ item.rule?.min_value }} - {{ item.rule?.max_value }}
-              </div>
-              <div v-else-if="item.rule?.condition_type === 'MTE'">
-                &ge; {{ item.rule?.min_value }}
-              </div>
-              <div v-else-if="item.rule?.condition_type === 'LTE'">
-                &le; {{ item.rule?.max_value }}
-              </div>
-              <div v-else>
-                Min: {{ item.rule?.min_value }} | Max: {{ item.rule?.max_value }}
-              </div>
-            </td>
-            <td>
-              <span :class="item.event_type === 'TRIGGER' ? 'badge bg-danger' : 'badge bg-success'">
-                {{ item.event_type }}
+
+            <td class="text-center">
+              <span :class="item.event_type === 'TRIGGER' ? 'text-danger fw-bold fs-5' : 'text-success fw-bold fs-5'">
+                {{ item.value }}
               </span>
             </td>
-            <td>{{ formatDate(item.created_at) }}</td>
+
+            <td class="text-center">
+              <span v-if="item.event_type === 'TRIGGER'" class="text-danger fw-bold">
+                <i class="bi bi-exclamation-triangle-fill"></i> TRIGGER
+              </span>
+              <span v-else class="text-success fw-bold">
+                <i class="bi bi-check-circle-fill"></i> RECOVERY
+              </span>
+            </td>
+
+            <td class="pe-3 text-muted small">{{ formatDate(item.created_at) }}</td>
           </tr>
-          <tr v-if="history.length === 0">
-            <td colspan="6" class="text-center py-5 text-muted">
-              ไม่พบข้อมูลประวัติในช่วงวันที่เลือก
+
+          <tr v-else>
+            <td colspan="7" class="text-center py-5 text-muted">
+              ไม่พบประวัติการแจ้งเตือนในช่วงวันที่เลือก
             </td>
           </tr>
         </tbody>
@@ -78,8 +96,8 @@ export default {
   data() {
     return {
       history: [],
+      loading: false,
       filter: {
-        // ตั้งค่า default เป็นวันที่ปัจจุบัน
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
       }
@@ -94,9 +112,9 @@ export default {
     async fetchHistory() {
       if (!this.devices || this.devices.length === 0) return;
       
-      // ดึง ID จาก device ตัวแรก หรือตัวที่ระบุ
-      const deviceId = this.devices[0].id; 
-      const BASE_API = import.meta.env.VITE_API_BASE_URL;
+      this.loading = true;
+      const deviceId = this.devices[0].id; // หรือเปลี่ยนเป็นเลือกจาก Dropdown
+      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       
       try {
         const url = `${BASE_API}/api/devices/${deviceId}/alarms/events?start=${this.filter.startDate}&end=${this.filter.endDate}`;
@@ -105,18 +123,16 @@ export default {
         this.history = await res.json();
       } catch (err) {
         console.error("Fetch error:", err);
+      } finally {
+        this.loading = false;
       }
     },
     formatDate(dateStr) {
       if (!dateStr) return "-";
       const date = new Date(dateStr);
       return date.toLocaleString('th-TH', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
     }
   }
@@ -124,6 +140,8 @@ export default {
 </script>
 
 <style scoped>
-.badge { font-weight: 500; }
-.table thead th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
+.table thead th { font-size: 0.8rem; letter-spacing: 0.5px; }
+.text-danger { color: #dc3545 !important; }
+.text-success { color: #198754 !important; }
+.fs-5 { font-size: 1.1rem !important; }
 </style>

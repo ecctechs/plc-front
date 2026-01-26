@@ -34,11 +34,11 @@
             <div class="d-flex justify-content-center gap-3 mb-2">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="showMax" id="checkMax" @change="renderAllCharts(lastData)">
-                <label class="form-check-label small text-danger fw-bold" for="checkMax">แสดง Max (Limit)</label>
+                <label class="form-check-label small text-danger fw-bold" for="checkMax">แสดง Max</label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="showMin" id="checkMin" @change="renderAllCharts(lastData)">
-                <label class="form-check-label small text-success fw-bold" for="checkMin">แสดง Min (Limit)</label>
+                <label class="form-check-label small text-success fw-bold" for="checkMin">แสดง Min</label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="showAvg" id="checkAvg" @change="renderAllCharts(lastData)">
@@ -240,12 +240,18 @@ export default {
 
       const numericValues = data.map(d => Number(d.x)).filter(val => !isNaN(val));
 
-      if (numericValues.length > 0) {
-        const sum = numericValues.reduce((a, b) => a + b, 0);
-        this.avgValue = sum / numericValues.length; // เก็บค่าเฉลี่ยลงใน data()
-      } else {
-        this.avgValue = 0;
-      }
+    if (numericValues.length > 0) {
+      const sum = numericValues.reduce((a, b) => a + b, 0);
+      this.avgValue = sum / numericValues.length;
+      
+      // หาค่าสูงสุด-ต่ำสุดจากข้อมูลจริง
+      this.actualMax = Math.max(...numericValues);
+      this.actualMin = Math.min(...numericValues);
+    } else {
+      this.avgValue = 0;
+      this.actualMax = null;
+      this.actualMin = null;
+    }
 
       const totalSec = this.stats.on * (this.device.refresh_rate_ms / 1000)
       this.totalRuntime =
@@ -291,30 +297,26 @@ export default {
             ctx.setLineDash([5, 5]);
             ctx.lineWidth = 1.5;
 
-            // เส้น Max จาก Config
-            if (this.showMax && configMax !== null && configMax !== undefined) {
-              const yPos = y.getPixelForValue(configMax);
-              // วาดเฉพาะถ้าตำแหน่ง Y อยู่ในช่วงที่มองเห็นบนสเกล
-              if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
-                ctx.strokeStyle = '#dc3545'; // สีแดง
-                ctx.beginPath();
-                ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
-                ctx.fillStyle = '#dc3545';
-                ctx.fillText(`Max Limit: ${configMax}`, x.left + 5, yPos - 5);
-              }
+          if (this.showMax && this.actualMax !== null) {
+            const yPos = y.getPixelForValue(this.actualMax);
+            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
+              ctx.strokeStyle = '#dc3545';
+              ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
+              ctx.fillStyle = '#dc3545';
+              ctx.fillText(`Max: ${this.actualMax}`, x.left + 5, yPos - 5);
             }
+          }
 
-            // เส้น Min จาก Config
-            if (this.showMin && configMin !== null && configMin !== undefined) {
-              const yPos = y.getPixelForValue(configMin);
-              if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
-                ctx.strokeStyle = '#198754'; // สีเขียว
-                ctx.beginPath();
-                ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
-                ctx.fillStyle = '#198754';
-                ctx.fillText(`Min Limit: ${configMin}`, x.left + 5, yPos + 15);
-              }
+          // เส้น Min (จากข้อมูลจริง)
+          if (this.showMin && this.actualMin !== null) {
+            const yPos = y.getPixelForValue(this.actualMin);
+            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
+              ctx.strokeStyle = '#198754';
+              ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke();
+              ctx.fillStyle = '#198754';
+              ctx.fillText(`Min: ${this.actualMin}`, x.left + 5, yPos + 15);
             }
+          }
 
           if (this.showAvg && this.avgValue != null) {
             const yPos = y.getPixelForValue(this.avgValue);

@@ -37,7 +37,7 @@
       <DisplayNumber
         v-if="['number', 'number_gauge'].includes(form.data_display_type)"
         v-model="form.numberConfig"
-        :showMinMax="true"
+        :type="form.data_display_type"
       />
 
       <DisplayLevel
@@ -102,10 +102,23 @@ export default {
   },
   computed: {
     isNumberConfigInvalid() {
+  // 1. ถ้าไม่ใช่สาย Number เลย ให้ผ่าน (false คือไม่ invalid)
       if (!['number', 'number_gauge'].includes(this.form.data_display_type)) return false;
+
+      // 2. ถ้าเป็น 'number' เฉยๆ ไม่ต้อง validate Min/Max เพราะเราไม่ได้ใช้
+      if (this.form.data_display_type === 'number') return false;
+
+      // 3. ถ้าเป็น 'number_gauge' ต้องตรวจสอบความถูกต้อง
       const cfg = this.form.numberConfig;
-      return cfg.min_value == null || cfg.max_value == null || cfg.min_value >= cfg.max_value;
+      
+      // ตรวจสอบว่าเป็นค่าว่างหรือไม่ (null หรือสายอักขระว่าง)
+      const isMinEmpty = cfg.min_value === null || cfg.min_value === '';
+      const isMaxEmpty = cfg.max_value === null || cfg.max_value === '';
+
+      return isMinEmpty || isMaxEmpty || Number(cfg.min_value) >= Number(cfg.max_value);
     },
+    
+    // isFormInvalid ไม่ต้องแก้ เพราะมันเรียกใช้ isNumberConfigInvalid อยู่แล้ว
     isFormInvalid() {
       if (!this.form.name) return true;
       if (this.form.data_display_type === 'level') return !!this.levelError;
