@@ -26,6 +26,16 @@
       <li class="nav-item">
         <button
           class="nav-link"
+          :class="{ active: tab === 'performance' }"
+          @click="tab = 'performance'"
+        >
+          Performance
+        </button>
+      </li>
+
+      <li class="nav-item">
+        <button
+          class="nav-link"
           :class="{ active: tab === 'demo' }"
           @click="tab = 'demo'"
         >
@@ -45,6 +55,10 @@
       v-if="tab === 'dashboard'"
       :devices="devices"
       :simulate="isSimulate"
+    />
+
+    <Performance
+      v-if="tab === 'performance'"
     />
 
     <Setting
@@ -70,6 +84,7 @@ import Dashboard from "./views/Dashboard.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
+import Performance from "./views/Performance.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
@@ -80,7 +95,8 @@ export default {
     Dashboard,
     Setting,
     Demo,
-    AlarmHistory
+    AlarmHistory,
+    Performance
   },
 
   data() {
