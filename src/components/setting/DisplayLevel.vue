@@ -77,26 +77,90 @@ export default {
   emits: ["update:modelValue", "validate"],
   computed: {
     validationError() {
-      const levels = this.modelValue;
-      if (!levels || levels.length === 0) return "กรุณาเพิ่มอย่างน้อย 1 รายการ";
-      const hasExact = levels.some(l => l.mode === 'exact');
-      if (hasExact) return null;
+      const levels = this.modelValue || [];
+      if (levels.length === 0) return "กรุณาเพิ่มอย่างน้อย 1 รายการ";
 
-      const sorted = [...levels].sort((a, b) => (a.min_value ?? -Infinity) - (b.min_value ?? -Infinity));
-      if (this.isMinCondition(sorted[0]) && sorted[0].min_value !== null) return "ต้องเริ่มจาก -Infinity";
-      if (this.isMaxCondition(sorted[sorted.length-1]) && sorted[sorted.length-1].max_value !== null) return "ต้องจบที่ +Infinity";
+      const criterias = levels.filter(l => l.mode === 'criteria');
+      const exacts = levels.filter(l => l.mode === 'exact');
 
-      for (let i = 0; i < sorted.length - 1; i++) {
-        const curr = sorted[i];
-        const next = sorted[i+1];
-        const currMax = curr.condition_type === 'BTW' ? curr.max_value : curr.min_value;
-        const nextMin = next.min_value;
-        if (currMax !== nextMin) return `รอยต่อไม่ต่อเนื่องที่ค่า ${currMax}`;
-        
-        const currHasEqual = curr.condition_type === 'BTW' ? curr.include_max : (curr.condition_type === 'LTE' || curr.condition_type === 'MTE');
-        const nextHasEqual = next.condition_type === 'BTW' ? next.include_min : (next.condition_type === 'LTE' || next.condition_type === 'MTE');
-        if (currHasEqual === nextHasEqual) return `ค่า ${currMax} ซ้อนทับหรือขาดหาย (เลือก Include ฝั่งเดียว)`;
+      /* =======================
+      * 1. Validate Criteria (เสมอ)
+      * ======================= */
+      if (criterias.length > 0) {
+        const sorted = [...criterias].sort(
+          (a, b) => (a.min_value ?? -Infinity) - (b.min_value ?? -Infinity)
+        );
+
+        // ต้องเริ่ม -Infinity
+        if (this.isMinCondition(sorted[0]) && sorted[0].min_value !== null)
+          return "ต้องเริ่มจาก -Infinity";
+
+        // ต้องจบ +Infinity
+        const last = sorted[sorted.length - 1];
+        if (this.isMaxCondition(last) && last.max_value !== null)
+          return "ต้องจบที่ +Infinity";
+
+        // ต้องต่อเนื่อง
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const curr = sorted[i];
+          const next = sorted[i + 1];
+
+          const currMax =
+            curr.condition_type === "BTW" ? curr.max_value : curr.min_value;
+          const nextMin = next.min_value;
+
+          if (currMax !== nextMin)
+            return `รอยต่อไม่ต่อเนื่องที่ค่า ${currMax}`;
+
+          const currInc =
+            curr.condition_type === "BTW"
+              ? curr.include_max
+              : ["LTE", "MTE"].includes(curr.condition_type);
+
+          const nextInc =
+            next.condition_type === "BTW"
+              ? next.include_min
+              : ["LTE", "MTE"].includes(next.condition_type);
+
+          if (currInc === nextInc)
+            return `ค่า ${currMax} ซ้อนทับหรือขาดหาย (Include ได้ฝั่งเดียว)`;
+        }
       }
+
+      /* =======================
+      * 2. Validate Exact (ถ้ามี)
+      * ======================= */
+      if (exacts.length > 0) {
+        for (const ex of exacts) {
+          const v = ex.min_value;
+
+          // Exact ซ้ำกัน
+          if (exacts.filter(e => e.min_value === v).length > 1)
+            return `Exact ซ้ำที่ค่า ${v}`;
+
+          // Exact ต้องอยู่ใน Criteria
+          if (criterias.length > 0) {
+            const matched = criterias.some(c => {
+              if (c.condition_type === "BTW") {
+                const minOk = c.include_min ? v >= c.min_value : v > c.min_value;
+                const maxOk = c.include_max ? v <= c.max_value : v < c.max_value;
+                return minOk && maxOk;
+              }
+
+              if (["MT", "MTE"].includes(c.condition_type))
+                return c.include_min ? v >= c.min_value : v > c.min_value;
+
+              if (["LT", "LTE"].includes(c.condition_type))
+                return c.include_min ? v <= c.min_value : v < c.min_value;
+
+              return false;
+            });
+
+            if (!matched) return `Exact ${v} อยู่นอกช่วง Criteria`;
+          }
+        }
+      }
+
       return null;
     }
   },
