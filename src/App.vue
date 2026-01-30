@@ -23,7 +23,7 @@
         </button>
       </li>
 
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <button
           class="nav-link"
           :class="{ active: tab === 'performance' }"
@@ -31,7 +31,7 @@
         >
           Performance
         </button>
-      </li>
+      </li> -->
 
       <li class="nav-item">
         <button
