@@ -44,7 +44,7 @@
               </div>
             </div>
 
-            <div v-else-if="device.data_display_type === 'number' || device.data_display_type === 'number_gauge'">
+            <div v-else-if="device.data_display_type === 'number' || device.data_display_type === 'number_gauge' || device.data_display_type === 'level'">
               <div class="mb-2">Value: <strong>{{ Number(device.value).toFixed(2) }}</strong></div>
               <input 
                 type="range" 

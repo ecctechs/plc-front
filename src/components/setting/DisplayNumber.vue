@@ -1,8 +1,7 @@
 <template>
   <div class="border rounded p-3 mb-3">
-    <h6 class="mb-3">Number Setting</h6>
+    <h6 class="mb-3">Number Setting ({{ type }})</h6>
 
-    <!-- ===== Row 1: Decimal / Scale / Offset ===== -->
     <div class="row g-2 mb-3">
       <div class="col-4">
         <label class="form-label small">Decimal</label>
@@ -35,9 +34,8 @@
       </div>
     </div>
 
-    <!-- ===== Row 2: Min / Max / Unit ===== -->
     <div
-      v-if="showMinMax"
+      v-if="type === 'number_gauge'"
       class="row g-2 mb-3"
     >
       <div class="col-4">
@@ -71,28 +69,25 @@
       </div>
     </div>
 
-    <!-- ===== Validation Hint ===== -->
     <div
-      v-if="minMaxInvalid"
+      v-if="type === 'number_gauge' && minMaxInvalid"
       class="text-danger small mb-2"
     >
       Min value ต้องน้อยกว่า Max value
     </div>
 
-    <!-- ===== Preview ===== -->
     <div class="bg-light rounded p-2 text-center">
       <div class="small text-muted">Preview</div>
 
       <div class="fs-5 fw-bold">
         {{ previewValue }}
-        <span v-if="model.unit" class="fs-6">
+        <span v-if="type === 'number_gauge' && model.unit" class="fs-6">
           {{ model.unit }}
         </span>
       </div>
 
-      <div class="small text-muted">
-        raw {{ rawValue }} →
-        (× {{ model.scale ?? 1 }} + {{ model.offset ?? 0 }})
+      <div class="small text-muted" style="font-size: 11px;">
+        raw {{ rawValue }} → ({{ rawValue }} × {{ model.scale ?? 1 }} + {{ model.offset ?? 0 }})
       </div>
     </div>
   </div>
@@ -107,16 +102,14 @@ export default {
       type: Object,
       required: true,
     },
-
-    showMinMax: {
-      type: Boolean,
-      default: false
+    // รับค่า 'number' หรือ 'number_gauge'
+    type: {
+      type: String,
+      default: 'number' 
     }
-    
   },
 
   computed: {
-    // ===== v-model bridge =====
     model: {
       get() {
         return this.modelValue;
@@ -126,7 +119,6 @@ export default {
       },
     },
 
-    // mock raw value (แทนค่า PLC)
     rawValue() {
       return 123;
     },
@@ -141,14 +133,15 @@ export default {
     },
 
     minMaxInvalid() {
-
-      if (!this.showMinMax) return false;
+      if (this.type !== 'number_gauge') return false;
 
       if (
         this.model.min_value !== null &&
-        this.model.max_value !== null
+        this.model.max_value !== null &&
+        this.model.min_value !== undefined &&
+        this.model.max_value !== undefined
       ) {
-        return this.model.min_value >= this.model.max_value;
+        return Number(this.model.min_value) >= Number(this.model.max_value);
       }
       return false;
     },
