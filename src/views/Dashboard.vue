@@ -220,7 +220,7 @@ export default {
                 ticksAngle: 240,
                 startAngle: 60,
                 animationDuration: 1500,
-                animationRule: "decelerate",
+                animationRule: "linear",
                 strokeTicks: true,
               }).draw();
             } catch (err) {
