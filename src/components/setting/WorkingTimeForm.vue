@@ -153,11 +153,7 @@ export default {
           };
         }
       } catch (err) {
-        await Swal.fire({
-          icon: "error",
-          title: "Load failed",
-          text: "ไม่สามารถโหลด Working Time ได้",
-        });
+        await showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลด Working Time ได้", "error");
       }
     },
 
@@ -220,20 +216,10 @@ export default {
           throw new Error(err.message || "Save failed");
         }
 
-        await Swal.fire({
-          icon: "success",
-          title: "Saved",
-          text: "Working time has been updated successfully",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        await showAlert("บันทึกสำเร็จ", "ข้อมูลถูกอัปเดตเรียบร้อยแล้ว", "success");
 
       } catch (err) {
-        await Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: err.message || "ไม่สามารถบันทึกข้อมูลได้",
-        });
+        await showAlert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
       } finally {
         this.loading = false;
       }

@@ -21,19 +21,48 @@
 
           <div class="col-md-4">
             <label class="form-label small fw-bold">Condition</label>
-            <select v-model="alarm.condition_type" class="form-select form-select-sm">
+            <select 
+              :value="['onoff', 'level'].includes(dataType) ? 'EXACT' : alarm.condition_type"
+              @input="e => alarm.condition_type = e.target.value"
+              class="form-select form-select-sm"
+              :disabled="['onoff', 'level'].includes(dataType)"
+            >
               <option value="EXACT">Equal (==)</option>
-              <option value="MT">More Than (> )</option>
-              <option value="MTE">More Than or Equal (>=)</option>
-              <option value="LT">Less Than (< )</option>
-              <option value="LTE">Less Than or Equal (<=)</option>
-              <option value="BTW">Between (In Range)</option>
+              <template v-if="dataType !== 'onoff' && dataType !== 'level'">
+                <option value="MT">More Than (> )</option>
+                <option value="MTE">More Than or Equal (>=)</option>
+                <option value="LT">Less Than (< )</option>
+                <option value="LTE">Less Than or Equal (<=)</option>
+                <option value="BTW">Between (In Range)</option>
+              </template>
             </select>
           </div>
 
           <div class="col-md-4">
             <label class="form-label small fw-bold">Threshold Value</label>
-            <div class="input-group input-group-sm">
+            
+            <select v-if="dataType === 'onoff'" v-model="alarm.min_value" class="form-select form-select-sm">
+              <option :value="1">ON</option>
+              <option :value="0">OFF</option>
+            </select>
+
+            <select 
+              v-else-if="dataType === 'level'" 
+              class="form-select form-select-sm"
+              :value="alarm.level_label"
+              @change="(e) => applyLevelRule(index, e.target.value)"
+            >
+              <option value="">-- เลือก Level --</option>
+              <option 
+                v-for="lvl in levelLabels" 
+                :key="lvl.label" 
+                :value="lvl.label"
+              >
+                {{ lvl.label }}
+              </option>
+            </select>
+
+            <div v-else class="input-group input-group-sm">
               <input 
                 v-if="alarm.condition_type !== 'LT' && alarm.condition_type !== 'LTE'"
                 v-model.number="alarm.min_value" 
@@ -41,9 +70,7 @@
                 class="form-control" 
                 :placeholder="alarm.condition_type === 'BTW' ? 'Min' : 'Value'"
               >
-              
               <span v-if="alarm.condition_type === 'BTW'" class="input-group-text">-</span>
-
               <input 
                 v-if="['LT', 'LTE', 'BTW'].includes(alarm.condition_type)"
                 v-model.number="alarm.max_value" 
@@ -54,16 +81,7 @@
             </div>
           </div>
 
-          <div class="col-md-12 d-flex align-items-center gap-3 mt-1" >
-             <!-- <div class="d-flex align-items-center">
-                <span class="small me-2">Severity:</span>
-                <select v-model="alarm.severity" class="form-select form-select-sm w-auto">
-                  <option value="info">Info</option>
-                  <option value="warning">Warning</option>
-                  <option value="critical">Critical</option>
-                </select>
-             </div> -->
-             
+          <div class="col-md-12 d-flex align-items-center gap-3 mt-1">
              <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" v-model="alarm.notify_email">
               <label class="form-check-label small">Email Notify</label>
@@ -86,15 +104,51 @@
 
 <script>
 export default {
-  props: ['modelValue'],
+  props: {
+    modelValue: { type: Array, default: () => [] },
+    dataType: { type: String, default: 'number' },
+    levelLabels: { type: Array, default: () => [] }
+  },
   emits: ['update:modelValue'],
+  watch: {
+    // บังคับ Condition เป็น EXACT ทันทีเมื่อสลับเป็น onoff หรือ level
+    dataType: {
+      immediate: true,
+      handler(newType) {
+        if (['onoff', 'level'].includes(newType)) {
+          this.modelValue.forEach(alarm => {
+            alarm.condition_type = 'EXACT';
+          });
+        }
+      }
+    }
+  },
   methods: {
+    // นำค่า Rule ทั้งชุดจาก Level ที่เลือกมาเก็บใน Alarm
+    applyLevelRule(index, label) {
+      const selectedLvl = this.levelLabels.find(l => l.label === label);
+      if (!selectedLvl) return;
+
+      const newList = JSON.parse(JSON.stringify(this.modelValue));
+      newList[index] = {
+        ...newList[index],
+        level_label: selectedLvl.label,         // เก็บชื่อไว้โชว์ใน UI
+        condition_type: selectedLvl.condition_type, // เช่น LT, BTW, MT
+        min_value: selectedLvl.min_value,
+        max_value: selectedLvl.max_value,
+        include_min: selectedLvl.include_min,
+        include_max: selectedLvl.include_max
+      };
+      this.$emit('update:modelValue', newList);
+    },
     addAlarm() {
+      const isSpecial = ['onoff', 'level'].includes(this.dataType);
       const newList = [...this.modelValue, {
         name: "",
-        condition_type: "MTE",
-        min_value: 0,
+        condition_type: isSpecial ? "EXACT" : "MTE",
+        min_value: this.dataType === 'onoff' ? 1 : 0,
         max_value: 0,
+        level_label: "",
         severity: "critical",
         notify_email: false,
         email_recipients: [],

@@ -1,377 +1,353 @@
 <template>
-  <div class="container mt-4">
+  <div class="container-fluid mt-4 min-vh-100">
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-      <div v-for="device in displayDevices" :key="device.id" class="col">
-        <div class="card shadow-sm p-3 text-center position-relative">
-          
-          <span class="status-dot" :class="device.connected ? 'online' : 'offline'"></span>
+      <div v-for="addr in addresses" :key="addr.address_id" class="col">
+        <div class="card shadow-sm p-4 text-center position-relative custom-card" 
+        :class="{ 'card-fixed': !addr.expand }">
+          <span class="status-dot" :class="addr.is_connected ? 'online' : 'offline'"></span>
 
-          <div class="fw-bold fs-5 mb-1 text-truncate px-3">{{ device.name }}</div>
-          <div class="text-muted small mb-3 text-uppercase">
-            Type : {{ device.data_display_type.replace('_', ' ') }}
+          <div class="mb-2">
+            <h4 class="fw-bold text-dark mb-0 text-uppercase">{{ addr.device.name }}</h4>
+            <div class="text-muted small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
           </div>
 
-          <div class="main-display-area d-flex align-items-center justify-content-center mb-3">
+          <div class="flex-grow-1 d-flex flex-column justify-content-center my-4">
             
-            <div v-if="device.data_display_type === 'onoff'" class="w-100">
-              <div class="onoff-circle mx-auto mb-2" :class="device.value !== 0 ? 'on' : 'off'"></div>
-              <div class="onoff-text mt-2" :class="device.value !== 0 ? 'text-success' : 'text-danger'">
-                {{ device.value !== 0 ? "ON" : "OFF" }}
-              </div>
+            <div v-if="addr.data_type === 'onoff'" class="w-100">
+              <div class="onoff-circle mx-auto mb-2" :class="addr.last_value !== 0 ? 'on' : 'off'"></div>
+              <h2 class="onoff-text fw-bold mb-0" :class="addr.last_value !== 0 ? 'text-success' : 'text-danger'">
+                {{ addr.last_value !== 0 ? "ON" : "OFF" }}
+              </h2>
             </div>
 
-            <div v-else-if="device.data_display_type === 'number' || device.data_display_type === 'level'" class="w-100 py-4">
+            <div v-else-if="addr.data_type === 'number' || addr.data_type === 'level'" class="w-100 py-3">
               <div class="display-value fw-bold text-primary">
-                {{ getDisplayValue(device) }}
+                {{ getDisplayValue(addr) }}
               </div>
-              <div class="text-muted fs-5">{{ device.numberConfig?.unit || '' }}</div>
+              <div v-if="addr.numberConfig?.unit" class="text-muted fw-bold">{{ addr.numberConfig.unit }}</div>
             </div>
 
-            <div v-else-if="device.data_display_type === 'number_gauge'" class="w-100">
+            <div v-else-if="addr.data_type === 'number_gauge'" class="w-100">
               <div class="gauge-container mx-auto">
-                <canvas :id="'gauge-' + device.id"></canvas>
+                <canvas :id="'gauge-' + addr.address_id"></canvas>
               </div>
-              <div class="text-muted small fw-bold mt-minus">
-                {{ getDisplayValue(device) }} {{ device.numberConfig?.unit || '' }}
+              <div class="fw-bold text-dark mt-2">
+                {{ getDisplayValue(addr) }} {{ addr.numberConfig?.unit }}
               </div>
             </div>
-
           </div>
 
-          <div class="pt-3 border-top mt-auto">
-            <div class="d-flex justify-content-center gap-2 mb-2">
-              <button 
-                class="btn btn-sm w-50" 
-                :class="device.expand ? 'btn-secondary' : 'btn-outline-secondary'"
-                @click="device.expand = !device.expand"
-              >
-                {{ device.expand ? "Hide Info" : "More Info" }}
-              </button>
-              <button class="btn btn-sm btn-outline-primary w-50" @click="openChart(device)">Chart</button>
+          <div class="mt-auto pt-3 border-top-light">
+            <div class="row g-2">
+              <div class="col-6">
+                <button
+                  class="btn btn-custom w-100"
+                  :class="addr.expand ? 'btn-secondary' : 'btn-outline-secondary'"
+                  @click="addr.expand = !addr.expand"
+                >
+                  {{ addr.expand ? 'Hide Info' : 'More Info' }}
+                </button>
+              </div>
+              <div class="col-6">
+                <button class="btn btn-outline-primary btn-custom w-100" @click="openChart(addr)">
+                  Chart
+                </button>
+              </div>
             </div>
+          </div>
 
-            <transition name="fade">
-              <div v-if="device.expand" class="mt-2 text-muted small text-start bg-light p-2 rounded border shadow-inner">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <div>
-                    <strong>Address:</strong> 
-                    <span class="ms-1 text-primary">{{ device.plc_address }}</span>
-                  </div>
-                  
-                  <div class="text-end">
-                    <strong>Refresh:</strong> 
-                    <span class="ms-1">{{ device.refresh_rate_ms }} ms</span>
-                  </div>
-                </div>
-                <template v-if="device.data_display_type === 'number' || device.data_display_type === 'number_gauge'">
-                  <div class="d-flex justify-content-between">
-                    <strong>Scale:</strong> <span>×{{ device.numberConfig?.scale || 1 }}</span>
-                  </div>
-                  <div class="d-flex justify-content-between">
-                    <strong>Offset:</strong> <span>{{ device.numberConfig?.offset || 0 }}</span>
-                  </div>
-                </template>
+          <transition name="fade">
+            <div v-if="addr.expand" class="info-panel mt-3 p-3 bg-light rounded text-start small">
+              <div class="d-flex justify-content-between mb-1">
+                <span><strong>Address:</strong> {{ addr.plc_address }}</span>
+                <span class="text-muted">Refresh: {{ addr.refresh_rate_ms }} ms</span>
+              </div>
 
-                <template v-if="device.data_display_type === 'number_gauge'">
-                  <div class="d-flex justify-content-between border-top mt-1 pt-1">
-                    <strong>Range:</strong> 
-                    <span>{{ device.numberConfig?.min_value ?? 0 }} - {{ device.numberConfig?.max_value ?? 100 }}</span>
-                  </div>
-                </template>
-                <div class="mt-1 pt-1 border-top" style="font-size: 0.7rem;">
-                  <strong>Last Update:</strong> {{ device.updated_at ? formatTime(device.updated_at) : "-" }}
+              <div v-if="addr.numberConfig">
+                <div>Scale: <strong>×{{ addr.numberConfig.scale ?? 1 }}</strong></div>
+                <div>Offset: <strong>{{ addr.numberConfig.offset ?? 0 }}</strong></div>
+
+                <div v-if="addr.numberConfig.min_value !== undefined">
+                  Range:
+                  <strong>
+                    {{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}
+                  </strong>
                 </div>
               </div>
-            </transition>
-          </div>
+                {{addr.last_update}}
+              <div class="text-muted mt-2 border-top pt-1">
+                Last Update: {{ formatTimeOnly(addr.updated_at) }}
+              </div>
+            </div>
+          </transition>
 
         </div>
       </div>
     </div>
   </div>
 
-  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+    <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
         <div class="modal-header">
-          <h5 class="modal-title">Chart : {{ selectedDevice?.name }}</h5>
+          <h5 class="modal-title">Chart : {{ selectedAddress?.label }}</h5>
           <button class="btn-close" @click="closeChart"></button>
         </div>
         <div class="modal-body text-center">
-          <Chart v-if="selectedDevice" :device="selectedDevice" />
+          <Chart v-if="selectedAddress" :device="selectedAddress" />
         </div>
       </div>
     </div>
   </div>
+
 </template>
 
 <script>
 import Chart from "./Chart.vue";
 import { RadialGauge } from 'canvas-gauges';
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-
 export default {
   name: "Dashboard",
   components: { Chart },
   props: {
-    devices: { type: Array, required: true },
-    simulate: {
-      type: Boolean,
-      required: true
-    }
+    // รับข้อมูลที่เป็น Array ของ Address ตาม JSON ที่คุณให้มา
+    addresses: { type: Array, required: true },
+    simulate: { type: Boolean, default: false }
   },
   data() {
     return {
-      statusTimer: null,
-      selectedDevice: null,
+      selectedAddress: null,
       showChart: false,
-      loading: false,
       gauges: {},
+      // เพิ่ม property expand เข้าไปในแต่ละ address สำหรับ UI
+      localAddresses: []
     };
   },
-  computed: {
-    displayDevices() {
-      const allowedTypes = ["onoff", "number", "number_gauge" , "level"];
-      return (this.devices || []).filter(d => d && allowedTypes.includes(d.data_display_type));
-    },
-  },
   watch: {
-    simulate(newVal) {
-      if (newVal) {
-        // ✅ เข้า simulate → หยุด polling
-        console.log("SIMULATE MODE → stop polling");
-        this.stopStatusPolling();
-      } else {
-        // ✅ ออกจาก simulate → กลับมา polling จริง
-        console.log("REAL MODE → start polling");
-        this.startStatusPolling();
-      }
-    },
-    devices: {
+    // คอยดูการอัปเดตค่า last_value
+    addresses: {
       deep: true,
-      handler(newDevices) {
-        newDevices.forEach(device => {
-          if (device.data_display_type === 'number_gauge' && this.gauges[device.id]) {
-            const val = parseFloat(this.getDisplayValue(device));
-            this.gauges[device.id].value = val;
-          }
-        });
+      handler(newVal) {
+        this.localAddresses = newVal;
+        this.updateGauges();
       }
     }
   },
   mounted() {
-    if (!this.simulate) {
-      this.startStatusPolling();
-    }
-    this.initAllGauges();
+    this.localAddresses = this.addresses;
+    this.$nextTick(() => {
+      this.initAllGauges();
+    });
   },
   updated() {
-    this.initAllGauges();
-  },
-  beforeUnmount() {
-    if (this.statusTimer) clearInterval(this.statusTimer);
-    Object.values(this.gauges).forEach(g => g.destroy());
+    this.$nextTick(() => {
+      this.initAllGauges();
+    });
   },
   methods: {
-    getDisplayValue(device) {
-      const cfg = device.numberConfig || {};
-      const raw = device.value ?? 0;
-      const scaled = (raw * (cfg.scale ?? 1)) + (cfg.offset ?? 0);
-      return Number(scaled).toFixed(cfg.decimal_places ?? 0);
-    },
-    // initAllGauges() {
-    //   this.displayDevices.forEach(device => {
-    //     if (device.data_display_type === 'number_gauge') {
-    //       const canvasId = `gauge-${device.id}`;
-    //       const canvasEl = document.getElementById(canvasId);
-    //       if (canvasEl && !this.gauges[device.id]) {
-    //         this.gauges[device.id] = new RadialGauge({
-    //           renderTo: canvasEl,
-    //           width: 180,
-    //           height: 180,
-    //           minValue: device.numberConfig?.min_value ?? 0,
-    //           maxValue: device.numberConfig?.max_value ?? 100,
-    //           value: parseFloat(this.getDisplayValue(device)),
-    //           units: device.numberConfig?.unit || '',
-    //           colorPlate: "#fff",
-    //           borderShadowWidth: 0,
-    //           borders: false,
-    //           needleType: "arrow",
-    //           needleWidth: 3,
-    //           needleCircleSize: 7,
-    //           needleCircleOuter: true,
-    //           needleCircleInner: false,
-    //           animationDuration: 500,
-    //           animationRule: "linear",
-    //           majorTicks: ["0", "20", "40", "60", "80", "100"],
-    //           highlights: [],
-    //           valueBox: false
-    //         }).draw();
-            
-    //       }
-    //     }
-    //   });
-    // },
-    initAllGauges() {
-      this.displayDevices.forEach(device => {
-        if (device.data_display_type === 'number_gauge') {
-          const canvasId = `gauge-${device.id}`;
-          const canvasEl = document.getElementById(canvasId);
-          
-          if (canvasEl && !this.gauges[device.id]) {
-            // ดึงค่า Config จาก Device
-            const min = device.numberConfig?.min_value ?? 0;
-            const max = device.numberConfig?.max_value ?? 100;
-            const unit = device.numberConfig?.unit || '';
-            const decimals = device.numberConfig?.decimal_places ?? 0;
-
-            // ฟังก์ชันคำนวณ Major Ticks ให้แบ่งเป็น 5-6 ช่องอัตโนมัติ
-            const generateTicks = (min, max) => {
-              const ticks = [];
-              const step = (max - min) / 5;
-              for (let i = 0; i <= 5; i++) {
-                ticks.push((min + (step * i)).toFixed(0));
-              }
-              return ticks;
-            };
-
-            this.gauges[device.id] = new RadialGauge({
-              renderTo: canvasId,
-              width: 180,
-              height: 180,
-              minValue: min,
-              maxValue: max,
-              value: parseFloat(this.getDisplayValue(device)),
-              units: unit,
-              
-              // --- การตั้งค่าเพื่อรองรับค่าหลักล้าน ---
-              majorTicks: generateTicks(min, max), // สร้างตัวเลขขีดแบ่งอัตโนมัติ
-              colorNumbers: "#444",
-              fontNumbersSize: 22, // ปรับขนาดตัวเลขถ้าค่าหลักล้านยาวเกินไป
-              
-              // --- ตกแต่งหน้าปัดให้สะอาดตา ---
-              colorPlate: "#fff",
-              borderShadowWidth: 0,
-              borders: false,
-              highlights: [], // ลบแถบสีเทาเข้มออก
-              
-              // --- เข็มไมล์ ---
-              needleType: "arrow",
-              needleWidth: 3,
-              needleCircleSize: 7,
-              needleCircleOuter: true,
-              needleCircleInner: false,
-              colorNeedle: "#ff6b6b",
-              colorNeedleEnd: "#ff6b6b",
-              
-              // --- การแสดงผลตัวเลข (เราซ่อนไว้เพราะเขียนใน Vue เองแล้ว) ---
-              valueBox: false, 
-              
-              // --- แอนิเมชัน ---
-              animationDuration: 500,
-              animationRule: "linear",
-              strokeTicks: true,
-            }).draw();
-          }
-        }
-      });
-    },
-    openChart(device) {
-      this.selectedDevice = device;
+    openChart(addr) {
+      this.selectedAddress = addr;
       this.showChart = true;
     },
     closeChart() {
       this.showChart = false;
-      this.selectedDevice = null;
+      this.selectedAddress = null;
     },
-    startStatusPolling() {
-      if (this.statusTimer) return; 
+    formatTimeOnly(iso) {
+      if (!iso) return '-';
+      return new Date(iso).toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Bangkok',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    },
+    getDisplayValue(addr) {
+      const cfg = addr.numberConfig || {};
+      const raw = addr.last_value ?? 0;
+      const scaled = (raw * (cfg.scale ?? 1)) + (cfg.offset ?? 0);
+      return Number(scaled).toFixed(cfg.decimal_places ?? 0);
+    },
+    initAllGauges() {
+      // ตรวจสอบก่อนว่ามีข้อมูลหรือไม่
+      if (!this.localAddresses || this.localAddresses.length === 0) return;
 
-      this.loadStatus();
-      this.statusTimer = setInterval(this.loadStatus, 1000);
-    },
-    stopStatusPolling() {
-      if (this.statusTimer) {
-        clearInterval(this.statusTimer);
-        this.statusTimer = null;
-      }
-    },
-    async loadStatus() {
-      if (this.simulate) return
-      
-      try {
-        const res = await fetch(`${BASE_API}/api/devices/status`);
-        if (!res.ok) return;
-        const statusList = await res.json();
-        statusList.forEach(s => {
-          const d = this.devices.find(x => x.id === s.id);
-          if (d) {
-            d.value = s.last_value;
-            d.connected = s.connected;
-            d.updated_at = s.value_updated_at;
+      this.localAddresses.forEach(addr => {
+        if (addr.data_type === 'number_gauge') {
+          const canvasId = `gauge-${addr.address_id}`;
+          const canvasEl = document.getElementById(canvasId);
+          
+          // ตรวจสอบว่ามี Element ในหน้าจอ และยังไม่ได้สร้าง Gauge สำหรับ ID นี้
+          if (canvasEl && !this.gauges[addr.address_id]) {
+            const min = addr.numberConfig?.min_value ?? 0;
+            const max = addr.numberConfig?.max_value ?? 100;
+            const unitLabel = addr.numberConfig?.unit || ''; 
+
+            try {
+              this.gauges[addr.address_id] = new RadialGauge({
+                renderTo: canvasEl, // ใช้ Element โดยตรงจะชัวร์กว่า ID string
+                width: 200,
+                height: 200,
+                minValue: min,
+                maxValue: max,
+                value: parseFloat(this.getDisplayValue(addr)),
+                units: unitLabel,
+                
+                // การตั้งค่า Ticks
+                majorTicks: this.generateTicks(min, max),
+                colorNumbers: "#444",
+                fontNumbersSize: 22,
+                fontNumbersWeight: "bold",
+                
+                // หน้าปัดใสเพื่อให้เห็นพื้นหลังการ์ด
+                colorPlate: "transparent", 
+                borderShadowWidth: 0,
+                borders: false,
+                highlights: [], 
+                
+                // เข็มสีแดงส้มตาม Screenshot
+                needleType: "arrow",
+                needleWidth: 4,
+                needleCircleSize: 7,
+                needleCircleOuter: true,
+                needleCircleInner: false,
+                colorNeedle: "#e74c3c",
+                colorNeedleEnd: "#e74c3c",
+                colorNeedleCircleOuter: "#e74c3c",
+                
+                valueBox: false, 
+                ticksAngle: 240,
+                startAngle: 60,
+                animationDuration: 1500,
+                animationRule: "decelerate",
+                strokeTicks: true,
+              }).draw();
+            } catch (err) {
+              console.error("Gauge Error:", err);
+            }
           }
-        });
-      } catch (err) {
-        console.error("STATUS ERROR:", err.message);
-      }
+        }
+      });
     },
-    formatTime(ts) {
-      return new Date(ts).toLocaleTimeString();
+    updateGauges() {
+      this.localAddresses.forEach(addr => {
+        if (this.gauges[addr.address_id]) {
+          this.gauges[addr.address_id].value = parseFloat(this.getDisplayValue(addr));
+        }
+      });
     },
-  },
+    generateTicks(min, max) {
+      const ticks = [];
+      const step = (max - min) / 5;
+      for (let i = 0; i <= 5; i++) ticks.push((min + (step * i)).toFixed(0));
+      return ticks;
+    }
+  }
 };
 </script>
 
 <style scoped>
-.status-dot {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 12px;
-  height: 12px;
+/* Card Style: ขอบเข้มขึ้นตามที่ต้องการ */
+.custom-card {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1.5px solid #d1d1d1 !important; /* ขอบการ์ดเข้ม */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* ON/OFF Circle: หัวใจสำคัญคือขอบขาว + เงาฟุ้ง */
+.onoff-circle {
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  z-index: 10;
-}
-.status-dot.online { background-color: #28a745; box-shadow: 0 0 6px #28a745; }
-.status-dot.offline { background-color: #dc3545; box-shadow: 0 0 6px #dc3545; }
-
-/* พื้นที่แสดงผลหลัก บังคับความสูงเพื่อให้การ์ดแถวเดียวกันเท่ากันตอนยังไม่ขยาย */
-.main-display-area {
-  min-height: 220px;
+  /* ขอบสีขาวหนา 4px เพื่อให้เหมือนรูป */
+  border: 4px solid #ffffff; 
+  transition: all 0.4s ease;
 }
 
-.onoff-circle { 
-  width: 160px; 
-  height: 160px; 
-  border-radius: 50%; 
-  transition: 0.3s;
-  border: 4px solid #f8f9fa;
+/* กรณีสถานะ ON (สีเขียว) */
+.onoff-circle.on {
+  background-color: #28a745;
+  /* เงาสีเขียวฟุ้งกระจายกว้างๆ */
+  box-shadow: 0 0 0 2px rgba(255,255,255,1), 0 0 30px rgba(40, 167, 69, 0.6);
 }
-.onoff-circle.on { background-color: #28a745; box-shadow: 0 0 20px rgba(40, 167, 69, 0.4); }
-.onoff-circle.off { background-color: #dc3545; box-shadow: 0 0 20px rgba(220, 53, 69, 0.4); }
 
-.onoff-text { font-size: 2.2rem; font-weight: 800; line-height: 1; }
-.display-value { font-size: 3.5rem; line-height: 1; }
+/* กรณีสถานะ OFF (สีแดงตามรูป) */
+.onoff-circle.off {
+  background-color: #c84d4d;
+  /* เงาสีแดงฟุ้งกระจายกว้างๆ */
+  box-shadow: 0 0 0 2px rgba(255,255,255,1), 0 0 35px rgba(200, 77, 77, 0.6);
+}
 
+/* ข้อความสถานะด้านล่างวงกลม */
+.onoff-text {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-top: 15px;
+  text-transform: uppercase;
+}
+
+/* Gauge Container: จัดให้มีเงาจางๆ รอบวงกลม gauge */
 .gauge-container {
-  width: 180px;
+  width: 200px;
   height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ทำให้ gauge มีมิติขึ้น */
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.08));
 }
 
-.mt-minus {
-  margin-top: -15px;
+/* Typography อื่นๆ */
+.display-value {
+  font-size: 4.5rem;
+  letter-spacing: -2px;
+  color: #4a76f1;
 }
 
-.shadow-inner {
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+.status-dot {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    z-index: 10;
 }
 
-/* Animation สำหรับการยืดหด */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s;
+/* Online = เขียว */
+.status-dot.online {
+  background-color: #28a745;
+  box-shadow: 0 0 6px rgba(40, 167, 69, 0.8);
 }
-.fade-enter-from, .fade-leave-to {
+
+/* Offline = แดง */
+.status-dot.offline {
+    background-color: #dc3545;
+    box-shadow: 0 0 6px #dc3545;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
+  transform: translateY(-6px);
 }
+
+.info-panel {
+  border: 1px solid #e3e6ea;
+  background: #fafafa;
+}
+
+.card-fixed {
+  min-height: 420px;   /* ปรับได้ตามดีไซน์ */
+  display: flex;
+  flex-direction: column;
+}
+
 </style>

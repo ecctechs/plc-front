@@ -2,8 +2,8 @@
   <div class="device-chart-container p-4 border rounded shadow-sm bg-white">
     <div class="row align-items-center mb-4 border-bottom pb-3">
       <div class="col-md-4">
-        <small class="text-uppercase text-muted fw-bold d-block">Device Name</small>
-        <h4 class="mb-0 text-primary">{{ device.name }}</h4>
+        <small class="text-uppercase text-muted fw-bold d-block">Value Name</small>
+        <h4 class="mb-0 text-primary">{{ device.label }}</h4>
       </div>
       <div class="col-md-4 border-start">
         <small class="text-uppercase text-muted fw-bold d-block">PLC Address</small>
@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'onoff'">
+    <div class="chart-area border rounded p-3" v-if="device.data_type === 'onoff'">
       <OnOffChart 
           :device="device" 
           :start-date="startDate" 
@@ -41,7 +41,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'number'">
+    <div class="chart-area border rounded p-3" v-if="device.data_type === 'number'">
       <NumberChart 
           :device="device" 
           :start-date="startDate" 
@@ -49,7 +49,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'number_gauge'">
+    <div class="chart-area border rounded p-3" v-if="device.data_type === 'number_gauge'">
       <NumberGaugeChart 
           :device="device" 
           :start-date="startDate" 
@@ -57,7 +57,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_display_type === 'level'">
+    <div class="chart-area border rounded p-3" v-if="device.data_type === 'level'">
       <LevelChart 
           :device="device" 
           :start-date="startDate" 

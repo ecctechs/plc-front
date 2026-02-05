@@ -1,147 +1,179 @@
 <template>
-  <div class="p-3">
-    <h3 class="mb-4">DEMO MODE (Simulation)</h3>
-    <div class="form-check form-switch">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        :checked="model"
-        @change="onChange"
-      >
-      <label class="form-check-label">
-        Simulate Mode
-      </label>
+  <div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h5 class="mb-0"> Demo / Simulate Mode</h5>
+
+      <div class="form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          :checked="isSimulate"
+          @change="$emit('update:is-simulate', $event.target.checked)"
+        />
+        <label class="form-check-label fw-bold">
+          Simulate Mode {{ isSimulate ? 'ON' : 'OFF' }}
+        </label>
+      </div>
     </div>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-      <div v-for="device in devices" :key="device.id" class="col">
-        <div class="card shadow-sm h-100">
-          
-          <div class="card-header bg-light d-flex align-items-center gap-2 py-1">
-            <span class="fw-bold">{{ device.name }}</span>
-            <span class="badge rounded-pill bg-secondary text-lowercase" style="font-size: 0.7rem;">
-              {{ device.data_display_type }}
-            </span>
-          </div>
 
-          <div class="card-body" style="min-height: 120px;">
+    <div class="row g-3">
+      <div
+        v-for="device in displayDevices"
+        :key="device.address_id"
+        class="col-md-4"
+      >
+        <div class="card shadow-sm h-100 " :class="{ 'opacity-75': !isSimulate }">
+          <div class="card-body">
             
-            <div v-if="device.data_display_type === 'onoff'">
-              <div class="mb-3">
-                Status: 
-                <span :class="['badge', device.value ? 'bg-success' : 'bg-danger']">
-                  {{ device.value ? 'ON' : 'OFF' }}
-                </span>
+            <div class="d-flex justify-content-between mb-3">
+              <div>
+                <div class="fw-bold">{{ device.label }}</div>
+                <small class="text-muted text-uppercase" style="font-size: 0.7rem;">
+                  {{ device.plc_address }} · {{ device.data_type }}
+                </small>
               </div>
-              <div class="d-flex gap-2">
-                <button 
-                  class="btn btn-success w-50 py-2" 
-                  @click="emitUpdate(device, 1)"
-                >ON</button>
-                <button 
-                  class="btn btn-danger w-50 py-2" 
-                  @click="emitUpdate(device, 0)"
-                >OFF</button>
-              </div>
+              <!-- <span
+                class="badge"
+                :class="device.is_connected ? 'bg-success' : 'bg-secondary'"
+              >
+                {{ device.is_connected ? 'Connected' : 'Offline' }}
+              </span> -->
             </div>
 
-            <div v-else-if="device.data_display_type === 'number' || device.data_display_type === 'number_gauge' || device.data_display_type === 'level'">
-              <div class="mb-2">Value: <strong>{{ Number(device.value).toFixed(2) }}</strong></div>
-              <input 
-                type="range" 
-                class="form-range" 
-                :value="device.value"
-                min="0" max="100" step="0.01"
-                @input="emitUpdate(device, $event.target.value)"
-              >
-              <input 
-                type="number" 
-                class="form-control mt-2" 
-                :value="device.value"
-                @change="emitUpdate(device, $event.target.value)"
-              >
+            <div class="my-4">
+              <template v-if="device.data_type === 'onoff'">
+                <div class="d-flex justify-content-center">
+                  <div class="btn-group w-100" role="group">
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      :class="device.last_value === 0 ? 'btn-danger' : 'btn-outline-danger'"
+                      :disabled="!isSimulate"
+                      @click="onInputChange(device, false)"
+                    >
+                      OFF
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      :class="device.last_value === 1 ? 'btn-success' : 'btn-outline-success'"
+                      :disabled="!isSimulate"
+                      @click="onInputChange(device, true)"
+                    >
+                      ON
+                    </button>
+                  </div>
+                </div>
+              </template>
+
+              <template v-else-if="hasRange(device)">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="small text-muted">Value: <strong>{{ device.last_value ?? 0 }}</strong></span>
+                    <span class="small text-muted">{{ device.min }} - {{ device.max }}</span>
+                  </div>
+                  
+                  <input 
+                    type="range" 
+                    class="form-range" 
+                    :min="device.min" 
+                    :max="device.max" 
+                    step="0.01"
+                    :value="device.last_value ?? 0"
+                    :disabled="!isSimulate"
+                    @input="onInputChange(device, $event.target.value)"
+                  >
+
+                  <input
+                    type="number"
+                    class="form-control form-control-sm mt-2"
+                    :value="device.last_value"
+                    :disabled="!isSimulate"
+                    @input="onInputChange(device, $event.target.value)"
+                  />
+                </div>
+              </template>
             </div>
 
-          </div>
+            <!-- <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+              <button
+                class="btn btn-sm"
+                :class="isAuto(device) ? 'btn-danger' : 'btn-outline-primary'"
+                :disabled="!isSimulate"
+                @click="$emit('toggle-auto', device)"
+              >
+                <i class="bi" :class="isAuto(device) ? 'bi-stop-fill' : 'bi-play-fill'"></i>
+                {{ isAuto(device) ? 'Stop Auto' : 'Auto Random' }}
+              </button>
 
-          <div 
-            class="card-footer bg-light text-center py-1 cursor-pointer" 
-            style="cursor: pointer;"
-            @click="toggleAuto(device)"
-          >
-            <small :class="device._timer ? 'text-primary fw-bold' : 'text-muted'">
-              {{ device._timer ? 'Stop Simulation' : 'Simulation Control' }}
-            </small>
-          </div>
+              <small class="text-muted" style="font-size: 0.75rem;">
+                {{ formatTime(device.updated_at) }}
+              </small>
+            </div> -->
 
+          </div>
         </div>
       </div>
+    </div>
+
+    <div v-if="!devices.length" class="text-center text-muted py-5">
+      No devices found.
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "Demo",
+  name: 'Demo',
   props: {
-    devices: { type: Array, required: true },
-  model: {
-      type: Boolean,
-      default: false
+    devices: Array,
+    isSimulate: Boolean,
+    autoTimers: Object // รับ Set() มาจาก App.vue
+  },
+  emits: ['update:is-simulate', 'update-device', 'toggle-auto'],
+
+  computed: {
+    displayDevices() {
+      return this.devices.map(d => ({
+        ...d,
+        min: d.min ?? 0,
+        max: d.max ?? 100
+      }));
     }
   },
-  emits: ["update"],
+
   methods: {
-    onChange(e) {
-      this.$emit("update", e.target.checked); // ⭐ emit boolean
+    hasRange(device) {
+      const types = ['number', 'number_gauge', 'level'];
+      return types.includes(device.data_type);
     },
-    // ส่ง Event ไปหา Parent
-    emitUpdate(device, newValue) {
-      let val = newValue;
-      // กรองประเภทข้อมูล
-      if (device.data_display_type !== 'onoff') {
+
+    isAuto(device) {
+      return this.autoTimers.has(device.address_id);
+    },
+
+    onInputChange(device, newValue) {
+      if (!this.isSimulate) return;
+
+      let val;
+      if (device.data_type === 'onoff') {
+        val = newValue ? 1 : 0;
+      } else {
         val = parseFloat(newValue) || 0;
-        device.value = val;
-      }else if(device.data_display_type == 'onoff'){
-        device.value = newValue;
+        // Clamp value
+        val = Math.min(device.max, Math.max(device.min, val));
       }
 
       this.$emit('update-device', {
-        ...device,
-        value: val,
-        connected: true,
-        updated_at: new Date()
+        address_id: device.address_id,
+        value: val
       });
     },
 
-    toggleAuto(device) {
-      if (device._timer) {
-        clearInterval(device._timer);
-        this.$emit('update-device', { ...device, _timer: null });
-      } else {
-        const timer = setInterval(() => {
-          let randomVal;
-          if (device.data_display_type === 'onoff') {
-            randomVal = Math.random() >= 0.5;
-          } else {
-            randomVal = (Math.random() * 100).toFixed(2);
-          }
-          this.emitUpdate(device, randomVal);
-        }, 2000);
-
-        this.$emit('update-device', { ...device, _timer: timer });
-      }
+    formatTime(ts) {
+      return ts ? new Date(ts).toLocaleTimeString() : '-';
     }
-  },
-  beforeUnmount() {
-    this.devices.forEach(d => { if (d._timer) clearInterval(d._timer); });
   }
 };
 </script>
-
-<style scoped>
-.card { border-radius: 4px; border: 1px solid #ddd; }
-.card-header { font-size: 0.9rem; border-bottom: 1px solid #eee; }
-.card-footer { border-top: 1px solid #eee; transition: 0.2s; }
-.card-footer:hover { background-color: #f0f0f0 !important; }
-.btn { border-radius: 4px; font-weight: bold; }
-</style>

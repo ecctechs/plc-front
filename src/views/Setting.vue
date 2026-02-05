@@ -1,6 +1,7 @@
 <template>
   <div class="setting-page">
        <DeviceForm @saved="addDevice" />
+       <PlcDebugForm />
       <WorkingTimeForm />
   </div>
 </template>
@@ -8,13 +9,14 @@
 <script>
 import WorkingTimeForm from "../components/setting/WorkingTimeForm.vue";
 import DeviceForm from "../components/setting/DeviceForm.vue";
-
+import PlcDebugForm from "../components/setting/PlcDebugForm.vue";
 export default {
   name: "Setting",
   emits: ["add-device"],
   components: {
     WorkingTimeForm,
-    DeviceForm
+    DeviceForm,
+    PlcDebugForm
   },
   data() {
     return {

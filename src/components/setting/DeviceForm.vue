@@ -1,241 +1,293 @@
 <template>
-  <div class="card shadow-sm setting-card mx-auto mt-4">
-    <div class="card-body">
-      <h4 class="mb-4">Device Setting</h4>
-
-      <div class="mb-3">
-        <label class="form-label fw-bold">Device Name</label>
-        <input v-model="form.name" class="form-control" />
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 1000px; border-radius: 15px;">
+    <div class="card-body p-4">
+      <div class="mb-4 pb-3 border-bottom">
+        <h4 class="fw-bold m-0"><i class="bi bi-gear-fill text-primary me-2"></i>Device Configuration</h4>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Device Type</label>
-        <select v-model="form.device_type" class="form-select">
-          <option value="lamp">Lamp</option>
-          <option value="motor">Motor</option>
-          <option value="pump">Pump</option>
-          <option value="inkjet">Inkjet</option>
-        </select>
+      <div class="row g-3 mb-5">
+        <div class="col-md-5">
+          <label class="form-label fw-bold small">Device Name</label>
+          <input v-model="form.name" class="form-control" placeholder="เช่น Motor 01" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold small">Device Type</label>
+          <select v-model="form.device_type" class="form-select">
+            <option value="motor">Motor</option>
+            <option value="pump">Pump</option>
+            <option value="lamp">Lamp</option>
+            <option value="inkjet">Inkjet</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold small">Global Refresh (ms)</label>
+          <input type="number" v-model.number="form.refresh_rate_ms" class="form-control" />
+        </div>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Data Display Type</label>
-        <select v-model="form.data_display_type" class="form-select">
-          <option value="onoff">ON / OFF</option>
-          <option value="number">Number</option>
-          <option value="number_gauge">Number Gauge</option>
-          <option value="level">Level</option>
-        </select>
+      <h5 class="fw-bold mb-4 text-secondary">Addresses Point ({{ form.addresses.length }})</h5>
+
+      <div v-for="(addr, index) in form.addresses" :key="index" class="address-card p-4 mb-4 border rounded shadow-sm bg-white position-relative">
+        
+        <button 
+          v-if="form.addresses.length > 1" 
+          @click="removeAddress(index)" 
+          class="btn btn-danger btn-sm position-absolute"
+          style="top: -10px; right: -10px; border-radius: 50%; width: 30px; height: 30px; z-index: 10;"
+        >
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+
+        <div class="row g-4">
+          <div class="col-md-5 border-end">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Label Name</label>
+              <input v-model="addr.label" class="form-control" placeholder="เช่น Speed, Status" />
+            </div>
+            <div>
+              <label class="form-label small fw-bold">Display Type</label>
+              <select v-model="addr.data_type" class="form-select" @change="onTypeChange(addr)">
+                <option value="onoff">ON / OFF</option>
+                <option value="number">Number (Text)</option>
+                <option value="number_gauge">Number (Gauge)</option>
+                <option value="level">Level (Status Range)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-7 bg-light-blue rounded p-3">
+            <div class="fw-bold small mb-3 text-primary"><i class="bi bi-link-45deg"></i> PLC Connection Setting</div>
+            <AddressForm 
+              v-model:address="addr.plc_address" 
+              v-model:refresh="addr.refresh_rate_ms"
+              :dataDisplayType="addr.data_type" 
+            />
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top" v-if="addr.data_type !== 'onoff'">
+          <div v-if="['number', 'number_gauge'].includes(addr.data_type)">
+            <DisplayNumber v-model="addr.numberConfig" :type="addr.data_type" />
+          </div>
+          <div v-if="addr.data_type === 'level'">
+            <DisplayLevel v-model="addr.levels" @validate="handleLevelValidate" />
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <AlertForm 
+            v-model="addr.alarms" 
+            :dataType="addr.data_type" 
+            :levelLabels="addr.levels" 
+          />
+        </div>
       </div>
 
-      <AddressForm
-        v-model:address="form.plc_address"
-        v-model:refresh="form.refresh_rate_ms"
-        :dataDisplayType="form.data_display_type"
-      />
-
-      <DisplayNumber
-        v-if="['number', 'number_gauge'].includes(form.data_display_type)"
-        v-model="form.numberConfig"
-        :type="form.data_display_type"
-      />
-
-      <DisplayLevel
-        v-if="form.data_display_type === 'level'"
-        v-model="form.levels"
-        @validate="onLevelValidate"
-      />
-
-      <PlcDebugForm />
-
-      <AlertForm v-model="form.alarms"/>
-
-      <div v-if="error" class="alert alert-danger py-2 mt-3 small">{{ error }}</div>
-
-      <div v-if="isFormInvalid && !loading" class="alert alert-warning py-2 mt-2 small text-center">
-        <span v-if="!form.name">กรุณาระบุ Device Name</span>
-        <span v-else-if="form.data_display_type === 'level'">{{ levelError || "Logic Level ไม่สมบูรณ์" }}</span>
-        <span v-else-if="isNumberConfigInvalid">กรุณาระบุค่า Min < Max ให้ถูกต้อง</span>
-      </div>
-
-      <button
-        class="btn btn-primary w-100 mt-3"
-        :disabled="loading || isFormInvalid"
-        @click="save"
-      >
-        <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-        {{ loading ? "Saving..." : "Save Device" }}
+      <button @click="addAddress" class="btn btn-outline-primary w-100 py-3 mb-5 border-dashed">
+        <i class="bi bi-plus-circle me-2"></i> Add New Address Point
       </button>
+
+      <div class="sticky-bottom bg-white py-3 border-top">
+        <button class="btn btn-success btn-lg w-100 fw-bold shadow-sm" @click="saveDevice" :disabled="loading">
+          <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+          บันทึกข้อมูลเทั้งหมด 
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import Swal from "sweetalert2";
 import AddressForm from "./AddressForm.vue";
 import DisplayNumber from "./DisplayNumber.vue";
 import DisplayLevel from "./DisplayLevel.vue";
-import PlcDebugForm from "./PlcDebugForm.vue";
 import AlertForm from "./AlertForm.vue";
+import { showAlert } from "../../utils/swalHelper";
 
-const API = import.meta.env.VITE_API_BASE_URL + "/api/devices";
+const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
-  name: "DeviceForm",
-  components: { AddressForm, DisplayNumber, DisplayLevel, PlcDebugForm , AlertForm },
+  components: { AddressForm, DisplayNumber, DisplayLevel, AlertForm  },
   data() {
     return {
+      loading: false,
+      levelError: null, // เก็บค่า Error จาก DisplayLevel
       form: {
         name: "",
-        device_type: "lamp",
-        data_display_type: "onoff",
-        plc_address: "M0",
+        device_type: "motor",
         refresh_rate_ms: 1000,
-        levels: [],
-        numberConfig: { min_value: null, max_value: null, scale: 1, offset: 0, decimal_places: 0, unit: '' },
-        alarms: []
-      },
-      levelError: null,
-      loading: false,
-      error: ""
+        addresses: [this.createNewAddress()]
+      }
     };
   },
-  computed: {
-    isNumberConfigInvalid() {
-  // 1. ถ้าไม่ใช่สาย Number เลย ให้ผ่าน (false คือไม่ invalid)
-      if (!['number', 'number_gauge'].includes(this.form.data_display_type)) return false;
-
-      // 2. ถ้าเป็น 'number' เฉยๆ ไม่ต้อง validate Min/Max เพราะเราไม่ได้ใช้
-      if (this.form.data_display_type === 'number') return false;
-
-      // 3. ถ้าเป็น 'number_gauge' ต้องตรวจสอบความถูกต้อง
-      const cfg = this.form.numberConfig;
-      
-      // ตรวจสอบว่าเป็นค่าว่างหรือไม่ (null หรือสายอักขระว่าง)
-      const isMinEmpty = cfg.min_value === null || cfg.min_value === '';
-      const isMaxEmpty = cfg.max_value === null || cfg.max_value === '';
-
-      return isMinEmpty || isMaxEmpty || Number(cfg.min_value) >= Number(cfg.max_value);
-    },
-    
-    // isFormInvalid ไม่ต้องแก้ เพราะมันเรียกใช้ isNumberConfigInvalid อยู่แล้ว
-    isFormInvalid() {
-      if (!this.form.name) return true;
-      if (this.form.data_display_type === 'level') return !!this.levelError;
-      if (this.isNumberConfigInvalid) return true;
-      return false;
-    }
-  },
   methods: {
-  onLevelValidate(msg) { this.levelError = msg; },
+    // --- Helper Methods ---
+    createNewAddress() {
+      return {
+        label: "Point " + (this.form?.addresses?.length + 1 || 1),
+        plc_address: "M0",
+        data_type: "onoff",
+        refresh_rate_ms: 1000,
+        numberConfig: { scale: 1, offset: 0, decimal_places: 0, unit: "", min_value: 0, max_value: 100 },
+        levels: [],
+        alarms: []
+      };
+    },
+    handleLevelValidate(error) {
+      this.levelError = error;
+    },
+    onTypeChange(addr) {
+      addr.plc_address = addr.data_type === 'onoff' ? 'M0' : 'D100';
+    },
+    addAddress() {
+      this.form.addresses.push(this.createNewAddress());
+    },
+    removeAddress(index) {
+      this.form.addresses.splice(index, 1);
+    },
 
-  async save() {
-    this.error = "";
-    let createdDeviceId = null; // เก็บ ID ไว้สำหรับ Rollback
+    // --- Validation Logic ---
+    validateBeforeSave() {
+      if (!this.form.name) throw new Error("กรุณาระบุชื่อ Device");
 
-    try {
-      this.loading = true;
+      for (const [idx, addr] of this.form.addresses.entries()) {
+        const pointLabel = addr.label || `Point ${idx + 1}`;
 
-      // --- ขั้นตอนที่ 1: บันทึก Device หลัก ---
-      const res = await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: this.form.name,
-          device_type: this.form.device_type,
-          data_display_type: this.form.data_display_type,
-          plc_address: this.form.plc_address,
-          refresh_rate_ms: this.form.refresh_rate_ms,
-        }),
-      });
-
-      const device = await res.json();
-      if (!res.ok) throw new Error(device.message || "บันทึกอุปกรณ์หลักไม่สำเร็จ");
-      
-      createdDeviceId = device.id; // เก็บ ID ไว้ ถ้าข้างล่าง error จะเอาไปลบทิ้ง
-
-      // --- ขั้นตอนที่ 2: บันทึก Config ย่อย ---
-      
-      // กรณีเป็น Number หรือ Number Gauge
-      if (['number', 'number_gauge'].includes(this.form.data_display_type)) {
-        await this.postData(`${API}/${device.id}/number-config`, this.form.numberConfig);
-      }
-
-      // กรณีเป็น Level
-      if (this.form.data_display_type === 'level') {
-        for (let i = 0; i < this.form.levels.length; i++) {
-          const level = this.form.levels[i];
-          
-          // สร้าง Payload สำหรับส่ง API
-          let levelData = {
-            label: level.label,
-            mode: level.mode,
-            condition_type: level.condition_type,
-            level_index: i // แก้ไขปัญหา level_index cannot be null
-          };
-
-          // แยกการส่งค่าตาม Mode
-          if (level.mode === 'exact') {
-            // ถ้าเป็น Exact ให้ส่งเข้า field exact_values
-            levelData.exact_values = [level.min_value]
-            levelData.min_value = null;
-            levelData.max_value = null;
-          } else {
-            // ถ้าเป็น Criteria ให้ส่ง min_value และ max_value ตามปกติ
-            levelData.exact_values = null;
-            levelData.min_value = level.min_value;
-            levelData.max_value = level.max_value;
-            levelData.include_min = level.include_min;
-            levelData.include_max = level.include_max;
+        // Validate Number
+        if (["number", "number_gauge"].includes(addr.data_type)) {
+          if (addr.numberConfig.min_value >= addr.numberConfig.max_value) {
+            throw new Error(`[${pointLabel}]: ค่า Min ต้องน้อยกว่า Max ในส่วน Number Setting`);
           }
+        }
 
-          await this.postData(`${API}/${device.id}/levels`, levelData);
+        // Validate Level
+        if (addr.data_type === "level") {
+          if (!addr.levels || addr.levels.length === 0) {
+            throw new Error(`[${pointLabel}]: กรุณาเพิ่มอย่างน้อย 1 Level`);
+          }
+          if (this.levelError) {
+            throw new Error(`[${pointLabel}]: ${this.levelError}`);
+          }
         }
       }
+    },
 
-      // --- ขั้นตอนที่ 3: บันทึก Alarms (ถ้ามีการเปิดใช้งาน) ---
-    if (this.form.alarms.length > 0) {
-      const alarmPromises = this.form.alarms.map(alarm => {
-        return this.postData(`${API}/${device.id}/alarms`, {
-          ...alarm,
-          data_type: this.form.data_display_type // ผูก data_type ตาม device
+    // --- Sub-Config API Calls ---
+    async saveChildConfigs(savedAddrId, formAddr) {
+      // 1. Save Number Config
+      if (["number", "number_gauge"].includes(formAddr.data_type)) {
+        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/number-config`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formAddr.numberConfig)
         });
-      });
-      
-      await Promise.all(alarmPromises); // รอให้บันทึกครบทุก Alarm
-    }
-
-      // --- สำเร็จทั้งหมด ---
-      Swal.fire({ icon: "success", title: "Saved", timer: 1200, showConfirmButton: false });
-      this.$emit("saved", device);
-
-    } catch (err) {
-      this.error = err.message;
-
-      // --- ROLLBACK LOGIC ---
-      // หากสร้าง Device ไปแล้วแต่บันทึก Config ไม่สำเร็จ ให้ลบ Device นั้นทิ้งทันที
-      if (createdDeviceId) {
-        console.warn("Rolling back: Deleting device due to config error");
-        await fetch(`${API}/${createdDeviceId}`, { method: "DELETE" });
       }
 
-    } finally {
-      this.loading = false;
-    }
-  },
+      // 2. Save Level Config
+      if (formAddr.data_type === "level") {
+        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formAddr.levels)
+        });
+      }
 
-  async postData(url, data) {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "บันทึกข้อมูลส่วนเสริม (Number/Level) ไม่สำเร็จ");
+      // 3. Save Alarms
+      if (formAddr.alarms && formAddr.alarms.length > 0) {
+        for (const alarm of formAddr.alarms) {
+          await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...alarm,
+              data_type: formAddr.data_type,
+              is_active: true
+            })
+          });
+        }
+      }
+    },
+
+    // --- Main Save Action ---
+    async saveDevice() {
+      try {
+        this.validateBeforeSave();
+        this.loading = true;
+
+        // Step 1: Create Main Device & Addresses
+        const res = await fetch(`${BASE_API}/api/devices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.form)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || "บันทึกข้อมูลหลักล้มเหลว");
+        }
+
+        const deviceResult = await res.json();
+
+        // Step 2: Loop Save Sub-Configs (Mapping by index)
+        const childRequests = deviceResult.addresses.map((savedAddr, i) => {
+          return this.saveChildConfigs(savedAddr.id, this.form.addresses[i]);
+        });
+
+        await Promise.all(childRequests);
+
+        // Step 3: Success
+        await showAlert("บันทึกสำเร็จ", "ข้อมูลถูกอัปเดตเรียบร้อยแล้ว", "success");
+
+        this.$emit("saved");
+
+      } catch (err) {
+        console.error("Save Error:", err);
+        await showAlert("เกิดข้อผิดพลาด", err.message, "error");
+      } finally {
+        this.loading = false;
+      }
     }
   }
-}
-}
+};
 </script>
-<style scoped> .setting-card { max-width: 800px; } </style>
+
+<style scoped>
+.address-card {
+  transition: all 0.2s;
+  border-left: 5px solid #0d6efd !important;
+}
+.address-card:hover {
+  border-color: #0a58ca !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+.bg-light-blue {
+  background-color: #f0f7ff;
+}
+.border-dashed {
+  border-style: dashed !important;
+  background-color: #fafafa;
+  transition: all 0.2s ease; /* เพิ่มความนุ่มนวลเวลา hover */
+}
+/* แก้ไขตอน Hover */
+.border-dashed:hover {
+  background-color: #f0f7ff !important; /* เปลี่ยนพื้นหลังเป็นฟ้าอ่อนๆ แทนสีน้ำเงินเข้ม */
+  color: #0d6efd !important;           /* บังคับให้ข้อความเป็นสีน้ำเงินเหมือนเดิม ไม่เป็นสีขาว */
+  border-color: #0d6efd !important;    /* ให้เส้นประเด่นขึ้น */
+  transform: translateY(-2px);         /* แถม: ให้ปุ่มลอยขึ้นนิดนึงดูมีมิติ */
+}
+
+/* แก้ไขตอน Active (กดค้าง) */
+.border-dashed:active {
+  background-color: #e2efff !important;
+  transform: translateY(0);
+}
+
+.form-control, .form-select {
+  border: 1px solid #ced4da !important;
+  background-color: #ffffff !important;
+}
+.form-control:focus {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+</style>
