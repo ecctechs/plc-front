@@ -19,10 +19,10 @@
             <option value="inkjet">Inkjet</option>
           </select>
         </div>
-        <div class="col-md-3">
+        <!-- <div class="col-md-3">
           <label class="form-label fw-bold small">Global Refresh (ms)</label>
           <input type="number" v-model.number="form.refresh_rate_ms" class="form-control" />
-        </div>
+        </div> -->
       </div>
 
       <h5 class="fw-bold mb-4 text-secondary">Addresses Point ({{ form.addresses.length }})</h5>
