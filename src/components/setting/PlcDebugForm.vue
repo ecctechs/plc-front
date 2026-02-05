@@ -1,7 +1,10 @@
 <template>
-  <div class="border rounded p-3 mb-4">
-    <h6 class="mb-3">PLC Address Debug (Test)</h6>
-
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 1000px; border-radius: 15px;">
+    <div class="card-body p-4">
+     <div class="mb-4 pb-3 border-bottom">
+        <h4 class="fw-bold m-0"><i class="bi bi-gear-fill text-primary me-2"></i>PLC Address Debug (Test)</h4>
+      </div>
+    <div class="border rounded p-3 mb-4">
     <!-- ===== One Row ===== -->
     <div class="row g-2 align-items-end mb-3">
 
@@ -57,6 +60,8 @@
 
     <div v-if="error" class="alert alert-danger py-2">
       {{ error }}
+    </div>
+  </div>
     </div>
   </div>
 </template>

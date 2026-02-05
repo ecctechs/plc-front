@@ -118,14 +118,22 @@ export default {
         const endUTC = new Date(this.endDate).toISOString();
 
         const res = await fetch(
-          `${baseUrl}/api/devices/${this.device.id}/chart/level?start=${startUTC}&end=${endUTC}`
+          `${baseUrl}/api/devices/${this.device.address_id}/chart/level?start=${startUTC}&end=${endUTC}`
         );
         const data = await res.json();
 
         console.log(data)
 
         this.levels = data.levels || [];
-        const series = data.series || [];
+        const series = (data.series || []).map(log => ({
+          x: log.x,
+          y: log.y,
+          label: log.label,
+          value: log.value,
+          // ⭐ map ให้ตรง OnOff / Network
+          connected: log.connected === 'connected'
+        }));
+
         this.lastData = series;
         this.isEmpty = series.length === 0;
 

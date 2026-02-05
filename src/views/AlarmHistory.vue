@@ -5,7 +5,7 @@
         <h5 class="mb-1 text-primary fw-bold">
           <i class="bi bi-clock-history me-2"></i>ประวัติการแจ้งเตือน
         </h5>
-        <p class="text-muted small mb-0">แสดงประวัติเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC</p>
+        <p class="text-muted small mb-0">แสดงประวัติเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC ทั้งหมด</p>
       </div>
       
       <div class="d-flex flex-wrap gap-2 align-items-end">
@@ -45,8 +45,8 @@
           </tr>
 
           <tr v-for="item in history" :key="item.id" v-else-if="history.length > 0">
-            <td class="ps-3"><strong>{{ item.device?.name }}</strong></td>
-            <td>{{ item.rule?.name }}</td>
+            <td class="ps-3"><strong>{{ item.device?.name || 'Unknown Device' }}</strong></td>
+            <td>{{ item.rule?.name || 'N/A' }}</td>
             <td class="text-center">
               <span class="badge bg-light text-dark border fw-normal">{{ item.rule?.condition_type }}</span>
             </td>
@@ -98,31 +98,34 @@ export default {
       history: [],
       loading: false,
       filter: {
+        // ตั้งค่าเริ่มต้นเป็นวันที่ปัจจุบัน
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
       }
     }
   },
   mounted() {
-    if (this.devices && this.devices.length > 0) {
-      this.fetchHistory();
-    }
+    // โหลดข้อมูลทั้งหมดทันทีเมื่อหน้าจอเปิดขึ้นมา
+    this.fetchHistory();
   },
   methods: {
     async fetchHistory() {
-      if (!this.devices || this.devices.length === 0) return;
-      
       this.loading = true;
-      const deviceId = this.devices[0].id; // หรือเปลี่ยนเป็นเลือกจาก Dropdown
       const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       
       try {
-        const url = `${BASE_API}/api/devices/${deviceId}/alarms/events?start=${this.filter.startDate}&end=${this.filter.endDate}`;
+        // ✅ เปลี่ยน URL ไปใช้ Endpoint "all" เพื่อดูภาพรวมทุกเครื่อง
+        const url = `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`;
+        console.log(url)
+        
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Network response was not ok');
+        if (!res.ok) throw new Error('Failed to fetch alarm history');
+        
+        // รับข้อมูล JSON (Array) ที่เรา Format ไว้ใน Controller
         this.history = await res.json();
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Fetch history error:", err);
+        // สามารถเพิ่มการแจ้งเตือน Error บน UI ได้ที่นี่
       } finally {
         this.loading = false;
       }
@@ -144,4 +147,5 @@ export default {
 .text-danger { color: #dc3545 !important; }
 .text-success { color: #198754 !important; }
 .fs-5 { font-size: 1.1rem !important; }
+.filter-group input { min-width: 150px; }
 </style>

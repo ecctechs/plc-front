@@ -96,13 +96,13 @@
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL;
+const baseUrl = import.meta.env.VITE_API_BASE_URL
 
 export default {
   name: "OnOffChart",
 
   props: {
-    device: { type: Object, required: true },
+    device: { type: Object, required: true }, // ต้องมี address_id, refresh_rate_ms
     startDate: { type: String, required: true },
     endDate: { type: String, required: true }
   },
@@ -126,7 +126,7 @@ export default {
   watch: {
     startDate: "restartAutoRefresh",
     endDate: "restartAutoRefresh",
-    "device.id": "restartAutoRefresh"
+    "device.address_id": "restartAutoRefresh"
   },
 
   mounted() {
@@ -141,6 +141,7 @@ export default {
 
   methods: {
     startAutoRefresh() {
+  
       this.stopAutoRefresh()
       const rate = this.device.refresh_rate_ms || 5000
       this.refreshTimer = setInterval(() => this.fetchData(true), rate)
@@ -155,24 +156,33 @@ export default {
       this.startAutoRefresh()
     },
 
+    // ===============================
+    // 🔥 แก้เฉพาะ API ตรงนี้
+    // ===============================
     async fetchData(isSilent = false) {
       if (!isSilent) this.loading = true
       try {
-        // แปลงวันที่จากตัวเลือก (Local) ให้เป็น UTC ISO String
-        const startUTC = new Date(this.startDate).toISOString();
-        const endUTC = new Date(this.endDate).toISOString();
-
         const res = await fetch(
-          `${baseUrl}/api/devices/${this.device.id}/chart/onoff?start=${startUTC}&end=${endUTC}`
+          `${baseUrl}/api/devices/chart` +
+          `?address_id=${this.device.address_id}` +
+          `&start=${this.startDate}` +
+          `&end=${this.endDate}`
         )
-        const data = await res.json()
 
-        this.isEmpty = !data || data.length === 0
+        const raw = await res.json()
 
-        if (!this.isEmpty) {
-          this.processData(data)
-          this.renderAllCharts(data)
-        }
+        this.isEmpty = !raw || raw.length === 0
+        if (this.isEmpty) return
+
+        // map จาก API ใหม่ → โครงสร้างเดิม
+        const data = raw.map(r => ({
+          x: r.value === null ? 0 : r.value,   // ON / OFF
+          y: r.created_at,                     // เวลา
+          connected: r.status === 1            // Network
+        }))
+
+        this.processData(data)
+        this.renderAllCharts(data)
 
       } catch (err) {
         console.error(err)
@@ -184,8 +194,8 @@ export default {
     processData(data) {
       this.stats.on = data.filter(d => d.x === 1).length
       this.stats.off = data.filter(d => d.x === 0).length
-      this.stats.connected = data.filter(d => d.connected === true).length
-      this.stats.disconnected = data.filter(d => d.connected === false).length
+      this.stats.connected = data.filter(d => d.connected).length
+      this.stats.disconnected = data.filter(d => !d.connected).length
 
       const totalSec = this.stats.on * (this.device.refresh_rate_ms / 1000)
       this.totalRuntime =
@@ -196,8 +206,6 @@ export default {
 
     renderAllCharts(data) {
       Object.values(this.charts).forEach(c => c?.destroy())
-
-      if (!this.$refs.lineCanvas || !this.$refs.pieCanvas) return
 
       this.charts.line = this.createLine(
         this.$refs.lineCanvas,
@@ -246,7 +254,7 @@ export default {
           maintainAspectRatio: false,
           animation: false,
           scales: {
-            x: {
+          x: {
               type: 'time',
               time: {
                 tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
