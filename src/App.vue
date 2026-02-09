@@ -102,16 +102,25 @@ export default {
       try {
         const res = await fetch(`${BASE_API}/api/devices/addresses`);
         const data = await res.json();
-        // ผสมข้อมูลเดิมที่มีอยู่ (ถ้ากำลัง Simulate อยู่)
-        this.devices = data.map(d => {
-          const existing = this.devices.find(ex => ex.address_id === d.address_id);
-          return existing && this.isSimulate ? existing : d;
+
+        this.devices = data.map(newAddr => {
+          // หาข้อมูลเดิมที่อยู่ในเครื่องตอนนี้
+          const existing = this.devices.find(ex => ex.address_id === newAddr.address_id);
+
+          if (this.isSimulate && existing) {
+            return existing; 
+          }
+
+          // ⭐ จุดสำคัญ: ถ้ามีข้อมูลเดิม ให้ดึงค่า expand กลับมาใส่ในข้อมูลใหม่ด้วย
+          return {
+            ...newAddr,
+            expand: existing ? existing.expand : false // รักษาค่า expand เดิมไว้
+          };
         });
       } catch (err) {
         console.error("Failed to load devices:", err);
       }
     },
-
     handleToggleAuto(device) {
       const id = device.address_id;
       if (this.autoTimers.has(id)) {
