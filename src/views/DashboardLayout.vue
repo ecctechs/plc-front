@@ -27,8 +27,8 @@
 </template>
 
 <script>
-import Dashboard from './Dashboard.vue';
-import AddDashboardCard from './AddDashboardCard.vue';
+import Dashboard from './DashboardCards.vue';
+import AddDashboardCard from './AddDashboardCardModal.vue';
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {

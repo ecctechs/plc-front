@@ -19,7 +19,7 @@
         :simulate="isSimulate"
       /> -->
 
-    <DashboardPage
+    <DashboardLayout
       v-if="tab === 'dashboard'"
       :devices="devices"
       :popup="devices_raw"
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import DashboardPage from "./views/DashboardPage.vue";
+import DashboardLayout from "./views/DashboardLayout.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
@@ -61,7 +61,7 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardPage, Setting, Demo, AlarmHistory },
+  components: { DashboardLayout, Setting, Demo, AlarmHistory },
 
   data() {
     return {

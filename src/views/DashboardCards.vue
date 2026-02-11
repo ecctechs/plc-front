@@ -153,7 +153,6 @@ export default {
     });
   },
   methods: {
-    // คำนวณแถบสีบนหน้าปัด Gauge
     getGaugeHighlights(addr) {
       if (!addr.alarms || addr.alarms.length === 0) return [];
 
@@ -231,7 +230,6 @@ export default {
             const max = addr.numberConfig?.max_value ?? 100;
             const unitLabel = addr.numberConfig?.unit || ''; 
 
-            // ตรวจสอบว่ามี Alarm หรือไม่
             const highlights = this.getGaugeHighlights(addr);
 
             try {
@@ -250,7 +248,6 @@ export default {
                 colorPlate: "transparent", 
                 borderShadowWidth: 0,
                 borders: false,
-                // ⭐ ถ้ามี Alarm ให้โชว์ Highlights ถ้าไม่มีให้เป็นค่าว่าง
                 highlights: highlights, 
                 highlightsWidth: 10,
                 needleType: "arrow",
@@ -258,7 +255,6 @@ export default {
                 needleCircleSize: 7,
                 needleCircleOuter: true,
                 needleCircleInner: false,
-                // สีเข็มเริ่มต้น
                 colorNeedle: "#28a745",
                 colorNeedleEnd: "#28a745",
                 colorNeedleCircleOuter: "#28a745",
@@ -289,7 +285,6 @@ export default {
           if (colorClass === 'text-danger') colorHex = '#dc3545';  // Red
 
           gauge.value = displayVal;
-          // ⭐ อัปเดตสีเข็มให้เปลี่ยนตามสถานะ
           gauge.update({
             colorNeedle: colorHex,
             colorNeedleEnd: colorHex,

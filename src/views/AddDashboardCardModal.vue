@@ -46,19 +46,6 @@
             </select>
           </div>
 
-          <!-- Display Type (readonly) -->
-          <!-- <div class="mb-3">
-            <label class="form-label fw-bold">Display Type</label>
-            <input
-              class="form-control"
-              :value="displayTypeLabel"
-              readonly
-            />
-            <div class="form-text text-muted">
-              Auto selected by system
-            </div>
-          </div> -->
-
         </div>
 
         <!-- Footer -->
@@ -100,25 +87,16 @@ export default {
   },
 
   computed: {
-    /* ===============================
-     * Device list
-     * =============================== */
     devices() {
       return this.addresses;
     },
 
-    /* ===============================
-     * Selected device
-     * =============================== */
     selectedDevice() {
       return this.devices.find(
         d => d.id === this.selectedDeviceId
       );
     },
 
-    /* ===============================
-     * Address ของ device ที่เลือก
-     * =============================== */
     filteredAddresses() {
       return this.selectedDevice?.addresses || [];
     },
@@ -129,9 +107,6 @@ export default {
       );
     },
 
-    /* ===============================
-     * Display Type
-     * =============================== */
     displayType() {
       if (!this.selectedAddress) return "";
 
