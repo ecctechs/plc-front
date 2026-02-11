@@ -13,11 +13,19 @@
     </ul>
 
     <div class="tab-content">
-      <Dashboard
+      <!-- <DashboardPage
         v-if="tab === 'dashboard'"
         :addresses="devices"
         :simulate="isSimulate"
-      />
+      /> -->
+
+    <DashboardPage
+      v-if="tab === 'dashboard'"
+      :devices="devices"
+      :popup="devices_raw"
+      :dashboard-cards="dashboardCards"
+      @add-card="addDashboardCard"
+    />
 
       <Setting
         v-if="tab === 'setting'"
@@ -44,7 +52,7 @@
 </template>
 
 <script>
-import Dashboard from "./views/Dashboard.vue";
+import DashboardPage from "./views/DashboardPage.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
@@ -53,12 +61,13 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { Dashboard, Setting, Demo, AlarmHistory },
+  components: { DashboardPage, Setting, Demo, AlarmHistory },
 
   data() {
     return {
       tab: "dashboard",
       devices: [],
+      devices_raw: [],
       isSimulate: false,
       pollTimer: null,
       autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
@@ -67,6 +76,7 @@ export default {
 
   async mounted() {
     await this.loadDevices();
+    await this.loadPopup();
     this.startPolling();
   },
 
@@ -100,7 +110,7 @@ export default {
     },
     async loadDevices() {
       try {
-        const res = await fetch(`${BASE_API}/api/devices/addresses`);
+        const res = await fetch(`${BASE_API}/api/dashboard/cards`);
         const data = await res.json();
 
         this.devices = data.map(newAddr => {
@@ -120,6 +130,38 @@ export default {
       } catch (err) {
         console.error("Failed to load devices:", err);
       }
+    },
+    async loadPopup() {
+      try {
+        const res = await fetch(`${BASE_API}/api/devices`);
+        const data = await res.json();
+
+        this.devices_raw = data.map(newAddr => {
+          // หาข้อมูลเดิมที่อยู่ในเครื่องตอนนี้
+          const existing = this.devices.find(ex => ex.address_id === newAddr.address_id);
+
+          if (this.isSimulate && existing) {
+            return existing; 
+          }
+
+          // ⭐ จุดสำคัญ: ถ้ามีข้อมูลเดิม ให้ดึงค่า expand กลับมาใส่ในข้อมูลใหม่ด้วย
+          return {
+            ...newAddr,
+            expand: existing ? existing.expand : false // รักษาค่า expand เดิมไว้
+          };
+        });
+      } catch (err) {
+        console.error("Failed to load devices:", err);
+      }
+    },
+    async addDashboardCard(payload) {
+      await fetch(`${BASE_API}/api/dashboard/cards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      await this.loadDevices();
     },
     handleToggleAuto(device) {
       const id = device.address_id;
@@ -171,6 +213,7 @@ export default {
 
     async reloadDevices() {
       await this.loadDevices();
+      await this.loadPopup();
       this.tab = "dashboard";
     },
   }
