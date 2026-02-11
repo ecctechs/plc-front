@@ -17,7 +17,7 @@
             <select class="form-select" v-model="selectedDeviceId">
               <option disabled value="">Select Device</option>
               <option
-                v-for="d in addresses"
+                v-for="d in devices"
                 :key="d.id"
                 :value="d.id"
               >
@@ -68,28 +68,39 @@
 </template>
 
 <script>
+const BASE_API = import.meta.env.VITE_API_BASE_URL;
+
 export default {
   name: "AddDashboardCardModal",
 
   props: {
-    // device list จาก API
+    // device list จาก API (optional now - will be fetched internally)
     addresses: {
       type: Array,
-      required: true
+      default: () => []
     }
   },
 
   data() {
     return {
       selectedDeviceId: "",
-      selectedAddressId: ""
+      selectedAddressId: "",
+      devices: []
     };
   },
 
+  async mounted() {
+    try {
+      const res = await fetch(`${BASE_API}/api/devices`);
+      const data = await res.json();
+      this.devices = data;
+    } catch (err) {
+      console.error("Failed to load devices:", err);
+      this.devices = [];
+    }
+  },
+
   computed: {
-    devices() {
-      return this.addresses;
-    },
 
     selectedDevice() {
       return this.devices.find(
@@ -128,11 +139,27 @@ export default {
   },
 
   methods: {
-    submit() {
-      this.$emit("add", {
-        address_id: this.selectedAddress.id,
-        display_type: this.displayType
-      });
+    async submit() {
+      try {
+        // POST to API
+        await fetch(`${BASE_API}/api/dashboard/cards`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address_id: this.selectedAddress.id,
+            display_type: this.displayType
+          })
+        });
+        
+        // Emit success event
+        this.$emit("add", {
+          address_id: this.selectedAddress.id,
+          display_type: this.displayType
+        });
+      } catch (err) {
+        console.error("Failed to add card:", err);
+        // Optionally emit error event or show alert
+      }
     }
   }
 };

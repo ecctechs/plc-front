@@ -19,7 +19,6 @@
 
     <AddDashboardCard
       v-if="showAdd"
-      :addresses="popup"
       @add="onAdd"
       @close="showAdd = false"
     />
@@ -35,9 +34,6 @@ export default {
   components: { Dashboard, AddDashboardCard },
 
   props: {
-    addresses: Array,
-    popup: Array,
-    dashboardCards: Array,
     devices:Array,
   },
 
@@ -61,7 +57,6 @@ export default {
 
   methods: {
     async deleteCard(card) {
-
       // call API
       await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
         method: 'DELETE'

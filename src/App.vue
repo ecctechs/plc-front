@@ -13,29 +13,23 @@
     </ul>
 
     <div class="tab-content">
-      <!-- <DashboardPage
-        v-if="tab === 'dashboard'"
-        :addresses="devices"
-        :simulate="isSimulate"
-      /> -->
 
-    <DashboardLayout
-      v-if="tab === 'dashboard'"
-      :devices="devices"
-      :popup="devices_raw"
-      :dashboard-cards="dashboardCards"
-      @add-card="addDashboardCard"
-    />
+      <DashboardLayout
+        v-if="tab === 'dashboard'"
+        :devices="dashboard"
+        :dashboard-cards="dashboardCards"
+        @add-card="onAddCard"
+      />
 
       <Setting
         v-if="tab === 'setting'"
-        :devices="devices"
+        :devices="dashboard"
         @add-device="reloadDevices"
       />
 
       <Demo
         v-if="tab === 'demo'"
-        :devices="devices"
+        :devices="dashboard"
         :is-simulate="isSimulate"
         :auto-timers="autoTimers"
         @update:is-simulate="isSimulate = $event"
@@ -45,7 +39,7 @@
 
       <AlarmHistory
         v-if="tab === 'alarmhistory'"
-        :devices="devices"
+        :devices="dashboard"
       />
     </div>
   </div>
@@ -66,8 +60,7 @@ export default {
   data() {
     return {
       tab: "dashboard",
-      devices: [],
-      devices_raw: [],
+      dashboard: [],
       isSimulate: false,
       pollTimer: null,
       autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
@@ -76,7 +69,6 @@ export default {
 
   async mounted() {
     await this.loadDevices();
-    await this.loadPopup();
     this.startPolling();
   },
 
@@ -113,9 +105,9 @@ export default {
         const res = await fetch(`${BASE_API}/api/dashboard/cards`);
         const data = await res.json();
 
-        this.devices = data.map(newAddr => {
+        this.dashboard = data.map(newAddr => {
           // หาข้อมูลเดิมที่อยู่ในเครื่องตอนนี้
-          const existing = this.devices.find(ex => ex.address_id === newAddr.address_id);
+          const existing = this.dashboard.find(ex => ex.address_id === newAddr.address_id);
 
           if (this.isSimulate && existing) {
             return existing; 
@@ -131,36 +123,7 @@ export default {
         console.error("Failed to load devices:", err);
       }
     },
-    async loadPopup() {
-      try {
-        const res = await fetch(`${BASE_API}/api/devices`);
-        const data = await res.json();
-
-        this.devices_raw = data.map(newAddr => {
-          // หาข้อมูลเดิมที่อยู่ในเครื่องตอนนี้
-          const existing = this.devices.find(ex => ex.address_id === newAddr.address_id);
-
-          if (this.isSimulate && existing) {
-            return existing; 
-          }
-
-          // ⭐ จุดสำคัญ: ถ้ามีข้อมูลเดิม ให้ดึงค่า expand กลับมาใส่ในข้อมูลใหม่ด้วย
-          return {
-            ...newAddr,
-            expand: existing ? existing.expand : false // รักษาค่า expand เดิมไว้
-          };
-        });
-      } catch (err) {
-        console.error("Failed to load devices:", err);
-      }
-    },
-    async addDashboardCard(payload) {
-      await fetch(`${BASE_API}/api/dashboard/cards`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
+    async onAddCard() {
       await this.loadDevices();
     },
     handleToggleAuto(device) {
@@ -176,7 +139,7 @@ export default {
     runAutoCycle(id) {
       if (!this.autoTimers.has(id) || !this.isSimulate) return;
 
-      const device = this.devices.find(d => d.address_id === id);
+      const device = this.dashboard.find(d => d.address_id === id);
       if (!device) return;
 
       let newValue;
@@ -200,12 +163,12 @@ export default {
     },
 
     handleDeviceUpdate(payload) {
-      const idx = this.devices.findIndex(d => d.address_id === payload.address_id);
+      const idx = this.dashboard.findIndex(d => d.address_id === payload.address_id);
       if (idx !== -1) {
-        this.devices.splice(idx, 1, {
-          ...this.devices[idx],
+        this.dashboard.splice(idx, 1, {
+          ...this.dashboard[idx],
           last_value: payload.value,
-          is_connected: this.isSimulate ? true : this.devices[idx].is_connected,
+          is_connected: this.isSimulate ? true : this.dashboard[idx].is_connected,
           updated_at: new Date().toISOString()
         });
       }
