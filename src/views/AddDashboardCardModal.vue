@@ -46,6 +46,21 @@
             </select>
           </div>
 
+          <!-- Display Type -->
+          <div class="mb-3" v-if="selectedAddress">
+            <label class="form-label fw-bold">Display Type</label>
+            <select
+              class="form-select"
+              v-model="selectedDisplayType"
+            >
+              <option disabled value="">Select Display Type</option>
+              <option value="onoff">ON/OFF</option>
+              <option value="number">Number</option>
+              <option value="gauge">Gauge</option>
+              <option value="level">Level</option>
+            </select>
+          </div>
+
         </div>
 
         <!-- Footer -->
@@ -85,6 +100,7 @@ export default {
     return {
       selectedDeviceId: "",
       selectedAddressId: "",
+      selectedDisplayType: "",
       devices: []
     };
   },
@@ -118,23 +134,8 @@ export default {
       );
     },
 
-    displayType() {
-      if (!this.selectedAddress) return "";
-
-      switch (this.selectedAddress.data_type) {
-        case "onoff":
-          return "onoff";
-        case "number_gauge":
-          return "gauge";
-        case "level":
-          return "level";
-        default:
-          return "number";
-      }
-    },
-
     canSubmit() {
-      return !!this.selectedAddress;
+      return !!this.selectedAddress && !!this.selectedDisplayType;
     }
   },
 
@@ -147,14 +148,14 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             address_id: this.selectedAddress.id,
-            display_type: this.displayType
+            display_type: this.selectedDisplayType
           })
         });
         
         // Emit success event
         this.$emit("add", {
           address_id: this.selectedAddress.id,
-          display_type: this.displayType
+          display_type: this.selectedDisplayType
         });
       } catch (err) {
         console.error("Failed to add card:", err);

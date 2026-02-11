@@ -24,21 +24,21 @@
 
           <div class="flex-grow-1 d-flex flex-column justify-content-center my-4">
             
-            <div v-if="addr.data_type === 'onoff'" class="w-100">
+            <div v-if="addr.display_type === 'onoff'" class="w-100">
               <div class="onoff-circle mx-auto mb-2" :class="addr.last_value !== 0 ? 'on' : 'off'"></div>
               <h2 class="onoff-text fw-bold mb-0" :class="addr.last_value !== 0 ? 'text-success' : 'text-danger'">
                 {{ addr.last_value !== 0 ? "ON" : "OFF" }}
               </h2>
             </div>
 
-            <div v-else-if="addr.data_type === 'number' || addr.data_type === 'level'" class="w-100 py-3">
+            <div v-else-if="addr.display_type === 'number' || addr.display_type === 'level'" class="w-100 py-3">
               <div class="display-value fw-bold" :class="getValueColor(addr)">
                 {{ getDisplayValue(addr) }}
               </div>
               <div v-if="addr.numberConfig?.unit" class="text-muted fw-bold">{{ addr.numberConfig.unit }}</div>
             </div>
 
-            <div v-else-if="addr.data_type === 'number_gauge'" class="w-100">
+            <div v-else-if="addr.display_type === 'number_gauge'" class="w-100">
               <div class="gauge-container mx-auto">
                 <canvas :id="'gauge-' + addr.address_id"></canvas>
               </div>
@@ -221,9 +221,14 @@ export default {
       if (!this.localAddresses || this.localAddresses.length === 0) return;
 
       this.localAddresses.forEach(addr => {
-        if (addr.data_type === 'number_gauge') {
+        console.log("Address:", addr.label, "display_type:", addr.display_type);
+        
+        if (addr.display_type === 'number_gauge') {
           const canvasId = `gauge-${addr.address_id}`;
           const canvasEl = document.getElementById(canvasId);
+          
+          console.log("Looking for canvas:", canvasId, "Found:", !!canvasEl);
+          console.log("numberConfig:", addr.numberConfig);
           
           if (canvasEl && !this.gauges[addr.address_id]) {
             const min = addr.numberConfig?.min_value ?? 0;
@@ -233,6 +238,7 @@ export default {
             const highlights = this.getGaugeHighlights(addr);
 
             try {
+              console.log("Creating gauge with min:", min, "max:", max);
               this.gauges[addr.address_id] = new RadialGauge({
                 renderTo: canvasEl,
                 width: 200,
@@ -265,9 +271,12 @@ export default {
                 animationRule: "linear",
                 strokeTicks: true,
               }).draw();
+              console.log("Gauge created successfully");
             } catch (err) {
               console.error("Gauge Error:", err);
             }
+          } else {
+            console.log("Skipping gauge - canvas not found or already initialized");
           }
         }
       });
