@@ -56,7 +56,7 @@
               <option disabled value="">Select Display Type</option>
               <option value="onoff">ON/OFF</option>
               <option value="number">Number</option>
-              <option value="gauge">Gauge</option>
+              <option value="number_gauge">Gauge</option>
               <option value="level">Level</option>
             </select>
           </div>
