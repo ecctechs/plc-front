@@ -54,10 +54,10 @@
                 <div class="col-6">
                   <button
                     class="btn btn-custom w-100"
-                    :class="addr.expand ? 'btn-secondary' : 'btn-outline-secondary'"
-                    @click="addr.expand = !addr.expand"
+                    :class="expandedCards[addr.card_id] ? 'btn-secondary' : 'btn-outline-secondary'"
+                    @click="expandedCards[addr.card_id] = !expandedCards[addr.card_id]"
                   >
-                    {{ addr.expand ? 'Hide Info' : 'More Info' }}
+                    {{ expandedCards[addr.card_id] ? 'Hide Info' : 'More Info' }}
                   </button>
                 </div>
                 <div class="col-6">
@@ -69,7 +69,7 @@
             </div>
 
             <transition name="fade">
-              <div v-if="addr.expand" class="info-panel mt-3 p-3 bg-light rounded text-start small">
+              <div v-if="expandedCards[addr.card_id]" class="info-panel mt-3 p-3 bg-light rounded text-start small">
                 <div class="d-flex justify-content-between mb-1">
                   <span><strong>Address:</strong> {{ addr.plc_address }}</span>
                   <span class="text-muted">Refresh: {{ addr.refresh_rate_ms }} ms</span>
@@ -129,7 +129,8 @@ export default {
       selectedAddress: null,
       showChart: false,
       gauges: {},
-      localAddresses: []
+      localAddresses: [],
+      expandedCards: {} // เก็บ state ขยาย: { card_id: boolean }
     };
   },
   watch: {
@@ -137,12 +138,22 @@ export default {
       deep: true,
       handler(newVal) {
         this.localAddresses = newVal;
+        // Initialize expandedCards for any new addresses
+        newVal.forEach(addr => {
+          if (!(addr.card_id in this.expandedCards)) {
+            this.expandedCards[addr.card_id] = false;
+          }
+        });
         this.updateGauges();
       }
     }
   },
   mounted() {
     this.localAddresses = this.addresses;
+    // Initialize expandedCards for all addresses
+    this.addresses.forEach(addr => {
+      this.expandedCards[addr.card_id] = false;
+    });
     this.$nextTick(() => {
       this.initAllGauges();
     });
@@ -221,7 +232,6 @@ export default {
       if (!this.localAddresses || this.localAddresses.length === 0) return;
 
       this.localAddresses.forEach(addr => {
-        console.log("Address:", addr.label, "display_type:", addr.display_type);
         
         if (addr.display_type === 'number_gauge') {
           const canvasId = `gauge-${addr.address_id}`;

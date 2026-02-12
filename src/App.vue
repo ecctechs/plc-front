@@ -113,11 +113,7 @@ export default {
             return existing; 
           }
 
-          // ⭐ จุดสำคัญ: ถ้ามีข้อมูลเดิม ให้ดึงค่า expand กลับมาใส่ในข้อมูลใหม่ด้วย
-          return {
-            ...newAddr,
-            expand: existing ? existing.expand : false // รักษาค่า expand เดิมไว้
-          };
+          return newAddr;
         });
       } catch (err) {
         console.error("Failed to load devices:", err);
