@@ -15,7 +15,10 @@
             <i class="fas fa-trash"></i>
           </button>
 
-          <span class="status-dot" :class="addr.is_connected ? 'online' : 'offline'"></span>
+          <div class="status-dot-wrapper">
+            <span class="status-dot" :class="addr.is_connected ? 'online' : 'offline'" role="button"></span>
+            <div class="status-tooltip">{{ addr.is_connected ? 'Connected' : 'Disconnected' }}</div>
+          </div>
 
           <div class="mb-2">
             <h4 class="fw-bold text-dark mb-0 text-uppercase">{{ addr.device.name }}</h4>
@@ -382,17 +385,57 @@ export default {
   transition: color 0.3s ease;
 }
 
-.status-dot {
+.status-dot-wrapper {
     position: absolute;
     top: 15px;
     right: 15px;
     width: 12px;
     height: 12px;
+    cursor: pointer;
+}
+
+.status-dot {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
+    display: block;
 }
 
 .status-dot.online { background-color: #28a745; }
 .status-dot.offline { background-color: #dc3545; }
+
+.status-tooltip {
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.status-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #333;
+}
+
+.status-dot-wrapper:hover .status-tooltip {
+    opacity: 1;
+}
 
 .text-success { color: #28a745 !important; }
 .text-warning { color: #ffc107 !important; }
