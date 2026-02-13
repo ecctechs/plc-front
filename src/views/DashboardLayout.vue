@@ -61,6 +61,7 @@ export default {
       await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
         method: 'DELETE'
       });
+      this.$emit('delete-card', card);
     },
     onAdd(payload) {
       this.$emit('add-card', payload);

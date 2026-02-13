@@ -19,6 +19,7 @@
         :devices="dashboard"
         :dashboard-cards="dashboardCards"
         @add-card="onAddCard"
+        @delete-card="onDeleteCard"
       />
 
       <Setting
@@ -120,6 +121,9 @@ export default {
       }
     },
     async onAddCard() {
+      await this.loadDevices();
+    },
+    async onDeleteCard() {
       await this.loadDevices();
     },
     handleToggleAuto(device) {

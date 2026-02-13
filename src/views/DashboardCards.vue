@@ -10,7 +10,7 @@
           <button
             v-if="editMode"
             class="btn btn-sm btn-danger position-absolute delete-btn"
-            @click="$emit('delete-card', addr)"
+            @click="handleDeleteCard(addr)"
           >
             <i class="fas fa-trash"></i>
           </button>
@@ -115,6 +115,7 @@
 <script>
 import Chart from "./Chart.vue";
 import { RadialGauge } from 'canvas-gauges';
+import { showConfirm } from '../utils/swalHelper';
 
 export default {
   name: "Dashboard",
@@ -332,6 +333,16 @@ export default {
 
     openChart(addr) { this.selectedAddress = addr; this.showChart = true; },
     closeChart() { this.showChart = false; this.selectedAddress = null; },
+    async handleDeleteCard(addr) {
+      const confirmed = await showConfirm(
+        'ลบการ์ด',
+        `คุณต้องการลบ \"${addr.label}\" ออกจากแดชบอร์ดหรือไม่?`,
+        'ลบ'
+      );
+      if (confirmed) {
+        this.$emit('delete-card', addr);
+      }
+    },
     formatTimeOnly(iso) {
       if (!iso) return '-';
       return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
