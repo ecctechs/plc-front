@@ -13,21 +13,23 @@
     </ul>
 
     <div class="tab-content">
-      <Dashboard
+
+      <DashboardLayout
         v-if="tab === 'dashboard'"
-        :addresses="devices"
-        :simulate="isSimulate"
+        :devices="dashboard"
+        :dashboard-cards="dashboardCards"
+        @add-card="onAddCard"
       />
 
       <Setting
         v-if="tab === 'setting'"
-        :devices="devices"
+        :devices="dashboard"
         @add-device="reloadDevices"
       />
 
       <Demo
         v-if="tab === 'demo'"
-        :devices="devices"
+        :devices="dashboard"
         :is-simulate="isSimulate"
         :auto-timers="autoTimers"
         @update:is-simulate="isSimulate = $event"
@@ -37,14 +39,14 @@
 
       <AlarmHistory
         v-if="tab === 'alarmhistory'"
-        :devices="devices"
+        :devices="dashboard"
       />
     </div>
   </div>
 </template>
 
 <script>
-import Dashboard from "./views/Dashboard.vue";
+import DashboardLayout from "./views/DashboardLayout.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
@@ -53,12 +55,12 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { Dashboard, Setting, Demo, AlarmHistory },
+  components: { DashboardLayout, Setting, Demo, AlarmHistory },
 
   data() {
     return {
       tab: "dashboard",
-      devices: [],
+      dashboard: [],
       isSimulate: false,
       pollTimer: null,
       autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
@@ -100,18 +102,26 @@ export default {
     },
     async loadDevices() {
       try {
-        const res = await fetch(`${BASE_API}/api/devices/addresses`);
+        const res = await fetch(`${BASE_API}/api/dashboard/cards`);
         const data = await res.json();
-        // ผสมข้อมูลเดิมที่มีอยู่ (ถ้ากำลัง Simulate อยู่)
-        this.devices = data.map(d => {
-          const existing = this.devices.find(ex => ex.address_id === d.address_id);
-          return existing && this.isSimulate ? existing : d;
+
+        this.dashboard = data.map(newAddr => {
+          // หาข้อมูลเดิมที่อยู่ในเครื่องตอนนี้
+          const existing = this.dashboard.find(ex => ex.address_id === newAddr.address_id);
+
+          if (this.isSimulate && existing) {
+            return existing; 
+          }
+
+          return newAddr;
         });
       } catch (err) {
         console.error("Failed to load devices:", err);
       }
     },
-
+    async onAddCard() {
+      await this.loadDevices();
+    },
     handleToggleAuto(device) {
       const id = device.address_id;
       if (this.autoTimers.has(id)) {
@@ -125,7 +135,7 @@ export default {
     runAutoCycle(id) {
       if (!this.autoTimers.has(id) || !this.isSimulate) return;
 
-      const device = this.devices.find(d => d.address_id === id);
+      const device = this.dashboard.find(d => d.address_id === id);
       if (!device) return;
 
       let newValue;
@@ -149,12 +159,12 @@ export default {
     },
 
     handleDeviceUpdate(payload) {
-      const idx = this.devices.findIndex(d => d.address_id === payload.address_id);
+      const idx = this.dashboard.findIndex(d => d.address_id === payload.address_id);
       if (idx !== -1) {
-        this.devices.splice(idx, 1, {
-          ...this.devices[idx],
+        this.dashboard.splice(idx, 1, {
+          ...this.dashboard[idx],
           last_value: payload.value,
-          is_connected: this.isSimulate ? true : this.devices[idx].is_connected,
+          is_connected: this.isSimulate ? true : this.dashboard[idx].is_connected,
           updated_at: new Date().toISOString()
         });
       }
@@ -162,6 +172,7 @@ export default {
 
     async reloadDevices() {
       await this.loadDevices();
+      await this.loadPopup();
       this.tab = "dashboard";
     },
   }

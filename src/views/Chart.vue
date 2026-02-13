@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_type === 'onoff'">
+    <div class="chart-area border rounded p-3" v-if="device.display_type === 'onoff'">
       <OnOffChart 
           :device="device" 
           :start-date="startDate" 
@@ -41,7 +41,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_type === 'number'">
+    <div class="chart-area border rounded p-3" v-if="device.display_type === 'number'">
       <NumberChart 
           :device="device" 
           :start-date="startDate" 
@@ -49,7 +49,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_type === 'number_gauge'">
+    <div class="chart-area border rounded p-3" v-if="device.display_type === 'number_gauge'">
       <NumberGaugeChart 
           :device="device" 
           :start-date="startDate" 
@@ -57,7 +57,7 @@
         />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.data_type === 'level'">
+    <div class="chart-area border rounded p-3" v-if="device.display_type === 'level'">
       <LevelChart 
           :device="device" 
           :start-date="startDate" 

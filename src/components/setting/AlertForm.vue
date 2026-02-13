@@ -14,12 +14,18 @@
         <button @click="removeAlarm(index)" class="btn-close position-absolute end-0 top-0" style="font-size: 0.7rem;"></button>
 
         <div class="row g-2">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label small fw-bold">Alarm Name</label>
-            <input v-model="alarm.name" type="text" class="form-control form-control-sm" placeholder="เช่น High Temp">
+            <input 
+              v-model="alarm.name" 
+              type="text" 
+              class="form-control form-control-sm" 
+              :class="{'is-invalid': hasError(index, 'name')}"
+              placeholder="เช่น High Temp"
+            >
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label small fw-bold">Condition</label>
             <select 
               :value="['onoff', 'level'].includes(dataType) ? 'EXACT' : alarm.condition_type"
@@ -38,36 +44,32 @@
             </select>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label small fw-bold">Threshold Value</label>
-            
-            <select v-if="dataType === 'onoff'" v-model="alarm.min_value" class="form-select form-select-sm">
-              <option :value="1">ON</option>
-              <option :value="0">OFF</option>
-            </select>
-
-            <select 
-              v-else-if="dataType === 'level'" 
-              class="form-select form-select-sm"
-              :value="alarm.level_label"
-              @change="(e) => applyLevelRule(index, e.target.value)"
-            >
-              <option value="">-- เลือก Level --</option>
-              <option 
-                v-for="lvl in levelLabels" 
-                :key="lvl.label" 
-                :value="lvl.label"
+            <div v-if="dataType === 'onoff'">
+              <select v-model="alarm.min_value" class="form-select form-select-sm">
+                <option :value="1">ON</option>
+                <option :value="0">OFF</option>
+              </select>
+            </div>
+            <div v-else-if="dataType === 'level'">
+              <select 
+                class="form-select form-select-sm"
+                :class="{'is-invalid': hasError(index, 'threshold')}"
+                :value="alarm.level_label"
+                @change="(e) => applyLevelRule(index, e.target.value)"
               >
-                {{ lvl.label }}
-              </option>
-            </select>
-
+                <option value="">-- เลือก Level --</option>
+                <option v-for="lvl in levelLabels" :key="lvl.label" :value="lvl.label">{{ lvl.label }}</option>
+              </select>
+            </div>
             <div v-else class="input-group input-group-sm">
               <input 
                 v-if="alarm.condition_type !== 'LT' && alarm.condition_type !== 'LTE'"
                 v-model.number="alarm.min_value" 
                 type="number" 
                 class="form-control" 
+                :class="{'is-invalid': hasError(index, 'threshold')}"
                 :placeholder="alarm.condition_type === 'BTW' ? 'Min' : 'Value'"
               >
               <span v-if="alarm.condition_type === 'BTW'" class="input-group-text">-</span>
@@ -76,26 +78,39 @@
                 v-model.number="alarm.max_value" 
                 type="number" 
                 class="form-control" 
+                :class="{'is-invalid': hasError(index, 'threshold')}"
                 placeholder="Max"
               >
             </div>
           </div>
 
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Severity</label>
+            <select v-model="alarm.severity" class="form-select form-select-sm">
+              <option value="Normal">Normal </option>
+              <option value="Warning">Warning </option>
+              <option value="Error">Error </option>
+            </select>
+          </div>
+
           <div class="col-md-12 d-flex align-items-center gap-3 mt-1">
-             <div class="form-check form-switch">
+            <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" v-model="alarm.notify_email">
               <label class="form-check-label small">Email Notify</label>
             </div>
-
             <input 
               v-if="alarm.notify_email"
               type="text" 
               class="form-control form-control-sm flex-grow-1" 
-              placeholder=""
+              :class="{'is-invalid': hasError(index, 'email')}"
+              placeholder="อีเมล (คั่นด้วยจุลภาค)"
               :value="alarm.email_recipients.join(', ')"
               @input="(e) => updateEmails(index, e.target.value)"
             >
           </div>
+        </div>
+        <div v-for="err in errors.filter(e => e.index === index)" :key="err.field" class="text-danger extra-small mt-1">
+          <i class="bi bi-x-circle me-1"></i>{{ err.message }}
         </div>
       </div>
     </div>
@@ -110,37 +125,85 @@ export default {
     levelLabels: { type: Array, default: () => [] }
   },
   emits: ['update:modelValue'],
-  watch: {
-    // บังคับ Condition เป็น EXACT ทันทีเมื่อสลับเป็น onoff หรือ level
-    dataType: {
-      immediate: true,
-      handler(newType) {
-        if (['onoff', 'level'].includes(newType)) {
-          this.modelValue.forEach(alarm => {
-            alarm.condition_type = 'EXACT';
-          });
-        }
-      }
+  data() {
+    return {
+      errors: [] // เก็บสถานะ Error ภายใน
     }
   },
   methods: {
-    // นำค่า Rule ทั้งชุดจาก Level ที่เลือกมาเก็บใน Alarm
-    applyLevelRule(index, label) {
-      const selectedLvl = this.levelLabels.find(l => l.label === label);
-      if (!selectedLvl) return;
-
-      const newList = JSON.parse(JSON.stringify(this.modelValue));
-      newList[index] = {
-        ...newList[index],
-        level_label: selectedLvl.label,         // เก็บชื่อไว้โชว์ใน UI
-        condition_type: selectedLvl.condition_type, // เช่น LT, BTW, MT
-        min_value: selectedLvl.min_value,
-        max_value: selectedLvl.max_value,
-        include_min: selectedLvl.include_min,
-        include_max: selectedLvl.include_max
-      };
-      this.$emit('update:modelValue', newList);
+    hasError(index, field) {
+      return this.errors.some(e => e.index === index && e.field === field);
     },
+    validateAlarms() {
+      this.errors = [];
+      const alarms = this.modelValue;
+      const nameSet = new Set();
+      const duplicateNames = new Set();
+
+      // หาชื่อที่ซ้ำกันก่อน
+      alarms.forEach(a => {
+        const name = a.name ? a.name.trim() : "";
+        if (name !== "") {
+          if (nameSet.has(name)) duplicateNames.add(name);
+          nameSet.add(name);
+        }
+      });
+
+      for (let i = 0; i < alarms.length; i++) {
+        const a = alarms[i];
+        const currentName = a.name ? a.name.trim() : "";
+        
+        // 1. ตรวจสอบค่าว่าง
+        if (!currentName) {
+          this.errors.push({ index: i, field: 'name', message: 'กรุณาระบุชื่อ Alarm (ห้ามว่าง)' });
+        } 
+        // 2. ตรวจสอบชื่อซ้ำ
+        else if (duplicateNames.has(currentName)) {
+          this.errors.push({ index: i, field: 'name', message: `ชื่อ "${currentName}" ซ้ำกับ Alarm อื่น` });
+        }
+
+        // 3. ตรวจสอบการเหลื่อมกัน (Overlap)
+        if (['number', 'number_gauge'].includes(this.dataType)) {
+          if (a.condition_type === 'BTW' && a.min_value >= a.max_value) {
+            this.errors.push({ index: i, field: 'threshold', message: 'ค่า Min ต้องน้อยกว่า Max' });
+          }
+          for (let j = i + 1; j < alarms.length; j++) {
+            if (this.isOverlapping(a, alarms[j])) {
+              const msg = `ช่วงค่าทับซ้อนกับ [${alarms[j].name || j+1}]`;
+              this.errors.push({ index: i, field: 'threshold', message: msg });
+              this.errors.push({ index: j, field: 'threshold', message: msg });
+            }
+          }
+        }
+      }
+      return this.errors.length === 0;
+    },
+
+    isOverlapping(a1, a2) {
+      const r1 = this.getRange(a1);
+      const r2 = this.getRange(a2);
+      if (!r1 || !r2) return false;
+      // สูตรเช็คทับซ้อน: (StartA < EndB) และ (EndA > StartB)
+      return r1.min < r2.max && r1.max > r2.min;
+    },
+
+    getRange(alarm) {
+      let min = -Infinity, max = Infinity;
+      const v1 = alarm.min_value ?? 0;
+      const v2 = alarm.max_value ?? 0;
+
+      switch (alarm.condition_type) {
+        case 'EXACT': min = v1; max = v1 + 0.0001; break;
+        case 'MT':  min = v1 + 0.0001; break;
+        case 'MTE': min = v1; break;
+        case 'LT':  max = v2 - 0.0001; break;
+        case 'LTE': max = v2; break;
+        case 'BTW': min = v1; max = v2; break;
+        default: return null;
+      }
+      return { min, max };
+    },
+
     addAlarm() {
       const isSpecial = ['onoff', 'level'].includes(this.dataType);
       const newList = [...this.modelValue, {
@@ -148,12 +211,19 @@ export default {
         condition_type: isSpecial ? "EXACT" : "MTE",
         min_value: this.dataType === 'onoff' ? 1 : 0,
         max_value: 0,
-        level_label: "",
-        severity: "critical",
+        severity: "Normal",
         notify_email: false,
         email_recipients: [],
         is_active: true
       }];
+      this.$emit('update:modelValue', newList);
+    },
+    // ... rest of existing methods (applyLevelRule, removeAlarm, updateEmails) ...
+    applyLevelRule(index, label) {
+      const selectedLvl = this.levelLabels.find(l => l.label === label);
+      if (!selectedLvl) return;
+      const newList = JSON.parse(JSON.stringify(this.modelValue));
+      newList[index] = { ...newList[index], level_label: selectedLvl.label, condition_type: selectedLvl.condition_type, min_value: selectedLvl.min_value, max_value: selectedLvl.max_value };
       this.$emit('update:modelValue', newList);
     },
     removeAlarm(index) {
@@ -168,3 +238,4 @@ export default {
   }
 }
 </script>
+<style scoped> .extra-small { font-size: 0.75rem; } </style>

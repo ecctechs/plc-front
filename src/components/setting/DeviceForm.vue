@@ -76,6 +76,7 @@
 
         <div class="mt-3">
           <AlertForm 
+            ref="alertForms"
             v-model="addr.alarms" 
             :dataType="addr.data_type" 
             :levelLabels="addr.levels" 
@@ -212,6 +213,23 @@ export default {
     async saveDevice() {
       try {
         this.validateBeforeSave();
+        
+         // ตรวจสอบ Alarm ทั้งหมดผ่าน refs
+        if (this.$refs.alertForms) {
+          const forms = Array.isArray(this.$refs.alertForms) 
+                        ? this.$refs.alertForms 
+                        : [this.$refs.alertForms];
+          
+          let isAllValid = true;
+          forms.forEach(form => {
+            if (!form.validateAlarms()) isAllValid = false;
+          });
+
+          if (!isAllValid) {
+            throw new Error("การตั้งค่า Alarm ไม่ถูกต้อง (มีชื่อซ้ำ, ค่าว่าง หรือช่วงทับซ้อนกัน)");
+          }
+        }
+
         this.loading = true;
 
         // Step 1: Create Main Device & Addresses
