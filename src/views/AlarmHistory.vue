@@ -62,9 +62,11 @@
             </td>
 
             <td class="text-center">
-              <span :class="item.event_type === 'TRIGGER' ? 'text-danger fw-bold fs-5' : 'text-success fw-bold fs-5'">
-                {{ item.value }}
-              </span>
+              <a href="#" @click.prevent="openChart(item)" class="text-decoration-none d-inline-block cursor-pointer">
+                <span :class="item.event_type === 'TRIGGER' ? 'text-danger fw-bold fs-5' : 'text-success fw-bold fs-5'">
+                  {{ item.value }}
+                </span>
+              </a>
             </td>
 
             <td class="text-center">
@@ -87,16 +89,42 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Chart Modal -->
+    <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header">
+            <h5 class="modal-title">Chart : {{ selectedDevice?.label }}</h5>
+            <button class="btn-close" @click="closeChart"></button>
+          </div>
+          <div class="modal-body text-center">
+            <Chart
+              v-if="selectedDevice"
+              :device="selectedDevice"
+              :initial-start="chartStartDate"
+              :initial-end="chartEndDate"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import Chart from './Chart.vue';
 export default {
+  components: { Chart },
   props: ['devices'],
   data() {
     return {
       history: [],
       loading: false,
+      showChart: false,
+      selectedDevice: null,
+      chartStartDate: null,
+      chartEndDate: null,
       filter: {
         // ตั้งค่าเริ่มต้นเป็นวันที่ปัจจุบัน
         startDate: new Date().toISOString().split('T')[0],
@@ -109,6 +137,41 @@ export default {
     this.fetchHistory();
   },
   methods: {
+    openChart(item) {
+      const addressId = item.rule?.address_id || item.address_id;
+
+      const foundAddress = this.devices.find(d => {
+        const value = d._custom?.value || d;
+        return Number(value.address_id) === Number(addressId);
+      });
+
+      if (!foundAddress) {
+        console.warn('Address ID not found:', addressId);
+        return;
+      }
+
+      const device = foundAddress._custom?.value || foundAddress;
+
+      // 🔥 คำนวณ 20 จุดก่อน + หลัง
+      const eventTime = new Date(item.created_at);
+      const windowMs = device.refresh_rate_ms * 20;
+
+      const start = new Date(eventTime.getTime() - windowMs);
+      const end = new Date(eventTime.getTime() + windowMs);
+
+      this.selectedDevice = device;
+
+      // ✅ ส่ง start/end ไปด้วย
+      this.chartStartDate = start.toISOString().slice(0,16);
+      this.chartEndDate = end.toISOString().slice(0,16);
+
+      this.showChart = true;
+    },
+    closeChart() {
+      this.showChart = false;
+      this.selectedDevice = null;
+    },
+
     async fetchHistory() {
       this.loading = true;
       const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -116,7 +179,6 @@ export default {
       try {
         // ✅ เปลี่ยน URL ไปใช้ Endpoint "all" เพื่อดูภาพรวมทุกเครื่อง
         const url = `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`;
-        console.log(url)
         
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch alarm history');

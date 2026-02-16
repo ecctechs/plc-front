@@ -83,18 +83,24 @@ export default {
     LevelChart
   },
   props: {
-    device: {
-      type: Object,
-      required: true,
-    },
+    device: Object,
+    initialStart: String,
+    initialEnd: String
   },
   data() {
     const today = new Date().toISOString().substr(0, 10);
     return {
-      // กำหนดค่าเริ่มต้นเป็นวันที่ปัจจุบัน
-    startDate: `${today}T00:00`,
-    endDate: `${today}T23:59`,
+      startDate: this.initialStart || `${today}T00:00`,
+      endDate: this.initialEnd || `${today}T23:59`,
     };
+  },
+  watch: {
+    initialStart(newVal) {
+      if (newVal) this.startDate = newVal;
+    },
+    initialEnd(newVal) {
+      if (newVal) this.endDate = newVal;
+    }
   },
   methods: {
     onDateChange() {
