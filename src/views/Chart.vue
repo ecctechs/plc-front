@@ -104,6 +104,7 @@
         :device="device" 
         :start-date="startDate" 
         :end-date="endDate" 
+        :alarmTime="alarmTime"
       />
     </div>
 
@@ -123,7 +124,8 @@ export default {
   props: {
     device: Object,
     initialStart: String,
-    initialEnd: String
+    initialEnd: String,
+    alarmTime: String,
   },
   data() {
 

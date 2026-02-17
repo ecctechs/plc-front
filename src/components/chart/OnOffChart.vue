@@ -104,7 +104,8 @@ export default {
   props: {
     device: { type: Object, required: true }, // ต้องมี address_id, refresh_rate_ms
     startDate: { type: String, required: true },
-    endDate: { type: String, required: true }
+    endDate: { type: String, required: true },
+    alarmTime: { type: String, default: null }
   },
 
   data() {
@@ -162,27 +163,45 @@ export default {
     async fetchData(isSilent = false) {
       if (!isSilent) this.loading = true
       try {
-        const res = await fetch(
-          `${baseUrl}/api/devices/chart` +
-          `?address_id=${this.device.address_id}` +
-          `&start=${this.startDate}` +
-          `&end=${this.endDate}`
-        )
+        let url = ''
+        
+        // ตรวจสอบว่ามี alarmTime หรือไม่
+        if (this.alarmTime) {
+          // กรณีเปิดจากหน้า Alarm History
+          url = `${baseUrl}/api/devices/chart-by-alarm` +
+                `?address_id=${this.device.address_id}` +
+                `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
+                `&expand=20`
+        } else {
+          // กรณีเปิดดู Chart ปกติ
+          url = `${baseUrl}/api/devices/chart` +
+                `?address_id=${this.device.address_id}` +
+                `&start=${this.startDate}` +
+                `&end=${this.endDate}`
+                console.log(url);
+        }
 
+        const res = await fetch(url)
         const raw = await res.json()
 
         this.isEmpty = !raw || raw.length === 0
         if (this.isEmpty) return
 
-        // map จาก API ใหม่ → โครงสร้างเดิม
         const data = raw.map(r => ({
-          x: r.value === null ? 0 : r.value,   // ON / OFF
-          y: r.created_at,                     // เวลา
-          connected: r.status === 1            // Network
+          x: r.value ,
+          y: r.created_at,
+            connected:
+              r.status === null
+                ? null
+                : r.status === 1
         }))
 
         this.processData(data)
         this.renderAllCharts(data)
+
+        // ถ้าเป็นการโหลดจาก Alarm Time อาจจะต้องการหยุด Auto Refresh 
+        // เพื่อไม่ให้ Chart กระโดดกลับมาที่เวลาปัจจุบัน
+        if (this.alarmTime) this.stopAutoRefresh()
 
       } catch (err) {
         console.error(err)
@@ -223,7 +242,15 @@ export default {
 
       this.charts.lineConn = this.createLine(
         this.$refs.lineCanvas_Conn,
-        data.map(d => ({ x: new Date(d.y), y: d.connected ? 1 : 0 })),
+        data.map(d => ({
+          x: new Date(d.y),
+          y:
+            d.connected === null
+              ? null
+              : d.connected
+                ? 1
+                : 0
+        })),
         '#10b981',
         ['Disconnect', 'Connect']
       )
@@ -246,7 +273,8 @@ export default {
             backgroundColor: color + '10',
             fill: true,
             stepped: true,
-            pointRadius: 0
+            pointRadius: 0,
+            spanGaps: true
           }]
         },
         options: {

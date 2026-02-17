@@ -64,7 +64,8 @@ export default {
   props: {
     device: { type: Object, required: true },
     startDate: { type: String, required: true },
-    endDate: { type: String, required: true }
+    endDate: { type: String, required: true },
+    alarmTime: { type: String, default: null }
   },
 
   data() {
@@ -141,6 +142,9 @@ export default {
           this.processStats(series);
           this.renderCharts(series);
         }
+
+        if (this.alarmTime) this.stopAutoRefresh()
+        
       } catch (err) {
         console.error("Fetch Level Error:", err);
       } finally {

@@ -115,7 +115,8 @@ export default {
   props: {
     device: { type: Object, required: true },
     startDate: { type: String, required: true },
-    endDate: { type: String, required: true }
+    endDate: { type: String, required: true },
+    alarmTime: { type: String, default: null }
   },
 
   data() {
@@ -145,6 +146,7 @@ export default {
   watch: {
     startDate: 'restartAutoRefresh',
     endDate: 'restartAutoRefresh',
+    alarmTime: 'restartAutoRefresh',
     'device.address_id': 'restartAutoRefresh'
   },
 
@@ -178,13 +180,23 @@ export default {
       if (!isSilent) this.loading = true
 
       try {
-        const res = await fetch(
-          `${baseUrl}/api/devices/chart` +
-          `?address_id=${this.device.address_id}` +
-          `&start=${this.startDate}` +
-          `&end=${this.endDate}`
-        )
+        let url = ''
 
+        if (this.alarmTime) {
+          // 🚨 โหมดเปิดจาก Alarm History
+          url = `${baseUrl}/api/devices/chart-by-alarm` +
+                `?address_id=${this.device.address_id}` +
+                `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
+                `&expand=20`
+        } else {
+          // 📊 โหมดปกติ
+          url = `${baseUrl}/api/devices/chart` +
+                `?address_id=${this.device.address_id}` +
+                `&start=${this.startDate}` +
+                `&end=${this.endDate}`
+        }
+
+        const res = await fetch(url)
         const raw = await res.json()
 
         if (!raw || raw.length === 0) {
@@ -193,9 +205,12 @@ export default {
         }
 
         const data = raw.map(d => ({
-          x: Number(d.value),
+          x: d.value !== null ? Number(d.value) : null,
           y: new Date(d.created_at),
-          connected: d.status === 1
+          connected:
+            d.status === null
+              ? null
+              : d.status === 1
         }))
 
         this.lastData = data
@@ -203,6 +218,9 @@ export default {
 
         this.processStats(data)
         this.renderCharts(data)
+
+        // 🔥 สำคัญ: ถ้าเป็น alarm mode หยุด auto refresh
+        if (this.alarmTime) this.stopAutoRefresh()
 
       } catch (err) {
         console.error(err)
@@ -212,8 +230,8 @@ export default {
     },
 
     processStats(data) {
-      this.stats.connected = data.filter(d => d.connected).length
-      this.stats.disconnected = data.filter(d => !d.connected).length
+      this.stats.connected = data.filter(d => d.connected === true).length
+      this.stats.disconnected = data.filter(d => d.connected === false).length
 
       // ✅ คำนวณค่า Max, Min, Avg จากชุดข้อมูล
       const numericValues = data.map(d => d.x).filter(v => !isNaN(v))
@@ -287,12 +305,13 @@ export default {
         data: {
           datasets: [{
             label: 'Value',
-            data: data.map(d => ({ x: d.y, y: d.x })),
+            data: data.map(d => ({ x: d.y, y: d.x })), // x คือเวลา, y คือค่า
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59,130,246,0.1)',
             fill: true,
             pointRadius: 1,
-            tension: 0.1
+            tension: 0.1,
+            spanGaps: false
           }]
         },
         options: {
@@ -332,8 +351,17 @@ export default {
         type: 'line',
         data: {
           datasets: [{
-            data: data.map(d => ({ x: d.y, y: d.connected ? 1 : 0 })),
+            data: data.map(d => ({
+              x: d.y,
+              y:
+                d.connected === null
+                  ? null
+                  : d.connected
+                    ? 1
+                    : 0
+            })),
             stepped: true,
+            spanGaps: true,
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.1)',
             fill: true,
@@ -362,9 +390,14 @@ export default {
               beginAtZero: true,
               ticks: {
                 stepSize: 1,
-                callback: v => (v === 1 ? 'Connect' : 'Disconnect')
-              }
-            }
+                    callback: v =>
+                    v === 1
+                      ? 'Connect'
+                      : v === 0
+                        ? 'Disconnect'
+                        : ''
+                            }
+               }
           },
           plugins: {
             legend: { display: false }

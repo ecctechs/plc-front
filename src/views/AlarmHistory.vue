@@ -126,12 +126,13 @@
             <button class="btn-close" @click="closeChart"></button>
           </div>
           <div class="modal-body">
-            <Chart
-              v-if="selectedDevice"
-              :device="selectedDevice"
-              :initial-start="chartStartDate"
-              :initial-end="chartEndDate"
-            />
+              <Chart
+                v-if="selectedDevice"
+                :device="selectedDevice"
+                :initial-start="chartStartDate"
+                :initial-end="chartEndDate"
+                :alarm-time="selectedAlarmTime" 
+              />
           </div>
         </div>
       </div>
@@ -154,6 +155,7 @@ export default {
       selectedDevice: null,
       chartStartDate: null,
       chartEndDate: null,
+      selectedAlarmTime: null,
       filter: {
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
@@ -194,6 +196,7 @@ export default {
     // ✅ ส่งเป็น Local datetime (ไม่มี Z)
     this.chartStartDate = this.formatLocalDateTime(start);
     this.chartEndDate   = this.formatLocalDateTime(end);
+    this.selectedAlarmTime = item.created_at
 
     this.showChart = true;
   },
