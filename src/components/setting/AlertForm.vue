@@ -87,7 +87,7 @@
           <div class="col-md-3">
             <label class="form-label small fw-bold">Severity</label>
             <select v-model="alarm.severity" class="form-select form-select-sm">
-              <option value="Normal">Normal </option>
+              <!-- <option value="Normal">Normal </option> -->
               <option value="Warning">Warning </option>
               <option value="Error">Error </option>
             </select>
@@ -211,7 +211,7 @@ export default {
         condition_type: isSpecial ? "EXACT" : "MTE",
         min_value: this.dataType === 'onoff' ? 1 : 0,
         max_value: 0,
-        severity: "Normal",
+        severity: "Warning",
         notify_email: false,
         email_recipients: [],
         is_active: true

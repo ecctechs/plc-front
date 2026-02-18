@@ -80,12 +80,17 @@
 
             <!-- Click เพื่อเปิด Chart -->
             <td class="text-center">
-              <a href="#" @click.prevent="openChart(item)" class="text-decoration-none">
-                <span :class="item.event_type === 'TRIGGER'
-                  ? 'text-danger fw-bold fs-5'
-                  : 'text-success fw-bold fs-5'">
-                  {{ item.value }}
-                </span>
+              <a href="#" @click.prevent="openChart(item)" class="chart-link text-decoration-none">
+                <div class="d-flex flex-column align-items-center">
+                  <span :class="item.event_type === 'TRIGGER' 
+                    ? 'text-danger fw-bold fs-5' 
+                    : 'text-success fw-bold fs-5'">
+                    {{ item.value }}
+                  </span>
+                  <small class="view-chart-text text-muted">
+                    <i class="bi bi-graph-up"></i> ดูกราฟ
+                  </small>
+                </div>
               </a>
             </td>
 
@@ -259,4 +264,33 @@ export default {
 .text-success { color: #198754 !important; }
 .fs-5 { font-size: 1.1rem !important; }
 .filter-group input { min-width: 150px; }
+
+.chart-link {
+  display: block;
+  padding: 5px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* เอฟเฟกต์เมื่อ Hover */
+.chart-link:hover {
+  background-color: rgba(13, 110, 253, 0.05); /* สีฟ้าจางๆ */
+  transform: translateY(-2px); /* ลอยขึ้นเล็กน้อย */
+}
+
+.chart-link:hover .view-chart-text {
+  color: #0d6efd !important; /* เปลี่ยนคำว่า 'ดูราฟ' เป็นสีฟ้า */
+  text-decoration: underline;
+}
+
+.chart-link:hover span {
+  filter: brightness(0.8); /* ทำสีตัวเลขให้เข้มขึ้นเล็กน้อย */
+}
+
+.view-chart-text {
+  font-size: 0.7rem;
+  margin-top: -2px;
+  opacity: 0.8;
+}
 </style>
