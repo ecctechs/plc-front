@@ -95,6 +95,9 @@
 <script>
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
+import annotationPlugin from 'chartjs-plugin-annotation'
+
+Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -104,7 +107,8 @@ export default {
   props: {
     device: { type: Object, required: true }, // ต้องมี address_id, refresh_rate_ms
     startDate: { type: String, required: true },
-    endDate: { type: String, required: true }
+    endDate: { type: String, required: true },
+    alarmTime: { type: String, default: null }
   },
 
   data() {
@@ -140,9 +144,31 @@ export default {
   },
 
   methods: {
+    formatDateTime(date) {
+      const d = new Date(date)
+      return d.toLocaleString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    },
+
+    formatHourMinute(date) {
+      const d = new Date(date)
+      return d.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+
     startAutoRefresh() {
-  
       this.stopAutoRefresh()
+      // ถ้าเปิดจากหน้า Alarm ไม่ควร Auto Refresh เพราะจะทำให้ช่วงเวลาที่ดูอยู่คลาดเคลื่อน
+      if (this.alarmTime) return 
+
       const rate = this.device.refresh_rate_ms || 5000
       this.refreshTimer = setInterval(() => this.fetchData(true), rate)
     },
@@ -156,46 +182,51 @@ export default {
       this.startAutoRefresh()
     },
 
-    // ===============================
-    // 🔥 แก้เฉพาะ API ตรงนี้
-    // ===============================
     async fetchData(isSilent = false) {
       if (!isSilent) this.loading = true
       try {
-        const res = await fetch(
-          `${baseUrl}/api/devices/chart` +
-          `?address_id=${this.device.address_id}` +
-          `&start=${this.startDate}` +
-          `&end=${this.endDate}`
-        )
+        let url = ''
+        if (this.alarmTime) {
+          url = `${baseUrl}/api/devices/chart-by-alarm` +
+                `?address_id=${this.device.address_id}` +
+                `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
+                `&expand=20`
+        } else {
+          url = `${baseUrl}/api/devices/chart` +
+                `?address_id=${this.device.address_id}` +
+                `&start=${this.startDate}` +
+                `&end=${this.endDate}`
+        }
 
+        const res = await fetch(url)
         const raw = await res.json()
 
         this.isEmpty = !raw || raw.length === 0
         if (this.isEmpty) return
 
-        // map จาก API ใหม่ → โครงสร้างเดิม
-        const data = raw.map(r => ({
-          x: r.value === null ? 0 : r.value,   // ON / OFF
-          y: r.created_at,                     // เวลา
-          connected: r.status === 1            // Network
+        // ปั้น Data ให้พร้อมสำหรับ Chart และเก็บสถานะ is_alarm
+        const processedData = raw.map(r => ({
+          x: r.value,
+          y: r.created_at,
+          is_alarm: r.is_alarm || false,
+          connected: r.status === null ? null : r.status === 1
         }))
 
-        this.processData(data)
-        this.renderAllCharts(data)
+        this.processStats(processedData)
+        this.renderAllCharts(processedData)
 
       } catch (err) {
-        console.error(err)
+        console.error("Fetch error:", err)
       } finally {
         this.loading = false
       }
     },
 
-    processData(data) {
+    processStats(data) {
       this.stats.on = data.filter(d => d.x === 1).length
       this.stats.off = data.filter(d => d.x === 0).length
-      this.stats.connected = data.filter(d => d.connected).length
-      this.stats.disconnected = data.filter(d => !d.connected).length
+      this.stats.connected = data.filter(d => d.connected === true).length
+      this.stats.disconnected = data.filter(d => d.connected === false).length
 
       const totalSec = this.stats.on * (this.device.refresh_rate_ms / 1000)
       this.totalRuntime =
@@ -205,15 +236,18 @@ export default {
     },
 
     renderAllCharts(data) {
+      // ทำลายกราฟเก่าก่อนวาดใหม่
       Object.values(this.charts).forEach(c => c?.destroy())
 
+      // 1. Line Chart: สถานะ ON/OFF
       this.charts.line = this.createLine(
         this.$refs.lineCanvas,
-        data.map(d => ({ x: new Date(d.y), y: d.x })),
+        data.map(d => ({ x: d.y, y: d.x, is_alarm: d.is_alarm })),
         '#3b82f6',
         ['OFF', 'ON']
       )
 
+      // 2. Pie Chart: สัดส่วน ON/OFF
       this.charts.pie = this.createPie(
         this.$refs.pieCanvas,
         [this.stats.on, this.stats.off],
@@ -221,13 +255,19 @@ export default {
         ['#3b82f6', '#f43f5e']
       )
 
+      // 3. Line Chart: Connection Status
       this.charts.lineConn = this.createLine(
         this.$refs.lineCanvas_Conn,
-        data.map(d => ({ x: new Date(d.y), y: d.connected ? 1 : 0 })),
+        data.map(d => ({
+          x: d.y,
+          y: d.connected === null ? null : (d.connected ? 1 : 0),
+          is_alarm: d.is_alarm
+        })),
         '#10b981',
         ['Disconnect', 'Connect']
       )
 
+      // 4. Pie Chart: สัดส่วน Connection
       this.charts.pieConn = this.createPie(
         this.$refs.pieCanvas_Conn,
         [this.stats.connected, this.stats.disconnected],
@@ -237,24 +277,37 @@ export default {
     },
 
     createLine(el, data, color, labels) {
+      // ค้นหาตำแหน่ง Alarm จาก data เพื่อวาดเส้นประ
+      const alarmPoint = data.find(d => d.is_alarm === true)
+      const alarmDate = alarmPoint ? new Date(alarmPoint.x) : null
+
       return new Chart(el.getContext('2d'), {
         type: 'line',
         data: {
           datasets: [{
-            data,
+            data: data.map(d => ({
+              x: new Date(d.x),
+              y: d.y,
+              isAlarm: d.is_alarm
+            })),
             borderColor: color,
             backgroundColor: color + '10',
             fill: true,
             stepped: true,
-            pointRadius: 0
+            pointRadius: (ctx) => (ctx.raw && ctx.raw.isAlarm ? 5 : 0),
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            spanGaps: true
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          interaction: { mode: 'nearest', intersect: false },
           scales: {
-          x: {
+            x: {
               type: 'time',
               time: {
                 tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
@@ -265,31 +318,61 @@ export default {
                   hour: 'dd-MM-yyyy HH:mm:ss'
                 }
               },
-              ticks: { maxTicksLimit: 4, autoSkip: true }
+              ticks: { maxTicksLimit: 4 }
             },
             y: {
               min: -0.1,
               max: 1.1,
               ticks: {
                 stepSize: 1,
-                callback: v => labels[v] || ''
+                callback: (v) => labels[v] || ''
               }
             }
           },
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (context) => 'เวลา: ' + this.formatDateTime(context[0].parsed.x),
+                label: (context) => {
+                  const status = labels[context.parsed.y] || '-'
+                  const isAlarm = context.raw.isAlarm
+                  return `สถานะ: ${status}${isAlarm ? ' 🚨 (Alarm)' : ''}`
+                }
+              }
+            },
+            annotation: alarmDate ? {
+              annotations: {
+                alarmLine: {
+                  type: 'line',
+                  xMin: alarmDate,
+                  xMax: alarmDate,
+                  borderColor: '#ef4444',
+                  borderWidth: 2,
+                  borderDash: [6, 6],
+                  label: {
+                    display: true,
+                    content: `🚨 ALARM ${this.formatHourMinute(alarmDate)}`,
+                    backgroundColor: '#ef4444',
+                    color: '#fff',
+                    position: 'start'
+                  }
+                }
+              }
+            } : {}
           }
         }
       })
     },
 
     createPie(el, data, labels, colors) {
+      const hasData = data.some(v => v > 0)
       return new Chart(el.getContext('2d'), {
         type: 'pie',
         data: {
           labels,
           datasets: [{
-            data: data.some(v => v > 0) ? data : [0, 1],
+            data: hasData ? data : [0, 0.000001], // กัน Pie เน่ากรณีไม่มีข้อมูล
             backgroundColor: colors
           }]
         },

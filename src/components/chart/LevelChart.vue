@@ -56,6 +56,9 @@
 <script>
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
+import annotationPlugin from 'chartjs-plugin-annotation'
+
+Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -64,7 +67,8 @@ export default {
   props: {
     device: { type: Object, required: true },
     startDate: { type: String, required: true },
-    endDate: { type: String, required: true }
+    endDate: { type: String, required: true },
+    alarmTime: { type: String, default: null }
   },
 
   data() {
@@ -72,7 +76,7 @@ export default {
       loading: false,
       isEmpty: false,
       charts: {},
-      levels: [], // [{level_index, label}]
+      levels: [], 
       lastData: [],
       stats: { connected: 0, disconnected: 0 },
       refreshTimer: null
@@ -82,7 +86,8 @@ export default {
   watch: {
     startDate: "restartAutoRefresh",
     endDate: "restartAutoRefresh",
-    "device.id": "restartAutoRefresh"
+    alarmTime: "restartAutoRefresh",
+    "device.address_id": "restartAutoRefresh"
   },
 
   mounted() {
@@ -96,8 +101,17 @@ export default {
   },
 
   methods: {
+    formatHourMinute(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    },
+
     startAutoRefresh() {
       this.stopAutoRefresh();
+      // ถ้าเปิดดู Alarm อยู่ ไม่ต้อง Refresh กราฟเพื่อให้จุด Alarm ไม่เลื่อนหาย
+      if (this.alarmTime) return; 
+
       const rate = this.device.refresh_rate_ms || 5000;
       this.refreshTimer = setInterval(() => this.fetchData(true), rate);
     },
@@ -117,22 +131,33 @@ export default {
         const startUTC = new Date(this.startDate).toISOString();
         const endUTC = new Date(this.endDate).toISOString();
 
-        const res = await fetch(
-          `${baseUrl}/api/devices/${this.device.address_id}/chart/level?start=${startUTC}&end=${endUTC}`
-        );
+        // ใช้ API เส้นเดียวตามที่กำหนด
+        const url = `${baseUrl}/api/devices/${this.device.address_id}/chart/level?start=${startUTC}&end=${endUTC}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network response was not ok');
+        
         const data = await res.json();
 
-        console.log(data)
-
         this.levels = data.levels || [];
-        const series = (data.series || []).map(log => ({
-          x: log.x,
-          y: log.y,
-          label: log.label,
-          value: log.value,
-          // ⭐ map ให้ตรง OnOff / Network
-          connected: log.connected === 'connected'
-        }));
+        
+        // แปลงเวลา Alarm เป็น Milliseconds เพื่อใช้เทียบจุด
+        const alarmTs = this.alarmTime ? new Date(this.alarmTime).getTime() : null;
+
+        const series = (data.series || []).map(log => {
+          const currentTs = new Date(log.x).getTime();
+          
+          // ตรวจสอบว่าจุดในข้อมูลนี้ อยู่ใกล้กับเวลา Alarm หรือไม่ (เผื่อความคลาดเคลื่อน 1 วินาที)
+          const isAlarmPoint = alarmTs ? Math.abs(currentTs - alarmTs) < 1500 : false;
+
+          return {
+            x: new Date(log.x),
+            y: log.y,
+            label: log.label,
+            is_alarm: isAlarmPoint, 
+            connected: log.connected === 'connected'
+          };
+        });
 
         this.lastData = series;
         this.isEmpty = series.length === 0;
@@ -141,6 +166,7 @@ export default {
           this.processStats(series);
           this.renderCharts(series);
         }
+        
       } catch (err) {
         console.error("Fetch Level Error:", err);
       } finally {
@@ -153,110 +179,62 @@ export default {
       this.stats.disconnected = series.filter(d => d.connected === false).length;
     },
 
-    renderCharts(series) {
-Object.values(this.charts).forEach(c => c?.destroy());
-
-  const levelLabels = {};
-  // เพิ่ม "Unknown" เข้าไปในกรณีที่ y เป็น null
-  levelLabels[null] = "Unknown"; 
-  this.levels.forEach(l => { levelLabels[l.level_index] = l.label; });
-
-  // คำนวณหา Max Level Index จาก config levels
-  const maxLevelIndex = this.levels.length > 0 
-    ? Math.max(...this.levels.map(l => l.level_index)) 
-    : 0;
-
-  this.charts.level = new Chart(this.$refs.levelCanvas.getContext('2d'), {
-    type: 'line',
-    data: {
-      datasets: [{
-        label: 'Level',
-        // ตรวจสอบค่า d.y ถ้าเป็น null ให้ใส่เป็น null เพื่อให้ Chart.js จัดการ (หรือใส่ 0 ขึ้นอยู่กับความต้องการ)
-        data: series.map(d => ({ x: new Date(d.x), y: d.y })), 
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        stepped: true,
-        pointRadius: 2,
-        spanGaps: false // ตั้งเป็น false เพื่อให้เห็นว่าข้อมูลขาดหาย (null)
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      scales: {
-          x: {
-              type: 'time',
-              time: {
-                tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
-                displayFormats: {
-                  millisecond: 'dd-MM-yyyy HH:mm:ss',
-                  second: 'dd-MM-yyyy HH:mm:ss',
-                  minute: 'dd-MM-yyyy HH:mm:ss',
-                  hour: 'dd-MM-yyyy HH:mm:ss'
-                }
-              },
-              ticks: { maxTicksLimit: 4, autoSkip: true }
-            },
-        y: {
-          // 1. ตั้งค่า min ให้ติดลบ (เช่น -0.5) เพื่อสร้าง Gap ด้านล่างไม่ให้ชิดพื้น
-          min: -0.5, 
-
-          // 2. ตั้งค่า max ให้สูงกว่า index สูงสุดเล็กน้อยเพื่อให้ Label อยู่ด้านบน
-          max: this.levels.length > 0 
-            ? Math.max(...this.levels.map(l => l.level_index)) + 0.2 
-            : 0.5,
-
-          ticks: {
-            stepSize: 1,
-            callback: (val) => {
-              // 3. แสดงเฉพาะ Label ที่มีในข้อมูล (ป้องกันไม่ให้เลข -1 หรือ 0.5 โผล่มา)
-              const found = this.levels.find(l => l.level_index === val);
-              return found ? found.label : null;
-            }
-          },
-          grid: {
-            // ซ่อนเส้น Grid ของค่าที่ติดลบ (ส่วนที่เป็น Gap) เพื่อความสวยงาม
-            drawBorder: false,
-            color: (context) => (context.tick.value < 0 ? 'transparent' : '#e5e7eb'),
-          }
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const val = context.parsed.y;
-              const label = levelLabels[val] || (val === null ? 'Unknown' : val);
-              return `Level: ${label}`;
+    // ฟังก์ชันสร้างเส้นประสีแดงตรงเวลาที่กำหนด
+    getAlarmAnnotation(alarmDate) {
+      return {
+        annotations: {
+          alarmLine: {
+            type: 'line',
+            xMin: alarmDate,
+            xMax: alarmDate,
+            borderColor: '#ef4444',
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: `🚨 ALARM ${this.formatHourMinute(alarmDate)}`,
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              position: 'start',
+              yAdjust: -10
             }
           }
         }
       }
-    }
-  });
+    },
 
-      // --- 2. Connection Line Chart ---
-      this.charts.connLine = new Chart(this.$refs.connLineCanvas.getContext('2d'), {
+    renderCharts(series) {
+      Object.values(this.charts).forEach(c => c?.destroy());
+
+      const levelLabels = {};
+      this.levels.forEach(l => { levelLabels[l.level_index] = l.label; });
+
+      // ใช้ค่า alarmTime ที่ส่งมาจาก Props โดยตรงในการวาดเส้นแนวตั้ง
+      const alarmDate = this.alarmTime ? new Date(this.alarmTime) : null;
+
+      // --- 1. Level Line Chart ---
+      this.charts.level = new Chart(this.$refs.levelCanvas.getContext('2d'), {
         type: 'line',
         data: {
           datasets: [{
-            data: series.map(d => ({ x: new Date(d.x), y: d.connected ? 1 : 0 })),
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            label: 'Level',
+            data: series.map(d => ({ x: d.x, y: d.y, isAlarm: d.is_alarm })), 
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
             stepped: true,
-            pointRadius: 1
+            // ถ้าเป็นจุดที่ตรงกับ Alarm ให้ขยายจุดเป็นสีแดง
+            pointRadius: ctx => (ctx.raw?.isAlarm ? 6 : 2),
+            pointBackgroundColor: ctx => (ctx.raw?.isAlarm ? '#ef4444' : '#3b82f6'),
+            pointBorderColor: ctx => (ctx.raw?.isAlarm ? '#fff' : '#3b82f6'),
+            pointBorderWidth: ctx => (ctx.raw?.isAlarm ? 2 : 1),
+            spanGaps: true 
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
+          responsive: true, maintainAspectRatio: false, animation: false,
           scales: {
-                      x: {
+            x: {
               type: 'time',
               time: {
                 tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
@@ -267,17 +245,59 @@ Object.values(this.charts).forEach(c => c?.destroy());
                   hour: 'dd-MM-yyyy HH:mm:ss'
                 }
               },
-              ticks: { maxTicksLimit: 4, autoSkip: true }
+              ticks: { maxTicksLimit: 6 }
             },
             y: {
-              min: 0, max: 1,
+              min: -0.5, 
+              max: this.levels.length > 0 ? Math.max(...this.levels.map(l => l.level_index)) + 0.5 : 1,
               ticks: {
                 stepSize: 1,
-                callback: (v) => v === 1 ? 'Connected' : 'Disconnected'
+                callback: (val) => this.levels.find(l => l.level_index === val)?.label || null
+              },
+              grid: { color: (context) => (context.tick.value < 0 ? 'transparent' : '#e5e7eb') }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            annotation: alarmDate ? this.getAlarmAnnotation(alarmDate) : {},
+            tooltip: {
+              callbacks: {
+                label: (context) => `Level: ${levelLabels[context.parsed.y] || context.parsed.y}`
+              }
+            }
+          }
+        }
+      });
+
+      // --- 2. Connection Line Chart (Network) ---
+      this.charts.connLine = new Chart(this.$refs.connLineCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          datasets: [{
+            data: series.map(d => ({ x: d.x, y: d.connected ? 1 : 0, isAlarm: d.is_alarm })),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true, stepped: true,
+            pointRadius: ctx => (ctx.raw?.isAlarm ? 6 : 0),
+            pointBackgroundColor: '#ef4444'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          scales: {
+            x: { type: 'time', time: { tooltipFormat: 'dd/MM/yyyy HH:mm:ss' }, ticks: { maxTicksLimit: 4 } },
+            y: {
+              min: -0.3, max: 1.3,
+              ticks: {
+                stepSize: 1,
+                callback: (v) => (v === 1 ? 'Connected' : v === 0 ? 'Disconnected' : '')
               }
             }
           },
-          plugins: { legend: { display: false } }
+          plugins: { 
+            legend: { display: false },
+            annotation: alarmDate ? this.getAlarmAnnotation(alarmDate) : {}
+          }
         }
       });
 
@@ -292,8 +312,7 @@ Object.values(this.charts).forEach(c => c?.destroy());
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           plugins: { legend: { position: 'bottom' } }
         }
       });

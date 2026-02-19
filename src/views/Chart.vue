@@ -1,5 +1,7 @@
 <template>
   <div class="device-chart-container p-4 border rounded shadow-sm bg-white">
+    
+    <!-- Header -->
     <div class="row align-items-center mb-4 border-bottom pb-3">
       <div class="col-md-4">
         <small class="text-uppercase text-muted fw-bold d-block">Value Name</small>
@@ -15,103 +17,239 @@
       </div>
     </div>
 
+    <!-- Filter -->
     <div class="row g-3 mb-4 bg-light p-3 rounded">
       <div class="col-sm-auto d-flex align-items-center">
         <span class="fw-bold me-2">Filter:</span>
       </div>
-      <div class="col-sm-4">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text">Start</span>
-          <input type="datetime-local" v-model="startDate" class="form-control" @change="onDateChange">
+
+      <!-- START -->
+      <div class="col-sm-5">
+        <div class="d-flex gap-2 align-items-center">
+
+          <VDatePicker v-model="startDateOnly" mode="date" locale="th-TH">
+            <template #default="{ inputEvents }">
+              <input
+                class="form-control form-control-sm"
+                :value="formatThaiDateOnly(startDateOnly)"
+                v-on="inputEvents"
+                readonly
+              />
+            </template>
+          </VDatePicker>
+
+          <!-- HH -->
+          <select v-model="startH" class="form-select form-select-sm w-auto">
+            <option v-for="h in hours" :key="'sh'+h" :value="h">{{ h }}</option>
+          </select>
+
+          :
+
+          <!-- MM -->
+          <select v-model="startM" class="form-select form-select-sm w-auto">
+            <option v-for="m in minutes" :key="'sm'+m" :value="m">{{ m }}</option>
+          </select>
+
+          :
+
+          <!-- SS -->
+          <select v-model="startS" class="form-select form-select-sm w-auto">
+            <option v-for="s in seconds" :key="'ss'+s" :value="s">{{ s }}</option>
+          </select>
+
+          <small>น.</small>
         </div>
       </div>
-      <div class="col-sm-4">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text">End</span>
-          <input type="datetime-local" v-model="endDate" class="form-control" @change="onDateChange">
+
+      <!-- END -->
+      <div class="col-sm-5">
+        <div class="d-flex gap-2 align-items-center">
+
+          <VDatePicker v-model="endDateOnly" mode="date" locale="th-TH">
+            <template #default="{ inputEvents }">
+              <input
+                class="form-control form-control-sm"
+                :value="formatThaiDateOnly(endDateOnly)"
+                v-on="inputEvents"
+                readonly
+              />
+            </template>
+          </VDatePicker>
+
+          <select v-model="endH" class="form-select form-select-sm w-auto">
+            <option v-for="h in hours" :key="'eh'+h" :value="h">{{ h }}</option>
+          </select>
+
+          :
+
+          <select v-model="endM" class="form-select form-select-sm w-auto">
+            <option v-for="m in minutes" :key="'em'+m" :value="m">{{ m }}</option>
+          </select>
+
+          :
+
+          <select v-model="endS" class="form-select form-select-sm w-auto">
+            <option v-for="s in seconds" :key="'es'+s" :value="s">{{ s }}</option>
+          </select>
+
+          <small>น.</small>
         </div>
       </div>
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.display_type === 'onoff'">
-      <OnOffChart 
-          :device="device" 
-          :start-date="startDate" 
-          :end-date="endDate" 
-        />
+    <!-- Chart -->
+    <div class="chart-area border rounded p-3">
+      <component 
+        :is="chartComponent" 
+        :device="device" 
+        :start-date="startDate" 
+        :end-date="endDate" 
+        :alarmTime="alarmTime"
+      />
     </div>
 
-    <div class="chart-area border rounded p-3" v-if="device.display_type === 'number'">
-      <NumberChart 
-          :device="device" 
-          :start-date="startDate" 
-          :end-date="endDate" 
-        />
-    </div>
-
-    <div class="chart-area border rounded p-3" v-if="device.display_type === 'number_gauge'">
-      <NumberGaugeChart 
-          :device="device" 
-          :start-date="startDate" 
-          :end-date="endDate" 
-        />
-    </div>
-
-    <div class="chart-area border rounded p-3" v-if="device.display_type === 'level'">
-      <LevelChart 
-          :device="device" 
-          :start-date="startDate" 
-          :end-date="endDate" 
-        />
-    </div>
   </div>
 </template>
 
 <script>
-// นำเข้า OnOffChart จากโฟลเดอร์ components
-import OnOffChart from '../components/chart/OnOffChart.vue';
-import NumberChart from '../components/chart/NumberChart.vue';
-import NumberGaugeChart from '../components/chart/NumberGaugeChart.vue';
-import LevelChart from '../components/chart/LevelChart.vue';
+import OnOffChart from '../components/chart/OnOffChart.vue'
+import NumberChart from '../components/chart/NumberChart.vue'
+import NumberGaugeChart from '../components/chart/NumberGaugeChart.vue'
+import LevelChart from '../components/chart/LevelChart.vue'
+import { formatISO } from '../utils/date-utils'
 
 export default {
   name: "Chart",
-  components: {
-    OnOffChart,
-    NumberChart,
-    NumberGaugeChart,
-    LevelChart
-  },
+  components: { OnOffChart, NumberChart, NumberGaugeChart, LevelChart },
   props: {
-    device: {
-      type: Object,
-      required: true,
-    },
+    device: Object,
+    initialStart: String,
+    initialEnd: String,
+    alarmTime: String,
   },
   data() {
-    const today = new Date().toISOString().substr(0, 10);
+
+    const today = new Date()
+
+    let start = new Date(today)
+    start.setHours(0,0,0)
+
+    let end = new Date(today)
+    end.setHours(23,59,59)
+
+    // 🔥 ถ้ามี initialStart ส่งมา → ใช้ค่านั้น
+    if (this.initialStart) {
+      start = new Date(this.initialStart)
+    }
+
+    if (this.initialEnd) {
+      end = new Date(this.initialEnd)
+    }
+
     return {
-      // กำหนดค่าเริ่มต้นเป็นวันที่ปัจจุบัน
-    startDate: `${today}T00:00`,
-    endDate: `${today}T23:59`,
-    };
+      startDateOnly: start,
+      endDateOnly: end,
+
+      startH: String(start.getHours()).padStart(2,'0'),
+      startM: String(start.getMinutes()).padStart(2,'0'),
+      startS: String(start.getSeconds()).padStart(2,'0'),
+
+      endH: String(end.getHours()).padStart(2,'0'),
+      endM: String(end.getMinutes()).padStart(2,'0'),
+      endS: String(end.getSeconds()).padStart(2,'0'),
+    }
+  },
+  computed: {
+    hours() {
+      return Array.from({ length: 24 }, (_, i) =>
+        String(i).padStart(2, '0')
+      )
+    },
+
+    minutes() {
+      return Array.from({ length: 60 }, (_, i) =>
+        String(i).padStart(2, '0')
+      )
+    },
+
+    seconds() {
+      return this.minutes
+    },
+
+    startDate() {
+      return this.combineDateTime(
+        this.startDateOnly,
+        this.startH,
+        this.startM,
+        this.startS
+      )
+    },
+
+    endDate() {
+      return this.combineDateTime(
+        this.endDateOnly,
+        this.endH,
+        this.endM,
+        this.endS
+      )
+    },
+
+    chartComponent() {
+      const mapping = {
+        onoff: 'OnOffChart',
+        number: 'NumberChart',
+        number_gauge: 'NumberGaugeChart',
+        level: 'LevelChart'
+      }
+      return mapping[this.device.display_type] || null
+    }
+  },
+  watch: {
+    startDate() { this.emitChange() },
+    endDate() { this.emitChange() }
   },
   methods: {
-    onDateChange() {
-      // แจ้ง Parent Component ว่ามีการเปลี่ยนวันที่
-      this.$emit('filter-changed', { start: this.startDate, end: this.endDate });
+
+    formatThaiDateOnly(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      const day = String(d.getDate()).padStart(2, '0')
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear() + 543
+      return `${day}/${month}/${year}`
+    },
+
+    combineDateTime(date, h, m, s) {
+      if (!date) return null
+
+      const d = new Date(date)
+      d.setHours(parseInt(h))
+      d.setMinutes(parseInt(m))
+      d.setSeconds(parseInt(s))
+
+      const pad = (n) => String(n).padStart(2, '0')
+
+      return (
+        d.getFullYear() + '-' +
+        pad(d.getMonth() + 1) + '-' +
+        pad(d.getDate()) + ' ' +
+        pad(d.getHours()) + ':' +
+        pad(d.getMinutes()) + ':' +
+        pad(d.getSeconds())
+      )
+    },
+
+    emitChange() {
+      this.$emit("filter-changed", {
+        start: this.startDate,
+        end: this.endDate
+      })
     }
   }
-};
+}
 </script>
 
 <style scoped>
-.text-uppercase {
-  letter-spacing: 0.5px;
-  font-size: 0.75rem;
-}
-.chart-area {
-  min-height: 400px;
-  background-color: #f8f9fa;
-}
+.text-uppercase { letter-spacing: 0.5px; font-size: 0.75rem; }
+.chart-area { min-height: 400px; background-color: #f8f9fa; }
 </style>

@@ -1,5 +1,15 @@
-import { createApp } from 'vue'
+import { createApp } from "vue";
+import App from "./App.vue";
 import './style.css'
-import App from './App.vue'
+import VCalendar from "@peeraop21/v-calendar-buddhist";
+import "@peeraop21/v-calendar-buddhist/style.css";
 
-createApp(App).mount('#app')
+const app = createApp(App);
+
+app.use(VCalendar, {
+  locale: "th-TH",
+  firstDayOfWeek: 1,
+});
+
+app.mount("#app");
+

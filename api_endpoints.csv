@@ -1,0 +1,15 @@
+method,path,description,source
+GET,/api/dashboard/cards,List dashboard cards (polling),src/App.vue
+DELETE,/api/dashboard/cards/{card_id},Delete a dashboard card,src/views/DashboardLayout.vue
+POST,/api/dashboard/cards,Add dashboard card,src/views/AddDashboardCardModal.vue
+GET,/api/devices,List devices + addresses,src/views/AddDashboardCardModal.vue
+POST,/api/devices,Create device with addresses,src/components/setting/DeviceForm.vue
+GET,"/api/devices/chart?address_id={id}&start={}&end={}",Time-series chart data (numbers/onoff),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
+GET,"/api/devices/{address_id}/chart/level?start={}&end={}",Level chart data,src/components/chart/LevelChart.vue
+POST,/api/addresses/{addressId}/number-config,Save numeric display config,src/components/setting/DeviceForm.vue
+POST,/api/addresses/{addressId}/levels,Save level ranges,src/components/setting/DeviceForm.vue
+POST,/api/addresses/{addressId}/alarms,Create alarms for an address,src/components/setting/DeviceForm.vue
+GET,"/api/events/all?start={}&end={}",Alarm/history listing,src/views/AlarmHistory.vue
+GET,"/api/plc/read?address={address}",PLC debug read,src/components/setting/PlcDebugForm.vue
+GET,/api/working-time,Load global working time,src/components/setting/WorkingTimeForm.vue
+PUT,/api/working-time,Update global working time,src/components/setting/WorkingTimeForm.vue

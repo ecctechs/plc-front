@@ -176,7 +176,6 @@ export default {
 
     async reloadDevices() {
       await this.loadDevices();
-      await this.loadPopup();
       this.tab = "dashboard";
     },
   }
