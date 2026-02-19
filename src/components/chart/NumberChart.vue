@@ -106,6 +106,9 @@
 <script>
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
+import annotationPlugin from 'chartjs-plugin-annotation'
+
+Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
@@ -125,7 +128,6 @@ export default {
       isEmpty: false,
       charts: {},
       lastData: [],
-      // ✅ เพิ่ม Data States จากโค้ดเก่า
       showMax: false,
       showMin: false,
       showAvg: false,
@@ -146,7 +148,6 @@ export default {
   watch: {
     startDate: 'restartAutoRefresh',
     endDate: 'restartAutoRefresh',
-    alarmTime: 'restartAutoRefresh',
     'device.address_id': 'restartAutoRefresh'
   },
 
@@ -161,8 +162,22 @@ export default {
   },
 
   methods: {
+    formatDateTime(date) {
+      const d = new Date(date)
+      return d.toLocaleString('th-TH', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      })
+    },
+
+    formatHourMinute(date) {
+      const d = new Date(date)
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    },
+
     startAutoRefresh() {
       this.stopAutoRefresh()
+      if (this.alarmTime) return 
       const rate = this.device.refresh_rate_ms || 5000
       this.refreshTimer = setInterval(() => this.fetchData(true), rate)
     },
@@ -178,25 +193,10 @@ export default {
 
     async fetchData(isSilent = false) {
       if (!isSilent) this.loading = true
-
       try {
-        let url = ''
-
-        if (this.alarmTime) {
-          // 🚨 Alarm Mode
-          url =
-            `${baseUrl}/api/devices/chart-by-alarm` +
-            `?address_id=${this.device.address_id}` +
-            `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
-            `&expand=20`
-        } else {
-          // 📊 Normal Mode
-          url =
-            `${baseUrl}/api/devices/chart` +
-            `?address_id=${this.device.address_id}` +
-            `&start=${this.startDate}` +
-            `&end=${this.endDate}`
-        }
+        let url = this.alarmTime 
+          ? `${baseUrl}/api/devices/chart-by-alarm?address_id=${this.device.address_id}&alarm_time=${encodeURIComponent(this.alarmTime)}&expand=20`
+          : `${baseUrl}/api/devices/chart?address_id=${this.device.address_id}&start=${this.startDate}&end=${this.endDate}`
 
         const res = await fetch(url)
         const raw = await res.json()
@@ -206,36 +206,30 @@ export default {
           return
         }
 
-        const data = raw.map(d => ({
-          // ตรวจสอบ null ก่อนแปลงเป็น Number
+        const processed = raw.map(d => ({
           x: d.value !== null ? Number(d.value) : null, 
-          y: new Date(d.created_at),
+          y: d.created_at,
+          is_alarm: d.is_alarm || false,
           connected: d.status === null ? null : d.status === 1
         }))
 
-        this.lastData = data
+        this.lastData = processed
         this.isEmpty = false
+        this.processStats(processed)
+        this.renderCharts(processed)
 
-        this.processStats(data)
-        this.renderCharts(data)
-
-        // 🔥 สำคัญ: ถ้าเป็น alarm mode ให้หยุด auto refresh
-        if (this.alarmTime) {
-          this.stopAutoRefresh()
-        }
-
+        if (this.alarmTime) this.stopAutoRefresh()
       } catch (err) {
         console.error(err)
       } finally {
         this.loading = false
       }
     },
+
     processStats(data) {
       this.stats.connected = data.filter(d => d.connected === true).length
       this.stats.disconnected = data.filter(d => d.connected === false).length
-
-      // ✅ คำนวณค่า Max, Min, Avg จากชุดข้อมูล
-      const numericValues = data.map(d => d.x).filter(v => !isNaN(v))
+      const numericValues = data.map(d => d.x).filter(v => v !== null && !isNaN(v))
       if (numericValues.length > 0) {
         this.actualMax = Math.max(...numericValues)
         this.actualMin = Math.min(...numericValues)
@@ -244,11 +238,7 @@ export default {
     },
 
     handleScaleChange() {
-      if (
-        this.limitUpper !== null && this.limitUpper !== '' &&
-        this.limitLower !== null && this.limitLower !== '' &&
-        Number(this.limitUpper) <= Number(this.limitLower)
-      ) {
+      if (this.limitUpper !== null && this.limitLower !== null && Number(this.limitUpper) <= Number(this.limitLower)) {
         this.isScaleInvalid = true
       } else {
         this.isScaleInvalid = false
@@ -256,71 +246,58 @@ export default {
       }
     },
 
+    // ฟังก์ชันสร้างเส้นประสีแดงตรงจุด Alarm
+    getAlarmAnnotation(alarmDate) {
+      return {
+        annotations: {
+          alarmLine: {
+            type: 'line',
+            xMin: alarmDate,
+            xMax: alarmDate,
+            borderColor: '#ef4444',
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: `🚨 ALARM ${this.formatHourMinute(alarmDate)}`,
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              position: 'start',
+              yAdjust: -10
+            }
+          }
+        }
+      }
+    },
+
     renderCharts(data) {
       Object.values(this.charts).forEach(c => c?.destroy())
       this.charts = {}
 
-      if (!data || data.length === 0) return
+      const alarmPoint = data.find(d => d.is_alarm === true)
+      const alarmDate = alarmPoint ? new Date(alarmPoint.y) : (this.alarmTime ? new Date(this.alarmTime) : null)
 
-      // ✅ Plugin สำหรับวาดเส้น Reference (Max/Min/Avg)
-      const referenceLinesPlugin = {
-        id: 'referenceLines',
-        afterDraw: (chart) => {
-          const { ctx, scales: { y, x } } = chart
-          ctx.save()
-          ctx.setLineDash([5, 5])
-          ctx.lineWidth = 1.5
-
-          // เส้น Max
-          if (this.showMax && this.actualMax !== null) {
-            const yPos = y.getPixelForValue(this.actualMax)
-            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
-              ctx.strokeStyle = '#dc3545'; ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke()
-              ctx.fillStyle = '#dc3545'; ctx.fillText(`Max: ${this.actualMax.toFixed(2)}`, x.left + 5, yPos - 5)
-            }
-          }
-          // เส้น Min
-          if (this.showMin && this.actualMin !== null) {
-            const yPos = y.getPixelForValue(this.actualMin)
-            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
-              ctx.strokeStyle = '#198754'; ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke()
-              ctx.fillStyle = '#198754'; ctx.fillText(`Min: ${this.actualMin.toFixed(2)}`, x.left + 5, yPos + 15)
-            }
-          }
-          // เส้น Avg
-          if (this.showAvg && this.avgValue !== null) {
-            const yPos = y.getPixelForValue(this.avgValue)
-            if (yPos >= chart.chartArea.top && yPos <= chart.chartArea.bottom) {
-              ctx.strokeStyle = '#ff9800'; ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke()
-              ctx.fillStyle = '#ff9800'; ctx.fillText(`Avg: ${this.avgValue.toFixed(2)}`, x.right - 70, yPos - 5)
-            }
-          }
-          ctx.restore()
-        }
-      }
-
-      // ===== Number Line =====
+      // 1. Number Value Chart
+      const refPlugin = this.createReferencePlugin()
       this.charts.valueLine = new Chart(this.$refs.lineCanvas.getContext('2d'), {
         type: 'line',
-        plugins: [referenceLinesPlugin],
+        plugins: [refPlugin],
         data: {
           datasets: [{
-            label: 'Value',
-            data: data.map(d => ({ x: d.y, y: d.x })),
+            data: data.map(d => ({ x: new Date(d.y), y: d.x, isAlarm: d.is_alarm })),
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59,130,246,0.1)',
             fill: true,
-            pointRadius: 1,
+            pointRadius: ctx => (ctx.raw?.isAlarm ? 5 : 1),
+            pointBackgroundColor: ctx => (ctx.raw?.isAlarm ? '#ef4444' : '#3b82f6'),
             tension: 0.1,
             spanGaps: true
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
+          responsive: true, maintainAspectRatio: false, animation: false,
           scales: {
-          x: {
+                        x: {
               type: 'time',
               time: {
                 tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
@@ -331,94 +308,80 @@ export default {
                   hour: 'dd-MM-yyyy HH:mm:ss'
                 }
               },
-              ticks: { maxTicksLimit: 4, autoSkip: true }
+              ticks: { maxTicksLimit: 6 }
             },
             y: { 
-              beginAtZero: false,
-              // ✅ นำค่าจาก Input มาใช้กำหนด Scale
-              min: (this.limitLower !== null && this.limitLower !== '' && !this.isScaleInvalid) ? Number(this.limitLower) : undefined,
-              max: (this.limitUpper !== null && this.limitUpper !== '' && !this.isScaleInvalid) ? Number(this.limitUpper) : undefined
+              min: (this.limitLower !== null && !this.isScaleInvalid) ? Number(this.limitLower) : undefined,
+              max: (this.limitUpper !== null && !this.isScaleInvalid) ? Number(this.limitUpper) : undefined
             }
           },
-          plugins: {
+          plugins: { 
             legend: { display: false },
-            clip: true // ✅ ป้องกันกราฟทะลุเส้นขอบเวลาล็อคสเกล
+            annotation: alarmDate ? this.getAlarmAnnotation(alarmDate) : {}
           }
         }
       })
 
-      // ===== Network Line =====
+      // 2. Network Chart (แก้ไข Label ซ้อน)
       this.charts.connLine = new Chart(this.$refs.lineCanvas_Conn.getContext('2d'), {
         type: 'line',
         data: {
           datasets: [{
-            data: data.map(d => ({
-              x: d.y,
-              y:
-                d.connected === null
-                  ? null
-                  : d.connected
-                    ? 1
-                    : 0
-            })),
-            stepped: true,
-            spanGaps: true,
+            data: data.map(d => ({ x: new Date(d.y), y: d.connected === null ? null : (d.connected ? 1 : 0), isAlarm: d.is_alarm })),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.1)',
-            fill: true,
-            pointRadius: 1
+            fill: true, stepped: true, pointRadius: ctx => (ctx.raw?.isAlarm ? 5 : 0), pointBackgroundColor: '#ef4444'
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
+          responsive: true, maintainAspectRatio: false, animation: false,
           scales: {
-           x: {
-              type: 'time',
-              time: {
-                tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
-                displayFormats: {
-                  millisecond: 'dd-MM-yyyy HH:mm:ss',
-                  second: 'dd-MM-yyyy HH:mm:ss',
-                  minute: 'dd-MM-yyyy HH:mm:ss',
-                  hour: 'dd-MM-yyyy HH:mm:ss'
-                }
-              },
-              ticks: { maxTicksLimit: 4, autoSkip: true }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1,
-                callback: v => (v === 1 ? 'Connect' : 'Disconnect')
-              }
+            x: { type: 'time', time: { tooltipFormat: 'dd/MM/yyyy HH:mm:ss' }, ticks: { maxTicksLimit: 6 } },
+            y: { 
+              min: -0.3, max: 1.3, // เพิ่ม Padding หัวท้าย
+              ticks: { 
+                stepSize: 1, 
+                callback: v => (v === 1 ? 'Connect' : v === 0 ? 'Disconnect' : '') // กรองค่าอื่นออก
+              } 
             }
           },
-          plugins: {
-            legend: { display: false }
+          plugins: { 
+            legend: { display: false },
+            annotation: alarmDate ? this.getAlarmAnnotation(alarmDate) : {}
           }
         }
       })
 
-      // ===== Network Pie =====
+      // 3. Network Pie
       this.charts.pieConn = new Chart(this.$refs.pieCanvas_Conn.getContext('2d'), {
         type: 'pie',
         data: {
           labels: ['Connect', 'Disconnect'],
-          datasets: [{
-            data: [this.stats.connected, this.stats.disconnected],
-            backgroundColor: ['#10b981', '#6c757d']
-          }]
+          datasets: [{ data: [this.stats.connected, this.stats.disconnected], backgroundColor: ['#10b981', '#6c757d'] }]
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
       })
+    },
+
+    createReferencePlugin() {
+      return {
+        id: 'referenceLines',
+        afterDraw: (chart) => {
+          const { ctx, scales: { y, x }, chartArea } = chart
+          ctx.save(); ctx.setLineDash([5, 5]); ctx.font = '12px Arial'
+          const drawLine = (val, label, color, bottom = false) => {
+            const yPos = y.getPixelForValue(val)
+            if (yPos >= chartArea.top && yPos <= chartArea.bottom) {
+              ctx.strokeStyle = color; ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x.left, yPos); ctx.lineTo(x.right, yPos); ctx.stroke()
+              ctx.fillText(`${label}: ${val.toFixed(2)}`, x.left + 5, bottom ? yPos + 15 : yPos - 5)
+            }
+          }
+          if (this.showMax && this.actualMax !== null) drawLine(this.actualMax, 'Max', '#dc3545')
+          if (this.showMin && this.actualMin !== null) drawLine(this.actualMin, 'Min', '#198754', true)
+          if (this.showAvg && this.avgValue !== null) drawLine(this.avgValue, 'Avg', '#ff9800')
+          ctx.restore()
+        }
+      }
     }
   }
 }
