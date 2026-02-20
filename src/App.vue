@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid mt-4">
     <ul class="nav nav-tabs mb-3">
-      <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory']" :key="t">
+      <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
         <button
           class="nav-link text-capitalize"
           :class="{ active: tab === t }"
@@ -38,9 +38,8 @@
         @toggle-auto="handleToggleAuto"
       />
 
-      <AlarmHistory
-        v-if="tab === 'alarmhistory'"
-        :devices="dashboard"
+      <Interaction
+        v-if="tab === 'interaction'"
       />
     </div>
   </div>
@@ -51,12 +50,13 @@ import DashboardLayout from "./views/DashboardLayout.vue";
 import Setting from "./views/Setting.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
+import Interaction from "./views/Interaction.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardLayout, Setting, Demo, AlarmHistory },
+  components: { DashboardLayout, Setting, Demo, AlarmHistory, Interaction },
 
   data() {
     return {

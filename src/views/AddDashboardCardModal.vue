@@ -88,14 +88,6 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 export default {
   name: "AddDashboardCardModal",
 
-  props: {
-    // device list จาก API (optional now - will be fetched internally)
-    addresses: {
-      type: Array,
-      default: () => []
-    }
-  },
-
   data() {
     return {
       selectedDeviceId: "",
