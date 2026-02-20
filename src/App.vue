@@ -41,6 +41,11 @@
       <Interaction
         v-if="tab === 'interaction'"
       />
+
+      <AlarmHistory
+        v-if="tab === 'alarmhistory'"
+        :devices="dashboard"
+      />
     </div>
   </div>
 </template>
