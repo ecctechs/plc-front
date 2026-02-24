@@ -5,8 +5,8 @@ POST,/api/dashboard/cards,Add dashboard card,src/views/AddDashboardCardModal.vue
 GET,/api/devices,List devices + addresses,src/views/AddDashboardCardModal.vue
 POST,/api/devices,Create device with addresses,src/components/setting/DeviceForm.vue
 GET,"/api/devices/chart?address_id={id}&start={}&end={}",Time-series chart data (numbers/onoff),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
-GET,"/api/devices/chart-by-alarm?address_id={id}&alarm_time={}&expand={}",Chart data by alarm time (expand ±20%),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
-GET,"/api/devices/{address_id}/chart/level?start={}&end={}",Level chart data,src/components/chart/LevelChart.vue
+GET,"/api/devices/chart-by-alarm?address_id={id}&alarm_time={}&expand={}",Chart data by alarm time (expand ±20% for numbers/onoff/level),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue;src/components/chart/LevelChart.vue
+GET,"/devices/chart?start={}&end={}&address_id={}",Time-series chart data (numbers/onoff/level),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue;src/components/chart/LevelChart.vue
 POST,/api/addresses/{addressId}/number-config,Save numeric display config,src/components/setting/DeviceForm.vue
 POST,/api/addresses/{addressId}/levels,Save level ranges,src/components/setting/DeviceForm.vue
 POST,/api/addresses/{addressId}/alarms,Create alarms for an address,src/components/setting/DeviceForm.vue

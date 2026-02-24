@@ -241,9 +241,6 @@ export default {
           const canvasId = `gauge-${addr.address_id}`;
           const canvasEl = document.getElementById(canvasId);
           
-          console.log("Looking for canvas:", canvasId, "Found:", !!canvasEl);
-          console.log("numberConfig:", addr.numberConfig);
-          
           if (canvasEl && !this.gauges[addr.address_id]) {
             const min = addr.numberConfig?.min_value ?? 0;
             const max = addr.numberConfig?.max_value ?? 100;
@@ -252,7 +249,6 @@ export default {
             const highlights = this.getGaugeHighlights(addr);
 
             try {
-              console.log("Creating gauge with min:", min, "max:", max);
               this.gauges[addr.address_id] = new RadialGauge({
                 renderTo: canvasEl,
                 width: 200,
@@ -285,7 +281,6 @@ export default {
                 animationRule: "linear",
                 strokeTicks: true,
               }).draw();
-              console.log("Gauge created successfully");
             } catch (err) {
               console.error("Gauge Error:", err);
             }
