@@ -7,6 +7,7 @@
         class="machine-background"
         :style="containerStyle"
       >
+
         <!-- Dynamic Elements -->
         <template v-for="element in visibleElements" :key="element.id">
           <StatusLamp 
@@ -16,8 +17,7 @@
             :size="calculateSize(element)"
             :bgColor="element.bg_color"
             :inactiveColor="element.inactive_color"
-            :deviceId="element.device_id"
-            :addressId="element.address_id"
+            :isOn="getValue(element.address_id) !== 0"
           />
           
           <NumberDisplay 
@@ -29,7 +29,25 @@
             :textColor="element.text_color"
             :unit="element.unit"
             :decimals="element.precision"
-            :deviceId="element.device_id"
+            :value="getValue(element.address_id)"
+            :editable="true"
+            :addressId="element.address_id"
+            @update-value="handleNumberUpdate"
+          />
+          
+          <GaugeDisplay
+            v-else-if="element.element_type === 'gauge_display'"
+            :x_percent="parseFloat(element.x_percent)"
+            :y_percent="parseFloat(element.y_percent)"
+            :size="calculateSize(element)"
+            :bgColor="element.bg_color"
+            :textColor="element.text_color"
+            :unit="element.unit"
+            :decimals="element.precision"
+            :value="getValue(element.address_id)"
+            :minValue="getDeviceMinMax(element.address_id).min"
+            :maxValue="getDeviceMinMax(element.address_id).max"
+            :alarms="getDeviceMinMax(element.address_id).alarms"
             :addressId="element.address_id"
           />
           
@@ -38,11 +56,11 @@
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
             :size="calculateSize(element)"
-            :label="element.button_label"
+            :label="getButtonLabel(element)"
             :activeColor="element.active_color"
             :inactiveColor="element.inactive_color"
-            :deviceId="element.device_id"
-            :addressId="element.address_id"
+            :isPressed="getValue(element.address_id) !== 0"
+            @click="writePlcValue(element)"
           />
         </template>
       </div>
@@ -53,6 +71,7 @@
 <script>
 import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
+import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
 import ControlButton from '../components/interaction/ControlButton.vue'
 import tpmLine from '../img/tpm_line.png'
 
@@ -63,7 +82,11 @@ export default {
   components: {
     StatusLamp,
     NumberDisplay,
+    GaugeDisplay,
     ControlButton
+  },
+  props: {
+    devices: { type: Array, default: () => [] }
   },
   data() {
     return {
@@ -72,6 +95,14 @@ export default {
       error: null,
       plcValues: {},
       backgroundImage: tpmLine,
+    }
+  },
+  watch: {
+    devices: {
+      deep: true,
+      handler(newVal) {
+        this.updatePlcValuesFromDevices(newVal)
+      }
     }
   },
   computed: {
@@ -89,11 +120,17 @@ export default {
     }
   },
   methods: {
+    getButtonLabel(element) {
+      const value = this.getValue(element.address_id)
+      return value === 0 ? 'START' : 'STOP'
+    },
     calculateSize(element) {
-      // Calculate responsive size based on element size_width
-      // Using vmin to keep consistent across all screen sizes
       const baseSize = element.size_width || 50
-      return baseSize / 10 // Convert pixel size to responsive unit
+      return baseSize / 10
+    },
+    getValue(addressId) {
+      if (!addressId) return 0
+      return this.plcValues[addressId] ?? 0
     },
     async fetchLayoutData() {
       try {
@@ -107,9 +144,6 @@ export default {
         }
         
         this.layoutData = await response.json()
-        
-        // Fetch PLC values for all devices
-        // await this.fetchPlcValues()
       } catch (error) {
         console.error('Failed to fetch layout data:', error)
         this.error = error.message
@@ -117,43 +151,122 @@ export default {
         this.loading = false
       }
     },
-    async fetchPlcValues() {
-      if (!this.layoutData || !this.layoutData.elements) return
+    updatePlcValuesFromDevices(devices) {
+      if (!devices || devices.length === 0) return
       
-      // Group addresses by device
-      const deviceAddresses = {}
-      this.layoutData.elements.forEach(el => {
-        if (el.device_id && el.address_id) {
-          if (!deviceAddresses[el.device_id]) {
-            deviceAddresses[el.device_id] = []
-          }
-          deviceAddresses[el.device_id].push(el.address_id)
+      const values = {}
+      devices.forEach(device => {
+        if (device.address_id) {
+          values[device.address_id] = device.last_value
         }
       })
+      this.plcValues = values
+      console.log('Updated PLC values:', this.plcValues)
+    },
+    getPlcAddress(addressId) {
+      if (!addressId || !this.devices) return null
       
-      // Fetch values for each device
-      for (const [deviceId, addressIds] of Object.entries(deviceAddresses)) {
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/plc/${deviceId}/read?addresses=${addressIds.join(',')}`
-          )
-          if (response.ok) {
-            const data = await response.json()
-            this.plcValues = { ...this.plcValues, ...data.values }
-          }
-        } catch (error) {
-          console.error(`Failed to fetch PLC values for device ${deviceId}:`, error)
+      const device = this.devices.find(d => d.address_id === addressId)
+      return device ? device.plc_address : null
+    },
+    getDeviceMinMax(addressId) {
+      if (!addressId || !this.devices) return { min: 0, max: 100, alarms: [] }
+      
+      const device = this.devices.find(d => d.address_id === addressId)
+      if (!device || !device.numberConfig) return { min: 0, max: 100, alarms: [] }
+      
+      return {
+        min: device.numberConfig.min_value ?? 0,
+        max: device.numberConfig.max_value ?? 100,
+        alarms: device.alarms || []
+      }
+    },
+    async writePlcValue(element) {
+      if (!element || !element.address_id) {
+        console.error('No address_id defined for this element')
+        return
+      }
+
+      const plcAddress = this.getPlcAddress(element.address_id)
+      if (!plcAddress) {
+        console.error('No PLC address found for this element')
+        return
+      }
+
+      // Toggle the value (0 -> 1 or 1 -> 0)
+      const currentValue = this.getValue(element.address_id)
+      const newValue = currentValue === 0 ? 1 : 0
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: plcAddress,
+            value: newValue
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
+
+        const result = await response.json()
+        console.log('PLC write successful:', result)
+
+        // Update local value
+        this.plcValues[element.address_id] = newValue
+
+        // Emit event to update parent
+        this.$emit('update-device', { address_id: element.address_id, value: newValue })
+      } catch (error) {
+        console.error('Failed to write to PLC:', error)
+        alert('Failed to write to PLC: ' + error.message)
+      }
+    },
+    async handleNumberUpdate({ addressId, value }) {
+      const plcAddress = this.getPlcAddress(addressId)
+      
+      if (!plcAddress) {
+        console.error('No PLC address found for this element')
+        return
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: plcAddress,
+            value: value
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const result = await response.json()
+        console.log('PLC write successful:', result)
+
+        // Update local value
+        this.plcValues[addressId] = value
+
+        // Emit event to update parent
+        this.$emit('update-device', { address_id: addressId, value: value })
+      } catch (error) {
+        console.error('Failed to write to PLC:', error)
+        alert('Failed to write to PLC: ' + error.message)
       }
     }
   },
   mounted() {
     this.fetchLayoutData()
-    
-    // // Poll for PLC values every 1 second
-    // this.pollingInterval = setInterval(() => {
-    //   this.fetchPlcValues()
-    // }, 1000)
+    this.updatePlcValuesFromDevices(this.devices)
   },
   beforeUnmount() {
     if (this.pollingInterval) {
