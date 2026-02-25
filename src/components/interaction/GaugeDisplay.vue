@@ -219,6 +219,7 @@ export default {
         valueBox: false, 
         ticksAngle: 240,
         startAngle: 60,
+        animation: true,
         animationDuration: 800,
         animationRule: "linear",
         strokeTicks: true
@@ -235,6 +236,7 @@ export default {
       const numVal = typeof newVal === 'number' ? newVal : parseFloat(newVal) || 0
       const scaledVal = (numVal * this.scale) + this.offset
       
+      this.gauge.value = scaledVal
       this.gauge.update({
         value: scaledVal
       })
