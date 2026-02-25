@@ -50,7 +50,9 @@
             :alarms="getDeviceMinMax(element.address_id).alarms"
             :scale="getDeviceMinMax(element.address_id).scale"
             :offset="getDeviceMinMax(element.address_id).offset"
+            :editable="true"
             :addressId="element.address_id"
+            @update-value="handleNumberUpdate"
           />
           
           <ControlButton 

@@ -1,11 +1,31 @@
 <template>
   <div 
     class="gauge-display"
+    :class="{ 'is-editable': editable }"
     :style="containerStyle"
+    @click="startEditing"
   >
     <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
-    <div class="gauge-value" :style="textStyle" v-if="showValue">
+    <div v-if="!editing && showValue" class="gauge-value" :style="textStyle">
       {{ displayValue }} {{ unit }}
+    </div>
+    <div v-else-if="editing" class="edit-container">
+      <input
+        ref="inputField"
+        type="number"
+        class="edit-input"
+        :style="textStyle"
+        :value="inputValue"
+        @input="onInput"
+        @blur="finishEditing"
+        @keyup.enter="finishEditing"
+        @keyup.escape="cancelEditing"
+        @click.stop
+        :min="minValue"
+        :max="maxValue"
+        :step="step"
+      />
+      <span class="unit-label" :style="textStyle">{{ unit }}</span>
     </div>
   </div>
 </template>
@@ -75,11 +95,22 @@ export default {
     showValue: {
       type: Boolean,
       default: true
+    },
+    editable: {
+      type: Boolean,
+      default: false
+    },
+    step: {
+      type: Number,
+      default: 1
     }
   },
+  emits: ['update-value'],
   data() {
     return {
-      gauge: null
+      gauge: null,
+      editing: false,
+      inputValue: 0
     }
   },
   computed: {
@@ -115,8 +146,11 @@ export default {
   },
   watch: {
     value: {
-      immediate: false,
+      immediate: true,
       handler(newVal) {
+        if (!this.editing) {
+          this.inputValue = newVal
+        }
         this.updateGauge(newVal)
       }
     },
@@ -227,6 +261,38 @@ export default {
       
       this.gauge.draw()
     },
+    startEditing() {
+      if (!this.editable) return
+      
+      this.editing = true
+      this.inputValue = this.value
+      
+      this.$nextTick(() => {
+        const input = this.$refs.inputField
+        if (input) {
+          input.focus()
+          input.select()
+        }
+      })
+    },
+    onInput(event) {
+      this.inputValue = parseFloat(event.target.value) || 0
+    },
+    finishEditing() {
+      if (!this.editable) return
+      
+      this.editing = false
+      
+      // Emit the new value to parent
+      this.$emit('update-value', {
+        addressId: this.addressId,
+        value: this.inputValue
+      })
+    },
+    cancelEditing() {
+      this.editing = false
+      this.inputValue = this.value
+    },
     updateGauge(newVal) {
       if (!this.gauge) {
         this.initGauge()
@@ -259,6 +325,15 @@ export default {
   justify-content: center;
 }
 
+.gauge-display.is-editable {
+  cursor: pointer;
+}
+
+.gauge-display.is-editable:hover {
+  border-color: #ffff00;
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+}
+
 .gauge-display canvas {
   width: 100% !important;
   height: auto !important;
@@ -269,5 +344,46 @@ export default {
   font-weight: bold;
   font-size: 1.2em;
   margin-top: 0.2em;
+}
+
+.edit-container {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.edit-input {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #00ff00;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1em;
+  width: 4em;
+  text-align: center;
+  color: #00ff00;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #ffff00;
+  box-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+}
+
+.edit-input::-webkit-outer-spin-button,
+.edit-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.edit-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.unit-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8em;
 }
 </style>
