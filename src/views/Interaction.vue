@@ -43,11 +43,13 @@
             :bgColor="element.bg_color"
             :textColor="element.text_color"
             :unit="element.unit"
-            :decimals="element.precision"
+            :decimals="getDeviceMinMax(element.address_id).decimal_places"
             :value="getValue(element.address_id)"
             :minValue="getDeviceMinMax(element.address_id).min"
             :maxValue="getDeviceMinMax(element.address_id).max"
             :alarms="getDeviceMinMax(element.address_id).alarms"
+            :scale="getDeviceMinMax(element.address_id).scale"
+            :offset="getDeviceMinMax(element.address_id).offset"
             :addressId="element.address_id"
           />
           
@@ -170,15 +172,18 @@ export default {
       return device ? device.plc_address : null
     },
     getDeviceMinMax(addressId) {
-      if (!addressId || !this.devices) return { min: 0, max: 100, alarms: [] }
+      if (!addressId || !this.devices) return { min: 0, max: 100, alarms: [], scale: 1, offset: 0, decimal_places: 0 }
       
       const device = this.devices.find(d => d.address_id === addressId)
-      if (!device || !device.numberConfig) return { min: 0, max: 100, alarms: [] }
+      if (!device || !device.numberConfig) return { min: 0, max: 100, alarms: [], scale: 1, offset: 0, decimal_places: 0 }
       
       return {
         min: device.numberConfig.min_value ?? 0,
         max: device.numberConfig.max_value ?? 100,
-        alarms: device.alarms || []
+        alarms: device.alarms || [],
+        scale: device.numberConfig.scale ?? 1,
+        offset: device.numberConfig.offset ?? 0,
+        decimal_places: device.numberConfig.decimal_places ?? 0
       }
     },
     async writePlcValue(element) {

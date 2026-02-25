@@ -48,6 +48,14 @@ export default {
       type: Number,
       default: 100
     },
+    scale: {
+      type: Number,
+      default: 1
+    },
+    offset: {
+      type: Number,
+      default: 0
+    },
     bgColor: {
       type: String,
       default: 'rgba(0, 0, 0, 0.8)'
@@ -94,10 +102,9 @@ export default {
       }
     },
     displayValue() {
-      if (typeof this.value === 'number') {
-        return this.value.toFixed(this.decimals)
-      }
-      return this.value
+      const raw = this.value ?? 0
+      const scaled = (raw * this.scale) + this.offset
+      return Number(scaled).toFixed(this.decimals)
     },
     highlights() {
       return this.getGaugeHighlights()
@@ -169,6 +176,10 @@ export default {
 
       return highlights
     },
+    getDisplayValue(raw) {
+      const scaled = (raw * this.scale) + this.offset
+      return Number(scaled).toFixed(this.decimals)
+    },
     initGauge() {
       if (!this.$refs.gaugeCanvas) return
       
@@ -186,7 +197,7 @@ export default {
         height: 200,
         minValue: min,
         maxValue: max,
-        value: parseFloat(this.value) || 0,
+        value: parseFloat(this.getDisplayValue(this.value)) || 0,
         units: unitLabel,
         majorTicks: this.generateTicks(min, max),
         colorNumbers: "#444",
@@ -222,9 +233,10 @@ export default {
       }
       
       const numVal = typeof newVal === 'number' ? newVal : parseFloat(newVal) || 0
+      const scaledVal = (numVal * this.scale) + this.offset
       
       this.gauge.update({
-        value: numVal
+        value: scaledVal
       })
     }
   }
