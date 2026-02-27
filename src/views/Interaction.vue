@@ -114,7 +114,7 @@ export default {
       plcValues: {},
       backgroundImage: null,
       layouts: [],
-      selectedLayoutId: 2
+      selectedLayoutId: 1
     }
   },
   watch: {
