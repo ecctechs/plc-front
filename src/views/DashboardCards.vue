@@ -79,8 +79,6 @@
                 </div>
 
                 <div v-if="addr.numberConfig">
-                  <div>Scale: <strong>×{{ addr.numberConfig.scale ?? 1 }}</strong></div>
-                  <div>Offset: <strong>{{ addr.numberConfig.offset ?? 0 }}</strong></div>
                   <div v-if="addr.numberConfig.min_value !== undefined">
                     Range: <strong>{{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}</strong>
                   </div>
@@ -313,10 +311,8 @@ export default {
     },
 
     getDisplayValue(addr) {
-      const cfg = addr.numberConfig || {};
       const raw = addr.last_value ?? 0;
-      const scaled = (raw * (cfg.scale ?? 1)) + (cfg.offset ?? 0);
-      return Number(scaled).toFixed(cfg.decimal_places ?? 0);
+      return Number(raw).toFixed(addr.numberConfig?.decimal_places ?? 0);
     },
 
     generateTicks(min, max) {
