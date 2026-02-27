@@ -1,21 +1,26 @@
 <template>
   <div class="interaction-page">
-    <div class="layout-selector">
-      <label for="layout-select">Select Layout:</label>
-      <select 
-        id="layout-select" 
-        v-model="selectedLayoutId" 
-        @change="onLayoutChange"
-      >
-        <option value="" disabled>-- Select a layout --</option>
-        <option 
-          v-for="layout in layouts" 
-          :key="layout.id" 
-          :value="layout.id"
+    <div class="layout-controls">
+      <div class="layout-selector">
+        <label for="layout-select">Select Layout:</label>
+        <select 
+          id="layout-select" 
+          v-model="selectedLayoutId" 
+          @change="onLayoutChange"
         >
-          {{ layout.name || layout.id }}
-        </option>
-      </select>
+          <option value="" disabled>-- Select a layout --</option>
+          <option 
+            v-for="layout in layouts" 
+            :key="layout.id" 
+            :value="layout.id"
+          >
+            {{ layout.name || layout.id }}
+          </option>
+        </select>
+      </div>
+      <button class="btn btn-primary" @click="showAddElementModal = true">
+        <i class="bi bi-plus-circle me-1"></i> Add Element
+      </button>
     </div>
     <div v-if="loading" class="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -84,6 +89,14 @@
         </template>
       </div>
     </div>
+
+    <!-- Add Element Modal -->
+    <AddElementModal 
+      v-if="showAddElementModal" 
+      :layoutId="selectedLayoutId"
+      @close="showAddElementModal = false"
+      @saved="onElementSaved"
+    />
   </div>
 </template>
 
@@ -92,6 +105,7 @@ import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
 import ControlButton from '../components/interaction/ControlButton.vue'
+import AddElementModal from './AddElementModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
@@ -101,7 +115,8 @@ export default {
     StatusLamp,
     NumberDisplay,
     GaugeDisplay,
-    ControlButton
+    ControlButton,
+    AddElementModal
   },
   props: {
     devices: { type: Array, default: () => [] }
@@ -114,7 +129,8 @@ export default {
       plcValues: {},
       backgroundImage: null,
       layouts: [],
-      selectedLayoutId: 1
+      selectedLayoutId: 1,
+      showAddElementModal: false
     }
   },
   watch: {
@@ -166,6 +182,11 @@ export default {
       }
     },
     onLayoutChange() {
+      this.fetchLayoutData()
+    },
+    onElementSaved() {
+      // Close modal and refresh layout data
+      this.showAddElementModal = false
       this.fetchLayoutData()
     },
     async fetchLayoutData(layoutId = null) {
@@ -325,8 +346,14 @@ export default {
 </script>
 
 <style scoped>
-.layout-selector {
+.layout-controls {
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.layout-selector {
   display: flex;
   align-items: center;
   gap: 10px;
