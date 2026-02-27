@@ -1,5 +1,22 @@
 <template>
   <div class="interaction-page">
+    <div class="layout-selector">
+      <label for="layout-select">Select Layout:</label>
+      <select 
+        id="layout-select" 
+        v-model="selectedLayoutId" 
+        @change="onLayoutChange"
+      >
+        <option value="" disabled>-- Select a layout --</option>
+        <option 
+          v-for="layout in layouts" 
+          :key="layout.id" 
+          :value="layout.id"
+        >
+          {{ layout.name || layout.id }}
+        </option>
+      </select>
+    </div>
     <div v-if="loading" class="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="image-container">
@@ -77,7 +94,6 @@ import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
 import ControlButton from '../components/interaction/ControlButton.vue'
-import tpmLine from '../img/tpm_line.png'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
@@ -98,7 +114,9 @@ export default {
       loading: true,
       error: null,
       plcValues: {},
-      backgroundImage: tpmLine,
+      backgroundImage: null,
+      layouts: [],
+      selectedLayoutId: 2
     }
   },
   watch: {
@@ -136,18 +154,45 @@ export default {
       if (!addressId) return 0
       return this.plcValues[addressId] ?? 0
     },
-    async fetchLayoutData() {
+    async fetchLayouts() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        this.layouts = await response.json()
+      } catch (error) {
+        console.error('Failed to fetch layouts:', error)
+      }
+    },
+    onLayoutChange() {
+      this.fetchLayoutData()
+    },
+    async fetchLayoutData(layoutId = null) {
+      const id = layoutId || this.selectedLayoutId
+      if (!id) {
+        this.loading = false
+        return
+      }
+      
       try {
         this.loading = true
         this.error = null
         
-        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/1`)
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`)
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         
         this.layoutData = await response.json()
+        
+        // Set background image from API response
+        if (this.layoutData.machine_image) {
+          this.backgroundImage = this.layoutData.machine_image
+        }
       } catch (error) {
         console.error('Failed to fetch layout data:', error)
         this.error = error.message
@@ -272,6 +317,7 @@ export default {
     }
   },
   mounted() {
+    this.fetchLayouts()
     this.fetchLayoutData()
     this.updatePlcValuesFromDevices(this.devices)
   },
@@ -284,6 +330,32 @@ export default {
 </script>
 
 <style scoped>
+.layout-selector {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.layout-selector label {
+  font-weight: bold;
+  color: #333;
+}
+
+.layout-selector select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.layout-selector select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
 .interaction-page {
   width: 100%;
   height: calc(100vh - 140px);
