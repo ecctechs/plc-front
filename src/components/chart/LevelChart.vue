@@ -124,30 +124,72 @@ export default {
     async fetchData(isSilent = false) {
       if (!isSilent) this.loading = true;
       try {
-        const startUTC = new Date(this.startDate).toISOString();
-        const endUTC = new Date(this.endDate).toISOString();
-        const url = `${baseUrl}/api/devices/${this.device.address_id}/chart/level?start=${startUTC}&end=${endUTC}`;
+        // Format date as YYYY-MM-DD HH:mm:ss (without T and Z)
+        const formatDate = (date) => {
+          const d = new Date(date);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const hours = String(d.getHours()).padStart(2, '0');
+          const minutes = String(d.getMinutes()).padStart(2, '0');
+          const seconds = String(d.getSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        };
+
+        let url;
+        if (this.alarmTime) {
+          // ใช้ chart-by-alarm เมื่อมี alarmTime (expand ±20%)
+          url = `${baseUrl}/api/devices/chart-by-alarm` +
+                `?address_id=${this.device.address_id}` +
+                `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
+                `&expand=20`;
+        } else {
+          // Format date as YYYY-MM-DD HH:mm:ss
+          const startStr = formatDate(this.startDate);
+          const endStr = formatDate(this.endDate);
+          url = `${baseUrl}/api/devices/chart/` +
+                `?address_id=${this.device.address_id}` +
+                `&start=${startStr}` +
+                `&end=${endStr}`;
+        }
 
         const res = await fetch(url);
         const data = await res.json();
+        console.log("Fetch URL:", url);
+        console.log("Fetched Chart Data:", data);
 
         // เก็บข้อมูล Level แบบล้าง Proxy
         this.levels = JSON.parse(JSON.stringify(data.levels || []));
         
         const alarmTs = this.alarmTime ? new Date(this.alarmTime).getTime() : null;
 
-        const series = (data.series || []).map(log => {
+        // หาจุดที่ใกล้ alarmTime มากที่สุด
+        let closestIdx = -1;
+        let closestDiff = Infinity;
+        
+        const series = (data.series || []).map((log, idx) => {
           const currentTs = new Date(log.x).getTime();
-          // มาร์คจุด Alarm (เผื่อเวลาคลาดเคลื่อน 2 วินาที)
-          const isAlarmPoint = alarmTs ? Math.abs(currentTs - alarmTs) < 2000 : false;
+          
+          if (alarmTs) {
+            const diff = Math.abs(currentTs - alarmTs);
+            if (diff < closestDiff) {
+              closestDiff = diff;
+              closestIdx = idx;
+            }
+          }
 
           return {
             x: new Date(log.x),
             y: log.y,
-            is_alarm: isAlarmPoint, 
-            connected: log.connected === 'connected'
+            is_alarm: false, 
+            connected: log.status === 1
           };
         });
+
+        // มาร์คเฉพาะจุดที่ใกล้ alarmTime มากที่สุดจุดเดียว
+        if (closestIdx >= 0) {
+          series[closestIdx].is_alarm = true;
+        }
 
         this.isEmpty = series.length === 0;
 
@@ -199,8 +241,6 @@ export default {
         levelMap[String(l.level_index)] = l.label;
       });
 
-      console.log("Level Map:", levelMap);
-
       const alarmDate = this.alarmTime ? new Date(this.alarmTime) : null;
       const levelKeys = Object.keys(levelMap).map(Number);
       const maxIdx = levelKeys.length > 0 ? Math.max(...levelKeys) : 2;
@@ -226,10 +266,18 @@ export default {
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
           scales: {
-            x: {
+                     x: {
               type: 'time',
-              time: { tooltipFormat: 'dd-MM-yyyy HH:mm:ss' },
-              ticks: { maxTicksLimit: 5 }
+              time: {
+                tooltipFormat: 'dd-MM-yyyy HH:mm:ss',
+                displayFormats: {
+                  millisecond: 'dd-MM-yyyy HH:mm:ss',
+                  second: 'dd-MM-yyyy HH:mm:ss',
+                  minute: 'dd-MM-yyyy HH:mm:ss',
+                  hour: 'dd-MM-yyyy HH:mm:ss'
+                }
+              },
+              ticks: { maxTicksLimit: 6 }
             },
             y: {
                 // 1. ตั้งค่า min ให้ติดลบ (เช่น -0.5) เพื่อสร้าง Gap ด้านล่างไม่ให้ชิดพื้น
