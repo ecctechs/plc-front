@@ -1,63 +1,62 @@
 <template>
-  <div class="card p-4 shadow-sm border-0">
+  <div class="card p-4 shadow-sm border-0 bg-white">
 
-    <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
-        <h5 class="mb-1 text-primary fw-bold">
+        <h5 class="mb-1 text-primary fw-bold d-flex align-items-center">
           <i class="bi bi-clock-history me-2"></i>ประวัติการแจ้งเตือน
         </h5>
         <p class="text-muted small mb-0">
-          แสดงประวัติเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC ทั้งหมด
+          แสดงเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC ทั้งหมด
         </p>
       </div>
 
-      <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div class="d-flex flex-wrap gap-2 align-items-end justify-content-start justify-content-md-end">
         <div class="filter-group">
-          <label class="form-label small fw-bold">จากวันที่</label>
-          <input type="date" v-model="filter.startDate" class="form-control form-control-sm">
+          <label class="form-label small fw-bold text-secondary">จากวันที่</label>
+          <input type="date" v-model="filter.startDate" class="form-control form-control-sm shadow-sm">
         </div>
         <div class="filter-group">
-          <label class="form-label small fw-bold">ถึงวันที่</label>
-          <input type="date" v-model="filter.endDate" class="form-control form-control-sm">
+          <label class="form-label small fw-bold text-secondary">ถึงวันที่</label>
+          <input type="date" v-model="filter.endDate" class="form-control form-control-sm shadow-sm">
         </div>
-        <button @click="fetchHistory" :disabled="loading" class="btn btn-primary btn-sm px-4">
+        <button @click="fetchHistory" :disabled="loading" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">
           <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
           <i v-else class="bi bi-search me-1"></i> ค้นหา
         </button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="table-responsive rounded-3 border">
-      <table class="table table-striped table-hover align-middle mb-0">
+    <div class="table-responsive rounded-3 border shadow-sm">
+      <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
           <tr>
-            <th class="ps-3">Device Name</th>
-            <th>Alarm Name</th>
-            <th class="text-center">Condition</th>
-            <th class="text-center">Threshold</th>
-            <th class="text-center">Actual Value</th>
-            <th class="text-center">Event Type</th>
-            <th class="pe-3">Time Stamp</th>
+            <th class="ps-3 py-3 border-0">Device Name</th>
+            <th class="py-3 border-0">Alarm Name</th>
+            <th class="py-3 text-center border-0">Condition</th>
+            <th class="py-3 text-center border-0">Threshold</th>
+            <th class="py-3 text-center border-0">Actual Value</th>
+            <th class="py-3 text-center border-0">Event Type</th>
+            <th class="pe-3 border-0">Time Stamp</th>
           </tr>
         </thead>
         <tbody>
-
-          <!-- Loading -->
           <tr v-if="loading">
             <td colspan="7" class="text-center py-5">
-              <div class="spinner-border text-primary"></div>
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="text-muted mt-2 mb-0">กำลังโหลดข้อมูล...</p>
             </td>
           </tr>
 
-          <!-- Data -->
-          <tr v-for="item in history" :key="item.id" v-else-if="history.length > 0">
-            <td class="ps-3"><strong>{{ item.device?.name || 'Unknown Device' }}</strong></td>
+          <tr v-for="item in paginatedHistory" :key="item.id" v-else-if="history.length > 0">
+            <td class="ps-3">
+              <div class="fw-bold text-dark">{{ item.device?.name || 'Unknown' }}</div>
+              <!-- <div class="text-muted extra-small">ID: {{ item.device?.address_id || '-' }}</div> -->
+            </td>
             <td>{{ item.rule?.name || 'N/A' }}</td>
 
             <td class="text-center">
-              <span class="badge bg-light text-dark border fw-normal">
+              <span class="badge bg-light text-dark border fw-normal px-2">
                 {{ item.rule?.condition_type }}
               </span>
             </td>
@@ -78,13 +77,10 @@
               <span v-else>-</span>
             </td>
 
-            <!-- Click เพื่อเปิด Chart -->
             <td class="text-center">
               <a href="#" @click.prevent="openChart(item)" class="chart-link text-decoration-none">
                 <div class="d-flex flex-column align-items-center">
-                  <span :class="item.event_type === 'TRIGGER' 
-                    ? 'text-danger fw-bold fs-5' 
-                    : 'text-success fw-bold fs-5'">
+                  <span :class="item.event_type === 'TRIGGER' ? 'text-danger fw-bold fs-5' : 'text-success fw-bold fs-5'">
                     {{ item.value }}
                   </span>
                   <small class="view-chart-text text-muted">
@@ -95,11 +91,11 @@
             </td>
 
             <td class="text-center">
-              <span v-if="item.event_type === 'TRIGGER'" class="text-danger fw-bold">
-                <i class="bi bi-exclamation-triangle-fill"></i> TRIGGER
+              <span v-if="item.event_type === 'TRIGGER'" class="badge bg-danger-soft text-danger fw-bold px-3">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> TRIGGER
               </span>
-              <span v-else class="text-success fw-bold">
-                <i class="bi bi-check-circle-fill"></i> RECOVERY
+              <span v-else class="badge bg-success-soft text-success fw-bold px-3">
+                <i class="bi bi-check-circle-fill me-1"></i> RECOVERY
               </span>
             </td>
 
@@ -108,29 +104,67 @@
             </td>
           </tr>
 
-          <!-- Empty -->
           <tr v-else>
-            <td colspan="7" class="text-center py-5 text-muted">
-              ไม่พบประวัติการแจ้งเตือนในช่วงวันที่เลือก
+            <td colspan="7" class="text-center py-5">
+              <div class="py-4">
+                <i class="bi bi-database-exclamation fs-1 text-muted opacity-50"></i>
+                <p class="text-muted mt-2">ไม่พบประวัติการแจ้งเตือนในช่วงวันที่เลือก</p>
+              </div>
             </td>
           </tr>
-
         </tbody>
       </table>
     </div>
 
-    <!-- Chart Modal -->
-    <div v-if="showChart" class="modal fade show d-block"
-         style="background: rgba(0,0,0,0.5)">
+    <div v-if="history.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 px-2">
+      <div class="text-muted small">
+        แสดง <strong>{{ startIndex + 1 }}</strong> ถึง <strong>{{ Math.min(endIndex, history.length) }}</strong> จากทั้งหมด <strong>{{ history.length }}</strong> รายการ
+      </div>
+      
+      <nav aria-label="Page navigation">
+        <ul class="pagination pagination-sm mb-0 custom-pagination">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="currentPage = 1"><i class="bi bi-chevron-double-left"></i></button>
+          </li>
+
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <button class="page-link" @click="currentPage--"><i class="bi bi-chevron-left"></i></button>
+          </li>
+
+          <li v-if="visiblePages[0] > 1" class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+
+          <li v-for="page in visiblePages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+            <button class="page-link fw-bold" @click="currentPage = page">{{ page }}</button>
+          </li>
+
+          <li v-if="visiblePages[visiblePages.length - 1] < totalPages" class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="currentPage++"><i class="bi bi-chevron-right"></i></button>
+          </li>
+
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <button class="page-link" @click="currentPage = totalPages"><i class="bi bi-chevron-double-right"></i></button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              Chart : {{ selectedDevice?.label }}
+          <div class="modal-header bg-light">
+            <h5 class="modal-title fw-bold text-dark">
+              <i class="bi bi-graph-up text-primary me-2"></i>กราฟประวัติเหตุการณ์: {{ selectedDevice?.label }}
             </h5>
-            <button class="btn-close" @click="closeChart"></button>
+            <button type="button" class="btn-close" @click="closeChart"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body p-0">
+            <div class="p-4">
               <Chart
                 v-if="selectedDevice"
                 :device="selectedDevice"
@@ -138,6 +172,10 @@
                 :initial-end="chartEndDate"
                 :alarm-time="selectedAlarmTime" 
               />
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0">
+            <button type="button" class="btn btn-secondary px-4" @click="closeChart">ปิดหน้าต่าง</button>
           </div>
         </div>
       </div>
@@ -151,7 +189,9 @@ import Chart from './Chart.vue'
 
 export default {
   components: { Chart },
-  props: ['devices'],
+  props: {
+    devices: { type: Array, default: () => [] }
+  },
   data() {
     return {
       history: [],
@@ -161,10 +201,43 @@ export default {
       chartStartDate: null,
       chartEndDate: null,
       selectedAlarmTime: null,
+      currentPage: 1,
+      itemsPerPage: 20,
       filter: {
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
       }
+    }
+  },
+
+  computed: {
+    totalPages() {
+      return Math.ceil(this.history.length / this.itemsPerPage) || 1;
+    },
+    startIndex() {
+      return (this.currentPage - 1) * this.itemsPerPage;
+    },
+    endIndex() {
+      return this.startIndex + this.itemsPerPage;
+    },
+    paginatedHistory() {
+      return this.history.slice(this.startIndex, this.endIndex);
+    },
+    visiblePages() {
+      const range = 2; // Show 2 pages before and after current
+      let start = Math.max(1, this.currentPage - range);
+      let end = Math.min(this.totalPages, this.currentPage + range);
+      
+      // Adjust if at start or end of the list
+      if (this.currentPage <= range) {
+        end = Math.min(this.totalPages, range * 2 + 1);
+      } else if (this.currentPage > this.totalPages - range) {
+        start = Math.max(1, this.totalPages - range * 2);
+      }
+
+      const pages = [];
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
     }
   },
 
@@ -173,124 +246,120 @@ export default {
   },
 
   methods: {
-
-    /* ================================
-       เปิด Chart (20 จุด ก่อน/หลัง)
-    ================================= */
-  openChart(item) {
-    const addressId = item.rule?.address_id || item.address_id;
-
-    const foundAddress = this.devices.find(d => {
-      const value = d._custom?.value || d;
-      return Number(value.address_id) === Number(addressId);
-    });
-
-    if (!foundAddress) return;
-
-    const device = foundAddress._custom?.value || foundAddress;
-
-    const eventTime = new Date(item.created_at);
-
-    const offsetMs = Number(device.refresh_rate_ms) * 20;
-
-    const start = new Date(eventTime.getTime() - offsetMs);
-    const end   = new Date(eventTime.getTime() + offsetMs);
-
-    this.selectedDevice = device;
-
-    // ✅ ส่งเป็น Local datetime (ไม่มี Z)
-    this.chartStartDate = this.formatLocalDateTime(start);
-    this.chartEndDate   = this.formatLocalDateTime(end);
-    this.selectedAlarmTime = item.created_at
-
-    this.showChart = true;
-  },
-  formatLocalDateTime(date) {
-    const pad = (n) => String(n).padStart(2, '0');
-
-    return (
-      date.getFullYear() + '-' +
-      pad(date.getMonth() + 1) + '-' +
-      pad(date.getDate()) + 'T' +
-      pad(date.getHours()) + ':' +
-      pad(date.getMinutes()) + ':' +
-      pad(date.getSeconds())
-    );
-  },
-    closeChart() {
-      this.showChart = false
-      this.selectedDevice = null
-    },
-
     async fetchHistory() {
-      this.loading = true
-      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+      this.loading = true;
+      this.currentPage = 1;
+      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
       try {
-        const url =
-          `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`
-
-        const res = await fetch(url)
-        if (!res.ok) throw new Error('Failed to fetch alarm history')
-
-        this.history = await res.json()
-
+        const url = `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('API Error');
+        this.history = await res.json();
       } catch (err) {
-        console.error("Fetch history error:", err)
+        console.error("Fetch history error:", err);
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
+    openChart(item) {
+      const addressId = item.rule?.address_id || item.address_id;
+      const foundAddress = this.devices.find(d => {
+        const val = d._custom?.value || d;
+        return Number(val.address_id) === Number(addressId);
+      });
+
+      if (!foundAddress) {
+        alert("ไม่พบข้อมูล Device ในระบบปัจจุบัน");
+        return;
+      }
+
+      const device = foundAddress._custom?.value || foundAddress;
+      const eventTime = new Date(item.created_at);
+      const offsetMs = Number(device.refresh_rate_ms || 1000) * 20;
+
+      this.selectedDevice = device;
+      this.chartStartDate = this.formatLocalDateTime(new Date(eventTime.getTime() - offsetMs));
+      this.chartEndDate   = this.formatLocalDateTime(new Date(eventTime.getTime() + offsetMs));
+      this.selectedAlarmTime = item.created_at;
+      this.showChart = true;
+    },
+
+    formatLocalDateTime(date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    },
+
+    closeChart() {
+      this.showChart = false;
+      this.selectedDevice = null;
+    },
+
     formatDate(dateStr) {
-      if (!dateStr) return "-"
-      const date = new Date(dateStr)
-      return date.toLocaleString('th-TH', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
+      if (!dateStr) return "-";
+      return new Date(dateStr).toLocaleString('th-TH', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
     }
   }
 }
 </script>
 
 <style scoped>
-.table thead th { font-size: 0.8rem; letter-spacing: 0.5px; }
-.text-danger { color: #dc3545 !important; }
-.text-success { color: #198754 !important; }
-.fs-5 { font-size: 1.1rem !important; }
-.filter-group input { min-width: 150px; }
+.extra-small { font-size: 0.65rem; }
+.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+.bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
 
+/* Table styling */
+.table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.table tbody tr { transition: background-color 0.15s ease; }
+
+/* Chart Link Effect */
 .chart-link {
-  display: block;
-  padding: 5px;
+  display: inline-block;
+  padding: 4px 12px;
   border-radius: 8px;
   transition: all 0.2s ease;
-  cursor: pointer;
 }
-
-/* เอฟเฟกต์เมื่อ Hover */
 .chart-link:hover {
-  background-color: rgba(13, 110, 253, 0.05); /* สีฟ้าจางๆ */
-  transform: translateY(-2px); /* ลอยขึ้นเล็กน้อย */
+  background-color: #f0f7ff;
+  transform: translateY(-2px);
+}
+.chart-link:hover .view-chart-text { color: #0d6efd !important; text-decoration: underline; }
+
+/* Custom Pagination */
+.custom-pagination .page-link {
+  border: none;
+  background-color: transparent;
+  color: #4b5563;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  border-radius: 8px !important;
+  transition: all 0.2s ease;
+}
+.custom-pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+}
+.custom-pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+  background-color: #e5e7eb;
+  color: #0d6efd;
+}
+.custom-pagination .page-item.disabled .page-link {
+  opacity: 0.3;
 }
 
-.chart-link:hover .view-chart-text {
-  color: #0d6efd !important; /* เปลี่ยนคำว่า 'ดูราฟ' เป็นสีฟ้า */
-  text-decoration: underline;
-}
-
-.chart-link:hover span {
-  filter: brightness(0.8); /* ทำสีตัวเลขให้เข้มขึ้นเล็กน้อย */
-}
-
-.view-chart-text {
-  font-size: 0.7rem;
-  margin-top: -2px;
-  opacity: 0.8;
+/* Modal animation */
+.modal.show { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
