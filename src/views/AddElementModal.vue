@@ -1,10 +1,10 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5)">
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 shadow">
+      <div class="modal-content border-0 shadow-lg">
         <!-- Header -->
-        <div class="modal-header">
-          <h5 class="modal-title">{{ isEdit ? 'Edit Element' : 'Add New Element' }}</h5>
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold text-dark">{{ isEdit ? 'Edit Element' : 'Add New Element' }}</h5>
           <button class="btn-close" @click="$emit('close')"></button>
         </div>
 
@@ -142,11 +142,11 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer">
-          <button class="btn btn-outline-secondary" @click="$emit('close')">
+        <div class="modal-footer bg-light border-0">
+          <button class="btn btn-outline-secondary px-4" @click="$emit('close')">
             Cancel
           </button>
-          <button class="btn btn-primary" :disabled="!canSubmit" @click="submit">
+          <button class="btn btn-primary px-4" :disabled="!canSubmit" @click="submit">
             {{ isEdit ? 'Update' : 'Add Element' }}
           </button>
         </div>

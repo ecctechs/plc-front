@@ -95,15 +95,22 @@
     </div>
   </div>
 
-  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header">
-          <h5 class="modal-title">Chart : {{ selectedAddress?.label }}</h5>
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold text-dark">
+            <i class="bi bi-graph-up text-primary me-2"></i>Chart : {{ selectedAddress?.label }}
+          </h5>
           <button class="btn-close" @click="closeChart"></button>
         </div>
-        <div class="modal-body text-center">
-          <Chart v-if="selectedAddress" :device="selectedAddress" />
+        <div class="modal-body p-0">
+          <div class="p-4">
+            <Chart v-if="selectedAddress" :device="selectedAddress" />
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-0">
+          <button type="button" class="btn btn-secondary px-4" @click="closeChart">ปิดหน้าต่าง</button>
         </div>
       </div>
     </div>
@@ -343,121 +350,6 @@ export default {
 </script>
 
 <style scoped>
-.custom-card {
-  border-radius: 12px;
-  background-color: #ffffff;
-  border: 1.5px solid #d1d1d1 !important;
-}
-
-.onoff-circle {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 4px solid #ffffff; 
-  transition: all 0.4s ease;
-}
-
-.onoff-circle.on {
-  background-color: #28a745;
-  box-shadow: 0 0 30px rgba(40, 167, 69, 0.4);
-}
-
-.onoff-circle.off {
-  background-color: #c84d4d;
-  box-shadow: 0 0 30px rgba(200, 77, 77, 0.4);
-}
-
-.onoff-text {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-top: 15px;
-}
-
-.gauge-container {
-  width: 200px;
-  height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.display-value {
-  font-size: 4.5rem;
-  letter-spacing: -2px;
-  transition: color 0.3s ease;
-}
-
-.status-dot-wrapper {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 12px;
-    height: 12px;
-    cursor: pointer;
-}
-
-.status-dot {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: block;
-}
-
-.status-dot.online { background-color: #28a745; }
-.status-dot.offline { background-color: #dc3545; }
-
-.status-tooltip {
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-}
-
-.status-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #333;
-}
-
-.status-dot-wrapper:hover .status-tooltip {
-    opacity: 1;
-}
-
-.text-success { color: #28a745 !important; }
-.text-warning { color: #ffc107 !important; }
-.text-danger  { color: #dc3545 !important; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.info-panel { border: 1px solid #eee; }
-
-.delete-btn {
-  top: 10px;
-  left: 10px;
-  z-index: 5;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Component-specific styles only */
+/* Note: Shared styles are imported from src/assets/shared-styles.css */
 </style>

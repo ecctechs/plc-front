@@ -1,3 +1,6 @@
+/* ===== Import Shared Styles ===== */
+@import './assets/shared-styles.css';
+
 /* ===== Font Prompt (Global) ===== */
 body {
   font-family: 'Prompt', sans-serif;

@@ -308,58 +308,6 @@ export default {
 </script>
 
 <style scoped>
-.extra-small { font-size: 0.65rem; }
-.bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
-.bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
-
-/* Table styling */
-.table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.table tbody tr { transition: background-color 0.15s ease; }
-
-/* Chart Link Effect */
-.chart-link {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-.chart-link:hover {
-  background-color: #f0f7ff;
-  transform: translateY(-2px);
-}
-.chart-link:hover .view-chart-text { color: #0d6efd !important; text-decoration: underline; }
-
-/* Custom Pagination */
-.custom-pagination .page-link {
-  border: none;
-  background-color: transparent;
-  color: #4b5563;
-  min-width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 2px;
-  border-radius: 8px !important;
-  transition: all 0.2s ease;
-}
-.custom-pagination .page-item.active .page-link {
-  background-color: #0d6efd;
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
-}
-.custom-pagination .page-item:not(.active):not(.disabled) .page-link:hover {
-  background-color: #e5e7eb;
-  color: #0d6efd;
-}
-.custom-pagination .page-item.disabled .page-link {
-  opacity: 0.3;
-}
-
-/* Modal animation */
-.modal.show { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* Component-specific styles only */
+/* Note: Shared styles are imported from src/assets/shared-styles.css */
 </style>
