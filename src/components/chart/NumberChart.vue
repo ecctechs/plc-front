@@ -296,6 +296,7 @@ export default {
         },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: 'nearest', intersect: false, axis: 'x' },
           scales: {
                         x: {
               type: 'time',
@@ -335,6 +336,7 @@ export default {
         },
         options: {
           responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: 'nearest', intersect: false, axis: 'x' },
           scales: {
             x: { type: 'time', time: { tooltipFormat: 'dd/MM/yyyy HH:mm:ss' }, ticks: { maxTicksLimit: 6 } },
             y: { 
