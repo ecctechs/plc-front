@@ -3,9 +3,9 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow">
         <!-- Header -->
-        <div class="modal-header">
+        <div class="modal-header bg-dark text-white">
           <h5 class="modal-title">Add Dashboard Card</h5>
-          <button class="btn-close" @click="$emit('close')"></button>
+          <button class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
 
         <!-- Body -->

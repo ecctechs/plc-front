@@ -3,9 +3,9 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg">
         <!-- Header -->
-        <div class="modal-header bg-light">
-          <h5 class="modal-title fw-bold text-dark">{{ isEdit ? 'Edit Element' : 'Add New Element' }}</h5>
-          <button class="btn-close" @click="$emit('close')"></button>
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold">{{ isEdit ? 'Edit Element' : 'Add New Element' }}</h5>
+          <button class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
 
         <!-- Body -->
