@@ -6,6 +6,7 @@
     @click="startEditing"
   >
     <div v-if="!editing" class="display-content">
+      <span v-if="name" class="display-name">{{ name }}</span>
       <span class="display-value" :style="textStyle">{{ displayValue }}</span>
       <span v-if="unit" class="display-unit" :style="textStyle">{{ unit }}</span>
     </div>
@@ -88,6 +89,10 @@ export default {
     addressId: {
       type: Number,
       default: null
+    },
+    name: {
+      type: String,
+      default: ''
     }
   },
   emits: ['update-value'],
@@ -188,12 +193,19 @@ export default {
 
 .display-content {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 0.2em;
+  gap: 0.1em;
   font-family: 'Courier New', monospace;
   font-weight: bold;
   white-space: nowrap;
+}
+
+.display-name {
+  font-size: 0.5em;
+  color: #fff;
+  opacity: 0.9;
 }
 
 .edit-content {

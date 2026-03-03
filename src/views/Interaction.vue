@@ -40,6 +40,9 @@
             :bgColor="element.bg_color"
             :inactiveColor="element.inactive_color"
             :isOn="getValue(element.address_id) !== 0"
+            :name="element.name"
+            :addressId="element.address_id"
+            @toggle="(newValue) => handleLampToggle(element, newValue)"
           />
           
           <NumberDisplay 
@@ -54,6 +57,7 @@
             :value="getValue(element.address_id)"
             :editable="true"
             :addressId="element.address_id"
+            :name="element.name"
             @update-value="handleNumberUpdate"
           />
           
@@ -72,6 +76,7 @@
             :alarms="getDeviceMinMax(element.address_id).alarms"
             :editable="true"
             :addressId="element.address_id"
+            :name="element.name"
             @update-value="handleNumberUpdate"
           />
           
@@ -84,6 +89,7 @@
             :activeColor="element.active_color"
             :inactiveColor="element.inactive_color"
             :isPressed="getValue(element.address_id) !== 0"
+            :name="element.name"
             @click="writePlcValue(element)"
           />
         </template>
@@ -326,6 +332,43 @@ export default {
 
         // Emit event to update parent
         this.$emit('update-device', { address_id: addressId, value: value })
+      } catch (error) {
+        console.error('Failed to write to PLC:', error)
+        alert('Failed to write to PLC: ' + error.message)
+      }
+    },
+    async handleLampToggle(element, newValue) {
+      const plcAddress = this.getPlcAddress(element.address_id)
+      
+      if (!plcAddress) {
+        console.error('No PLC address found for this element')
+        return
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: plcAddress,
+            value: newValue ? 1 : 0
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const result = await response.json()
+        console.log('PLC write successful:', result)
+
+        // Update local value
+        this.plcValues[element.address_id] = newValue ? 1 : 0
+
+        // Emit event to update parent
+        this.$emit('update-device', { address_id: element.address_id, value: newValue ? 1 : 0 })
       } catch (error) {
         console.error('Failed to write to PLC:', error)
         alert('Failed to write to PLC: ' + error.message)

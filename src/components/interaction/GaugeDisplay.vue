@@ -6,6 +6,7 @@
     @click="startEditing"
   >
     <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
+    <div v-if="name" class="gauge-name">{{ name }}</div>
     <div v-if="!editing && showValue" class="gauge-value" :style="textStyle">
       {{ displayValue }} {{ unit }}
     </div>
@@ -103,6 +104,10 @@ export default {
     step: {
       type: Number,
       default: 1
+    },
+    name: {
+      type: String,
+      default: ''
     }
   },
   emits: ['update-value'],
@@ -234,28 +239,30 @@ export default {
         value: parseFloat(this.getDisplayValue(this.value)) || 0,
         units: unitLabel,
         majorTicks: this.generateTicks(min, max),
-        colorNumbers: "#444",
+        colorNumbers: this.textColor || '#00ff00',
         fontNumbersSize: 22,
-        fontNumbersWeight: "bold",
-        colorPlate: "transparent", 
+        fontNumbersWeight: 'bold',
+        colorPlate: '#1a1a1a',
+        colorBarProgress: this.textColor || '#00ff00',
+        colorBar: '#333333',
         borderShadowWidth: 0,
         borders: false,
-        highlights: this.highlights, 
+        highlights: this.highlights,
         highlightsWidth: 10,
-        needleType: "arrow",
+        needleType: 'arrow',
         needleWidth: 4,
         needleCircleSize: 7,
         needleCircleOuter: true,
         needleCircleInner: false,
-        colorNeedle: "#28a745",
-        colorNeedleEnd: "#28a745",
-        colorNeedleCircleOuter: "#28a745",
-        valueBox: false, 
+        colorNeedle: this.textColor || '#00ff00',
+        colorNeedleEnd: this.textColor || '#00ff00',
+        colorNeedleCircleOuter: this.textColor || '#00ff00',
+        valueBox: false,
         ticksAngle: 240,
         startAngle: 60,
         animation: true,
         animationDuration: 800,
-        animationRule: "linear",
+        animationRule: 'linear',
         strokeTicks: true
       })
       
@@ -323,6 +330,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .gauge-display.is-editable {
@@ -344,6 +352,14 @@ export default {
   font-weight: bold;
   font-size: 1.2em;
   margin-top: 0.2em;
+}
+
+.gauge-name {
+  font-family: 'Courier New', monospace;
+  font-size: 0.7em;
+  color: #fff;
+  margin-bottom: 0.2em;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
 
 .edit-container {
