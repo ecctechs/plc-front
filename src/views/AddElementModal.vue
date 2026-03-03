@@ -262,8 +262,9 @@ export default {
 
       try {
         const url = this.isEdit 
-          ? `${BASE_API}/interaction/elements/${this.editData.id}`
-          : `${BASE_API}/interaction/elements`;
+          ? `${BASE_API}/api/interaction/elements/${this.editData.id}`
+          : `${BASE_API}/api/interaction/elements`;
+
 
         const method = this.isEdit ? 'PUT' : 'POST';
 
@@ -272,6 +273,7 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.form)
         });
+
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
