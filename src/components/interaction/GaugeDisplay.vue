@@ -6,9 +6,11 @@
     @click="startEditing"
   >
     <div v-if="name" class="gauge-name">{{ name }}</div>
-    <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
+    <div class="gauge-canvas-wrapper">
+      <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
+    </div>
     <div v-if="!editing && showValue" class="gauge-value" :style="textStyle">
-      {{ displayValue }} {{ unit }}
+      {{ displayValue }} <span class="gauge-unit">{{ unit }}</span>
     </div>
     <div v-else-if="editing" class="edit-container">
       <input
@@ -126,7 +128,9 @@ export default {
       return {
         left: `${this.x_percent}%`,
         top: `${this.y_percent}%`,
-        width: `clamp(${this.size * 5}vmin, ${this.size * 10}vw, ${this.size * 15}vmax)`,
+        width: `clamp(${this.size * 4}vw, ${this.size * 6}vmax, ${this.size * 12}vw)`,
+        minWidth: '80px',
+        maxWidth: '300px',
         background: this.bgColor,
         borderColor: this.textColor
       }
@@ -134,7 +138,8 @@ export default {
     textStyle() {
       return {
         color: this.textColor,
-        textShadow: `0 0 5px ${this.textColor}`
+        textShadow: `0 0 5px ${this.textColor}`,
+        fontSize: 'clamp(0.7rem, 2vmin, 1.4rem)'
       }
     },
     displayValue() {
@@ -230,17 +235,21 @@ export default {
       const max = this.maxValue
       const unitLabel = this.unit || ''
       
+      // Responsive gauge size based on viewport
+      const baseSize = Math.min(window.innerWidth, window.innerHeight)
+      const gaugeSize = baseSize < 480 ? 150 : (baseSize < 768 ? 180 : 200)
+      
       this.gauge = new RadialGauge({
         renderTo: this.$refs.gaugeCanvas,
-        width: 200,
-        height: 200,
+        width: gaugeSize,
+        height: gaugeSize,
         minValue: min,
         maxValue: max,
         value: parseFloat(this.getDisplayValue(this.value)) || 0,
         units: unitLabel,
         majorTicks: this.generateTicks(min, max),
         colorNumbers: this.textColor || '#00ff00',
-        fontNumbersSize: 22,
+        fontNumbersSize: baseSize < 480 ? 14 : (baseSize < 768 ? 18 : 22),
         fontNumbersWeight: 'bold',
         colorPlate: '#1a1a1a',
         colorBarProgress: this.textColor || '#00ff00',
@@ -248,10 +257,10 @@ export default {
         borderShadowWidth: 0,
         borders: false,
         highlights: this.highlights,
-        highlightsWidth: 10,
+        highlightsWidth: baseSize < 480 ? 6 : 10,
         needleType: 'arrow',
-        needleWidth: 4,
-        needleCircleSize: 7,
+        needleWidth: baseSize < 480 ? 2 : 4,
+        needleCircleSize: baseSize < 480 ? 5 : 7,
         needleCircleOuter: true,
         needleCircleInner: false,
         colorNeedle: this.textColor || '#00ff00',
@@ -324,13 +333,17 @@ export default {
   transform: translate(-50%, -50%);
   z-index: 10;
   border: 2px solid #00ff00;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0.5em;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 .gauge-display.is-editable {
@@ -339,53 +352,82 @@ export default {
 
 .gauge-display.is-editable:hover {
   border-color: #ffff00;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 0, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.02);
+}
+
+.gauge-canvas-wrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
 }
 
 .gauge-display canvas {
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important;
+  max-width: 200px;
+  max-height: 200px;
 }
 
 .gauge-value {
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  font-size: 1.2em;
-  margin-top: 0.2em;
+  font-size: clamp(0.8rem, 2.5vmin, 1.4rem);
+  margin-top: 0.3em;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2em;
+}
+
+.gauge-unit {
+  font-size: 0.7em;
+  opacity: 0.8;
 }
 
 .gauge-name {
   font-family: 'Courier New', monospace;
-  font-size: 0.7em;
+  font-size: clamp(0.55rem, 1.5vmin, 0.8rem);
   color: #fff;
   margin-bottom: 0.2em;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .edit-container {
   display: flex;
   align-items: center;
   gap: 0.3em;
+  margin-top: 0.3em;
 }
 
 .edit-input {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid #00ff00;
-  border-radius: 4px;
-  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  padding: 0.3em 0.5em;
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  font-size: 1em;
-  width: 4em;
+  font-size: clamp(0.7rem, 2vmin, 1rem);
+  width: 4.5em;
   text-align: center;
   color: #00ff00;
   text-shadow: 0 0 5px #00ff00;
+  transition: all 0.2s ease;
 }
 
 .edit-input:focus {
   outline: none;
   border-color: #ffff00;
-  box-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 0, 0.5);
 }
 
 .edit-input::-webkit-outer-spin-button,
@@ -400,6 +442,42 @@ export default {
 
 .unit-label {
   font-family: 'Courier New', monospace;
-  font-size: 0.8em;
+  font-size: clamp(0.6rem, 1.5vmin, 0.8rem);
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 480px) {
+  .gauge-display {
+    padding: 0.3em;
+    border-radius: 8px;
+  }
+  
+  .gauge-value {
+    font-size: clamp(0.7rem, 3vmin, 1rem);
+  }
+  
+  .gauge-name {
+    font-size: clamp(0.5rem, 1.8vmin, 0.7rem);
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1200px) {
+  .gauge-display canvas {
+    max-width: 220px;
+    max-height: 220px;
+  }
+  
+  .gauge-value {
+    font-size: clamp(1rem, 1.5vmin, 1.6rem);
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1600px) {
+  .gauge-display canvas {
+    max-width: 250px;
+    max-height: 250px;
+  }
 }
 </style>

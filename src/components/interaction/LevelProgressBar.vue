@@ -66,9 +66,9 @@
     </div>
 
     <!-- Current Level Indicator -->
-    <div v-if="currentLevelLabel" class="current-level" :style="textStyle">
+    <!-- <div v-if="currentLevelLabel" class="current-level" :style="textStyle">
       {{ currentLevelLabel }}
-    </div>
+    </div> -->
 
   </div>
 </template>
@@ -154,7 +154,9 @@ export default {
       return {
         left: `${this.x_percent}%`,
         top: `${this.y_percent}%`,
-        width: `clamp(${this.size * 5}vmin, ${this.size * 10}vw, ${this.size * 20}vmax)`,
+        width: `clamp(${this.size * 4}vw, ${this.size * 6}vmax, ${this.size * 15}vw)`,
+        minWidth: '100px',
+        maxWidth: '400px',
         background: this.bgColor,
         borderColor: this.textColor
       }
@@ -177,13 +179,15 @@ export default {
     labelStyle() {
       return {
         color: this.textColor,
-        textShadow: `0 0 3px ${this.textColor}`
+        textShadow: `0 0 3px ${this.textColor}`,
+        fontSize: 'clamp(0.5rem, 1.5vmin, 0.75rem)'
       }
     },
     textStyle() {
       return {
         color: this.textColor,
-        textShadow: `0 0 5px ${this.textColor}`
+        textShadow: `0 0 5px ${this.textColor}`,
+        fontSize: 'clamp(0.6rem, 2vmin, 1rem)'
       }
     },
     displayValue() {
@@ -356,13 +360,17 @@ export default {
   transform: translate(-50%, -50%);
   z-index: 10;
   border: 2px solid #00ff00;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0.5em;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 .level-progress-bar.is-editable {
@@ -371,13 +379,16 @@ export default {
 
 .level-progress-bar.is-editable:hover {
   border-color: #ffff00;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 0, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.02);
 }
 
 .progress-track {
   position: relative;
   width: 100%;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: visible;
   border: 1px solid;
 }
@@ -388,7 +399,7 @@ export default {
   left: 0;
   height: 100%;
   transition: width 0.3s ease;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .level-segment {
@@ -427,16 +438,16 @@ export default {
 
 .level-label {
   font-family: 'Courier New', monospace;
-  font-size: 0.55em;
+  font-size: clamp(0.4rem, 1.2vmin, 0.6rem);
   white-space: nowrap;
   position: absolute;
-  bottom: -20px;
+  bottom: -18px;
 }
 
 .value-display {
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  font-size: 1em;
+  font-size: clamp(0.7rem, 2vmin, 1.1em);
   margin-top: 0.8em;
   display: flex;
   align-items: center;
@@ -454,7 +465,7 @@ export default {
 
 .current-level {
   font-family: 'Courier New', monospace;
-  font-size: 0.7em;
+  font-size: clamp(0.5rem, 1.5vmin, 0.75rem);
   margin-top: 0.3em;
   padding: 2px 6px;
   background: rgba(0, 0, 0, 0.5);
@@ -463,10 +474,15 @@ export default {
 
 .bar-name {
   font-family: 'Courier New', monospace;
-  font-size: 0.7em;
+  font-size: clamp(0.5rem, 1.5vmin, 0.75rem);
   color: #fff;
   margin-top: 0.3em;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .edit-container {
@@ -479,21 +495,22 @@ export default {
 .edit-input {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid #00ff00;
-  border-radius: 4px;
-  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  padding: 0.3em 0.5em;
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  font-size: 1em;
-  width: 4em;
+  font-size: clamp(0.6rem, 1.8vmin, 1rem);
+  width: 4.5em;
   text-align: center;
   color: #00ff00;
   text-shadow: 0 0 5px #00ff00;
+  transition: all 0.2s ease;
 }
 
 .edit-input:focus {
   outline: none;
   border-color: #ffff00;
-  box-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 0, 0.5);
 }
 
 .edit-input::-webkit-outer-spin-button,
@@ -508,6 +525,37 @@ export default {
 
 .unit-label {
   font-family: 'Courier New', monospace;
-  font-size: 0.8em;
+  font-size: clamp(0.5rem, 1.5vmin, 0.8rem);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .level-progress-bar {
+    padding: 0.3em;
+    border-radius: 8px;
+  }
+  
+  .level-label {
+    font-size: clamp(0.35rem, 1.5vmin, 0.5rem);
+    bottom: -14px;
+  }
+  
+  .value-display {
+    margin-top: 0.5em;
+  }
+}
+
+@media (min-width: 1200px) {
+  .level-label {
+    font-size: clamp(0.5rem, 1vmin, 0.7rem);
+    bottom: -22px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .level-label {
+    font-size: clamp(0.55rem, 0.8vmin, 0.8rem);
+    bottom: -24px;
+  }
 }
 </style>
