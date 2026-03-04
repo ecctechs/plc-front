@@ -92,6 +92,24 @@
             :name="element.name"
             @click="writePlcValue(element)"
           />
+
+          <LevelProgressBar
+            v-else-if="element.element_type === 'level_progress_bar'"
+            :x_percent="parseFloat(element.x_percent)"
+            :y_percent="parseFloat(element.y_percent)"
+            :size="calculateSize(element)"
+            :bgColor="element.bg_color"
+            :textColor="element.text_color"
+            :barColor="element.bar_color"
+            :unit="element.unit"
+            :decimals="element.precision"
+            :value="getValue(element.address_id)"
+            :levels="getDeviceLevels(element.address_id)"
+            :editable="true"
+            :addressId="element.address_id"
+            :name="element.name"
+            @update-value="handleNumberUpdate"
+          />
         </template>
       </div>
     </div>
@@ -111,6 +129,7 @@ import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
 import ControlButton from '../components/interaction/ControlButton.vue'
+import LevelProgressBar from '../components/interaction/LevelProgressBar.vue'
 import AddElementModal from './AddElementModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
@@ -122,6 +141,7 @@ export default {
     NumberDisplay,
     GaugeDisplay,
     ControlButton,
+    LevelProgressBar,
     AddElementModal
   },
   props: {
@@ -255,6 +275,15 @@ export default {
         alarms: device.alarms || []
       }
     },
+    getDeviceLevels(addressId) {
+      if (!addressId || !this.devices) return []
+      
+      const device = this.devices.find(d => d.address_id === addressId)
+      console.log('Device for levels:', device)
+      if (!device) return []
+      
+      return device.levelConfigs || []
+    },
     async writePlcValue(element) {
       if (!element || !element.address_id) {
         console.error('No address_id defined for this element')
@@ -301,7 +330,10 @@ export default {
       }
     },
     async handleNumberUpdate({ addressId, value }) {
+      console.log('handleNumberUpdate called:', { addressId, value })
+      
       const plcAddress = this.getPlcAddress(addressId)
+      console.log('plcAddress:', plcAddress)
       
       if (!plcAddress) {
         console.error('No PLC address found for this element')

@@ -19,6 +19,7 @@
                 <option value="number_display">Number Display</option>
                 <option value="status_lamp">Status Lamp</option>
                 <option value="control_button">Control Button</option>
+                <option value="level_progress_bar">Level Progress Bar</option>
               </select>
             </div>
 
@@ -119,6 +120,12 @@
               <input type="color" class="form-control form-control-color" v-model="form.text_color" />
             </div>
 
+            <!-- Bar Color - Only for level_progress_bar -->
+            <div class="col-md-4" v-if="form.element_type === 'level_progress_bar'">
+              <label class="form-label fw-bold">Bar Color</label>
+              <input type="color" class="form-control form-control-color" v-model="form.bar_color" />
+            </div>
+
             <div class="col-md-4">
               <label class="form-label fw-bold">Font Size</label>
               <input type="number" class="form-control" v-model.number="form.font_size" min="8" max="72" />
@@ -188,6 +195,7 @@ export default {
         font_size: null,
         bg_color: null,
         text_color: '#ffffff',
+        bar_color: '#00ff00',
         unit: '',
         precision: 0,
         active_color: null,
