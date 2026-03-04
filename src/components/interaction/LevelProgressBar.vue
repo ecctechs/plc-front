@@ -5,11 +5,15 @@
     :style="containerStyle"
     @click="startEditing"
   >
+
+    <!-- Name Label -->
+    <div v-if="name" class="bar-name">{{ name }}</div>
+
     <!-- Progress Bar Track -->
     <div class="progress-track" :style="trackStyle">
       <!-- Progress Fill - fills up to current level -->
       <div class="progress-fill" :style="fillStyle"></div>
-      
+
       <!-- Level Markers/Segments -->
       <div 
         v-for="(level, index) in sortedLevels" 
@@ -66,8 +70,6 @@
       {{ currentLevelLabel }}
     </div>
 
-    <!-- Name Label -->
-    <div v-if="name" class="bar-name">{{ name }}</div>
   </div>
 </template>
 

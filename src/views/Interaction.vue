@@ -155,7 +155,7 @@ export default {
       plcValues: {},
       backgroundImage: null,
       layouts: [],
-      selectedLayoutId: 1,
+      selectedLayoutId: 3,
       showAddElementModal: false
     }
   },

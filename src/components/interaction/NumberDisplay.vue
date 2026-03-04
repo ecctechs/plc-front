@@ -114,7 +114,7 @@ export default {
         left: `${this.x_percent}%`,
         top: `${this.y_percent}%`,
         fontSize: `clamp(${this.size * 0.5}vmin, ${this.size}vw, ${this.size * 2}vmax)`,
-        background: this.bgColor,
+        background: this.bgColor ? this.bgColor : 'rgba(0, 0, 0, 0.8)',
         borderColor: this.textColor,
         cursor: this.editable ? 'pointer' : 'default'
       }

@@ -347,7 +347,7 @@
 /* ===== Interaction Page ===== */
 .interaction-page {
   width: 100%;
-  height: calc(100vh - 140px);
+  /* height: calc(100vh - 140px); */
   padding: 0;
   margin: 0;
 }

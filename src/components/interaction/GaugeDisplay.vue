@@ -5,8 +5,8 @@
     :style="containerStyle"
     @click="startEditing"
   >
-    <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
     <div v-if="name" class="gauge-name">{{ name }}</div>
+    <canvas ref="gaugeCanvas" :id="canvasId"></canvas>
     <div v-if="!editing && showValue" class="gauge-value" :style="textStyle">
       {{ displayValue }} {{ unit }}
     </div>
