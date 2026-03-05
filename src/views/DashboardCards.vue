@@ -78,11 +78,48 @@
                   <span class="text-muted">Refresh: {{ addr.refresh_rate_ms }} ms</span>
                 </div>
 
-                <div v-if="addr.numberConfig">
-                  <div v-if="addr.numberConfig.min_value !== undefined">
-                    Range: <strong>{{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}</strong>
+                <div v-if="addr.numberConfig && addr.display_type === 'number_gauge'">
+                  <div v-if="addr.numberConfig.min_value !== undefined" class="mb-2">
+                    <span class="text-muted">Range:</span> <strong>{{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}</strong>
+                  </div>
+                  <div class="mt-2 pt-2 border-top">
+                    <strong class="text-uppercase" style="font-size: 0.7rem;">Number Gauge Settings:</strong>
+                    <div class="row g-2 mt-1">
+                      <div class="col-4" v-if="addr.numberConfig.decimal_places !== undefined">
+                        <span class="text-muted">Decimal:</span> {{ addr.numberConfig.decimal_places }}
+                      </div>
+                      <div class="col-4" v-if="addr.numberConfig.scale !== undefined">
+                        <span class="text-muted">Scale:</span> {{ addr.numberConfig.scale }}
+                      </div>
+                      <div class="col-4" v-if="addr.numberConfig.offset !== undefined">
+                        <span class="text-muted">Offset:</span> {{ addr.numberConfig.offset }}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <div v-if="addr.levelConfigs?.length > 0" class="mt-2 pt-2 border-top">
+                  <strong class="text-uppercase" style="font-size: 0.7rem;">Level Settings:</strong>
+                  <div class="row g-2 mt-1">
+                    <div 
+                      v-for="lvl in addr.levelConfigs.sort((a, b) => a.level_index - b.level_index)" 
+                      :key="lvl.id" 
+                      class="col-6 col-md-4" 
+                    >
+                      <div class="bg-white border rounded px-2 py-1 h-100 d-flex align-items-center">
+                        <span class="fw-bold text-dark" style="font-size: 0.7rem;">
+                          {{ lvl.label }}
+                          <span class="text-muted fw-normal ms-1" style="font-size: 0.65rem;">
+                            <template v-if="lvl.condition_type === 'LT'">&lt;{{ lvl.min_value }}</template>
+                            <template v-else-if="lvl.condition_type === 'MT'">&gt;{{ lvl.min_value }}</template>
+                            <template v-else>{{ lvl.min_value }}-{{ lvl.max_value }}</template>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="text-muted mt-2 border-top pt-1">
                   Last Update: {{ formatTimeOnly(addr.updated_at) }}
                 </div>
@@ -344,6 +381,17 @@ export default {
     formatTimeOnly(iso) {
       if (!iso) return '-';
       return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    },
+    formatConditionType(type) {
+      const map = {
+        'LT': '<',
+        'LTE': '≤',
+        'MT': '>',
+        'MTE': '≥',
+        'BTW': '↔',
+        'EXACT': '='
+      };
+      return map[type] || type;
     }
   }
 };
@@ -353,3 +401,4 @@ export default {
 /* Component-specific styles only */
 /* Note: Shared styles are imported from src/assets/shared-styles.css */
 </style>
+
