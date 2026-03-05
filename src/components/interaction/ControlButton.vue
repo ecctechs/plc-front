@@ -6,6 +6,7 @@
     @click="handleClick"
     :disabled="disabled"
   >
+    <span v-if="name" class="button-name">{{ name }}</span>
     <span class="button-text">{{ label }}</span>
   </button>
 </template>
@@ -53,6 +54,10 @@ export default {
     addressId: {
       type: Number,
       default: null
+    },
+    name: {
+      type: String,
+      default: ''
     }
   },
   computed: {
@@ -120,5 +125,12 @@ export default {
 .button-text {
   display: block;
   white-space: nowrap;
+}
+
+.button-name {
+  display: block;
+  font-size: 0.5em;
+  margin-bottom: 0.1em;
+  opacity: 0.9;
 }
 </style>

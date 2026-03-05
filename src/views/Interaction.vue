@@ -1,21 +1,26 @@
 <template>
   <div class="interaction-page">
-    <div class="layout-selector">
-      <label for="layout-select">Select Layout:</label>
-      <select 
-        id="layout-select" 
-        v-model="selectedLayoutId" 
-        @change="onLayoutChange"
-      >
-        <option value="" disabled>-- Select a layout --</option>
-        <option 
-          v-for="layout in layouts" 
-          :key="layout.id" 
-          :value="layout.id"
+    <div class="layout-controls">
+      <div class="layout-selector">
+        <label for="layout-select">Select Layout:</label>
+        <select 
+          id="layout-select" 
+          v-model="selectedLayoutId" 
+          @change="onLayoutChange"
         >
-          {{ layout.name || layout.id }}
-        </option>
-      </select>
+          <option value="" disabled>-- Select a layout --</option>
+          <option 
+            v-for="layout in layouts" 
+            :key="layout.id" 
+            :value="layout.id"
+          >
+            {{ layout.name || layout.id }}
+          </option>
+        </select>
+      </div>
+      <button class="btn btn-primary" @click="showAddElementModal = true">
+        <i class="bi bi-plus-circle me-1"></i> Add Element
+      </button>
     </div>
     <div v-if="loading" class="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -35,6 +40,9 @@
             :bgColor="element.bg_color"
             :inactiveColor="element.inactive_color"
             :isOn="getValue(element.address_id) !== 0"
+            :name="element.name"
+            :addressId="element.address_id"
+            @toggle="(newValue) => handleLampToggle(element, newValue)"
           />
           
           <NumberDisplay 
@@ -49,6 +57,7 @@
             :value="getValue(element.address_id)"
             :editable="true"
             :addressId="element.address_id"
+            :name="element.name"
             @update-value="handleNumberUpdate"
           />
           
@@ -67,6 +76,7 @@
             :alarms="getDeviceMinMax(element.address_id).alarms"
             :editable="true"
             :addressId="element.address_id"
+            :name="element.name"
             @update-value="handleNumberUpdate"
           />
           
@@ -79,11 +89,38 @@
             :activeColor="element.active_color"
             :inactiveColor="element.inactive_color"
             :isPressed="getValue(element.address_id) !== 0"
+            :name="element.name"
             @click="writePlcValue(element)"
+          />
+
+          <LevelProgressBar
+            v-else-if="element.element_type === 'level_progress_bar'"
+            :x_percent="parseFloat(element.x_percent)"
+            :y_percent="parseFloat(element.y_percent)"
+            :size="calculateSize(element)"
+            :bgColor="element.bg_color"
+            :textColor="element.text_color"
+            :barColor="element.bar_color"
+            :unit="element.unit"
+            :decimals="element.precision"
+            :value="getValue(element.address_id)"
+            :levels="getDeviceLevels(element.address_id)"
+            :editable="true"
+            :addressId="element.address_id"
+            :name="element.name"
+            @update-value="handleNumberUpdate"
           />
         </template>
       </div>
     </div>
+
+    <!-- Add Element Modal -->
+    <AddElementModal 
+      v-if="showAddElementModal" 
+      :layoutId="selectedLayoutId"
+      @close="showAddElementModal = false"
+      @saved="onElementSaved"
+    />
   </div>
 </template>
 
@@ -92,6 +129,8 @@ import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
 import ControlButton from '../components/interaction/ControlButton.vue'
+import LevelProgressBar from '../components/interaction/LevelProgressBar.vue'
+import AddElementModal from './AddElementModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
@@ -101,10 +140,14 @@ export default {
     StatusLamp,
     NumberDisplay,
     GaugeDisplay,
-    ControlButton
+    ControlButton,
+    LevelProgressBar,
+    AddElementModal
   },
+  emits: ['update-device'],
   props: {
-    devices: { type: Array, default: () => [] }
+    devices: { type: Array, default: () => [] },
+    isSimulate: { type: Boolean, default: false }
   },
   data() {
     return {
@@ -114,7 +157,8 @@ export default {
       plcValues: {},
       backgroundImage: null,
       layouts: [],
-      selectedLayoutId: 1
+      selectedLayoutId: 3,
+      showAddElementModal: false
     }
   },
   watch: {
@@ -166,6 +210,11 @@ export default {
       }
     },
     onLayoutChange() {
+      this.fetchLayoutData()
+    },
+    onElementSaved() {
+      // Close modal and refresh layout data
+      this.showAddElementModal = false
       this.fetchLayoutData()
     },
     async fetchLayoutData(layoutId = null) {
@@ -228,6 +277,15 @@ export default {
         alarms: device.alarms || []
       }
     },
+    getDeviceLevels(addressId) {
+      if (!addressId || !this.devices) return []
+      
+      const device = this.devices.find(d => d.address_id === addressId)
+      console.log('Device for levels:', device)
+      if (!device) return []
+      
+      return device.levelConfigs || []
+    },
     async writePlcValue(element) {
       if (!element || !element.address_id) {
         console.error('No address_id defined for this element')
@@ -243,6 +301,14 @@ export default {
       // Toggle the value (0 -> 1 or 1 -> 0)
       const currentValue = this.getValue(element.address_id)
       const newValue = currentValue === 0 ? 1 : 0
+
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Updating local value:', { address_id: element.address_id, value: newValue })
+        this.plcValues[element.address_id] = newValue
+        this.$emit('update-device', { address_id: element.address_id, value: newValue })
+        return
+      }
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
@@ -274,10 +340,21 @@ export default {
       }
     },
     async handleNumberUpdate({ addressId, value }) {
+      console.log('handleNumberUpdate called:', { addressId, value })
+      
       const plcAddress = this.getPlcAddress(addressId)
+      console.log('plcAddress:', plcAddress)
       
       if (!plcAddress) {
         console.error('No PLC address found for this element')
+        return
+      }
+
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Updating local value:', { addressId, value })
+        this.plcValues[addressId] = value
+        this.$emit('update-device', { address_id: addressId, value: value })
         return
       }
 
@@ -309,6 +386,51 @@ export default {
         console.error('Failed to write to PLC:', error)
         alert('Failed to write to PLC: ' + error.message)
       }
+    },
+    async handleLampToggle(element, newValue) {
+      const plcAddress = this.getPlcAddress(element.address_id)
+      
+      if (!plcAddress) {
+        console.error('No PLC address found for this element')
+        return
+      }
+
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Lamp toggle:', { address_id: element.address_id, value: newValue ? 1 : 0 })
+        this.plcValues[element.address_id] = newValue ? 1 : 0
+        this.$emit('update-device', { address_id: element.address_id, value: newValue ? 1 : 0 })
+        return
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: plcAddress,
+            value: newValue ? 1 : 0
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const result = await response.json()
+        console.log('PLC write successful:', result)
+
+        // Update local value
+        this.plcValues[element.address_id] = newValue ? 1 : 0
+
+        // Emit event to update parent
+        this.$emit('update-device', { address_id: element.address_id, value: newValue ? 1 : 0 })
+      } catch (error) {
+        console.error('Failed to write to PLC:', error)
+        alert('Failed to write to PLC: ' + error.message)
+      }
     }
   },
   mounted() {
@@ -325,69 +447,6 @@ export default {
 </script>
 
 <style scoped>
-.layout-selector {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.layout-selector label {
-  font-weight: bold;
-  color: #333;
-}
-
-.layout-selector select {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: white;
-  cursor: pointer;
-}
-
-.layout-selector select:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.interaction-page {
-  width: 100%;
-  height: calc(100vh - 140px);
-  padding: 0;
-  margin: 0;
-}
-
-.image-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.machine-background {
-  position: relative;
-  width: 100%;
-  max-width: 1200px;
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.loading,
-.error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 1.5rem;
-  color: #666;
-}
-
-.error {
-  color: #e74c3c;
-}
+/* Component-specific styles only */
+/* Note: Shared styles are imported from src/assets/shared-styles.css */
 </style>

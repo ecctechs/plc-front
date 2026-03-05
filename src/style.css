@@ -1,3 +1,6 @@
+/* ===== Import Shared Styles ===== */
+@import './assets/shared-styles.css';
+
 /* ===== Font Prompt (Global) ===== */
 body {
   font-family: 'Prompt', sans-serif;
@@ -26,4 +29,33 @@ h1, h2, h3, h4, h5, h6 {
 .form-control,
 .form-select {
   font-family: 'Prompt', sans-serif;
+}
+
+/* ===== Responsive Utilities ===== */
+@media (max-width: 576px) {
+  /* Extra small devices */
+  html {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  /* Small devices (landscape phones) */
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1200px) {
+  /* Large devices */
+  html {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 1600px) {
+  /* Extra large devices */
+  html {
+    font-size: 18px;
+  }
 }

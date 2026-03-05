@@ -2,19 +2,23 @@
   <div class="device-chart-container p-4 border rounded shadow-sm bg-white">
     
     <!-- Header -->
-    <div class="row align-items-center mb-4 border-bottom pb-3">
+    <div class="row align-items-center mb-4 border-bottom pb-3 text-center">
+      
       <div class="col-md-4">
         <small class="text-uppercase text-muted fw-bold d-block">Value Name</small>
         <h4 class="mb-0 text-primary">{{ device.label }}</h4>
       </div>
-      <div class="col-md-4 border-start">
+
+      <div class="col-md-4 border-start border-end">
         <small class="text-uppercase text-muted fw-bold d-block">PLC Address</small>
-        <code class="fs-5">{{ device.plc_address }}</code>
+        <code class="fs-5 px-2 bg-light rounded">{{ device.plc_address }}</code>
       </div>
-      <div class="col-md-4 border-start">
+
+      <div class="col-md-4">
         <small class="text-uppercase text-muted fw-bold d-block">Refresh Rate</small>
-        <span class="fs-5">{{ device.refresh_rate_ms }} <small>ms</small></span>
+        <span class="fs-5">{{ device.refresh_rate_ms }} <small class="text-muted">ms</small></span>
       </div>
+
     </div>
 
     <!-- Filter -->

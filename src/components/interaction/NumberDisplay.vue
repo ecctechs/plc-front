@@ -6,6 +6,7 @@
     @click="startEditing"
   >
     <div v-if="!editing" class="display-content">
+      <span v-if="name" class="display-name">{{ name }}</span>
       <span class="display-value" :style="textStyle">{{ displayValue }}</span>
       <span v-if="unit" class="display-unit" :style="textStyle">{{ unit }}</span>
     </div>
@@ -88,6 +89,10 @@ export default {
     addressId: {
       type: Number,
       default: null
+    },
+    name: {
+      type: String,
+      default: ''
     }
   },
   emits: ['update-value'],
@@ -108,8 +113,10 @@ export default {
       return {
         left: `${this.x_percent}%`,
         top: `${this.y_percent}%`,
-        fontSize: `clamp(${this.size * 0.5}vmin, ${this.size}vw, ${this.size * 2}vmax)`,
-        background: this.bgColor,
+        fontSize: `clamp(${this.size * 0.4}vmin, ${this.size * 0.8}vw, ${this.size * 1.5}vmax)`,
+        minFontSize: '0.8rem',
+        maxFontSize: '3rem',
+        background: this.bgColor ? this.bgColor : 'rgba(0, 0, 0, 0.8)',
         borderColor: this.textColor,
         cursor: this.editable ? 'pointer' : 'default'
       }
@@ -117,7 +124,8 @@ export default {
     textStyle() {
       return {
         color: this.textColor,
-        textShadow: `0 0 5px ${this.textColor}`
+        textShadow: `0 0 5px ${this.textColor}`,
+        fontSize: 'inherit'
       }
     }
   },
@@ -174,25 +182,48 @@ export default {
   transform: translate(-50%, -50%);
   z-index: 10;
   border: 2px solid #00ff00;
-  border-radius: 4px;
-  padding: 0.3em 0.5em;
+  border-radius: 12px;
+  padding: 0.4em 0.6em;
   min-width: 3em;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.number-display.is-editable {
+  cursor: pointer;
 }
 
 .number-display.is-editable:hover {
   border-color: #ffff00;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 0, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.02);
 }
 
 .display-content {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 0.2em;
+  gap: 0.1em;
   font-family: 'Courier New', monospace;
   font-weight: bold;
+  white-space: nowrap;
+}
+
+.display-name {
+  font-size: clamp(0.4rem, 1.2vmin, 0.6rem);
+  color: #fff;
+  opacity: 0.9;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -221,6 +252,12 @@ export default {
   font-size: 1em;
   width: 4em;
   text-align: center;
+  color: inherit;
+  text-shadow: inherit;
+}
+
+.edit-input:focus {
+  outline: none;
 }
 
 .edit-input::-webkit-outer-spin-button,
@@ -231,5 +268,25 @@ export default {
 
 .edit-input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .number-display {
+    padding: 0.3em 0.4em;
+    border-radius: 8px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .number-display {
+    padding: 0.5em 0.8em;
+  }
+}
+
+@media (min-width: 1600px) {
+  .number-display {
+    padding: 0.6em 1em;
+  }
 }
 </style>

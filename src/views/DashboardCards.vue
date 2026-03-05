@@ -78,11 +78,48 @@
                   <span class="text-muted">Refresh: {{ addr.refresh_rate_ms }} ms</span>
                 </div>
 
-                <div v-if="addr.numberConfig">
-                  <div v-if="addr.numberConfig.min_value !== undefined">
-                    Range: <strong>{{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}</strong>
+                <div v-if="addr.numberConfig && addr.display_type === 'number_gauge'">
+                  <div v-if="addr.numberConfig.min_value !== undefined" class="mb-2">
+                    <span class="text-muted">Range:</span> <strong>{{ addr.numberConfig.min_value }} - {{ addr.numberConfig.max_value }}</strong>
+                  </div>
+                  <div class="mt-2 pt-2 border-top">
+                    <strong class="text-uppercase" style="font-size: 0.7rem;">Number Gauge Settings:</strong>
+                    <div class="row g-2 mt-1">
+                      <div class="col-4" v-if="addr.numberConfig.decimal_places !== undefined">
+                        <span class="text-muted">Decimal:</span> {{ addr.numberConfig.decimal_places }}
+                      </div>
+                      <div class="col-4" v-if="addr.numberConfig.scale !== undefined">
+                        <span class="text-muted">Scale:</span> {{ addr.numberConfig.scale }}
+                      </div>
+                      <div class="col-4" v-if="addr.numberConfig.offset !== undefined">
+                        <span class="text-muted">Offset:</span> {{ addr.numberConfig.offset }}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <div v-if="addr.levelConfigs?.length > 0" class="mt-2 pt-2 border-top">
+                  <strong class="text-uppercase" style="font-size: 0.7rem;">Level Settings:</strong>
+                  <div class="row g-2 mt-1">
+                    <div 
+                      v-for="lvl in addr.levelConfigs.sort((a, b) => a.level_index - b.level_index)" 
+                      :key="lvl.id" 
+                      class="col-6 col-md-4" 
+                    >
+                      <div class="bg-white border rounded px-2 py-1 h-100 d-flex align-items-center">
+                        <span class="fw-bold text-dark" style="font-size: 0.7rem;">
+                          {{ lvl.label }}
+                          <span class="text-muted fw-normal ms-1" style="font-size: 0.65rem;">
+                            <template v-if="lvl.condition_type === 'LT'">&lt;{{ lvl.min_value }}</template>
+                            <template v-else-if="lvl.condition_type === 'MT'">&gt;{{ lvl.min_value }}</template>
+                            <template v-else>{{ lvl.min_value }}-{{ lvl.max_value }}</template>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="text-muted mt-2 border-top pt-1">
                   Last Update: {{ formatTimeOnly(addr.updated_at) }}
                 </div>
@@ -95,15 +132,22 @@
     </div>
   </div>
 
-  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header">
-          <h5 class="modal-title">Chart : {{ selectedAddress?.label }}</h5>
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold text-dark">
+            <i class="bi bi-graph-up text-primary me-2"></i>Chart : {{ selectedAddress?.label }}
+          </h5>
           <button class="btn-close" @click="closeChart"></button>
         </div>
-        <div class="modal-body text-center">
-          <Chart v-if="selectedAddress" :device="selectedAddress" />
+        <div class="modal-body p-0">
+          <div class="p-4">
+            <Chart v-if="selectedAddress" :device="selectedAddress" />
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-0">
+          <button type="button" class="btn btn-secondary px-4" @click="closeChart">ปิดหน้าต่าง</button>
         </div>
       </div>
     </div>
@@ -337,127 +381,24 @@ export default {
     formatTimeOnly(iso) {
       if (!iso) return '-';
       return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    },
+    formatConditionType(type) {
+      const map = {
+        'LT': '<',
+        'LTE': '≤',
+        'MT': '>',
+        'MTE': '≥',
+        'BTW': '↔',
+        'EXACT': '='
+      };
+      return map[type] || type;
     }
   }
 };
 </script>
 
 <style scoped>
-.custom-card {
-  border-radius: 12px;
-  background-color: #ffffff;
-  border: 1.5px solid #d1d1d1 !important;
-}
-
-.onoff-circle {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 4px solid #ffffff; 
-  transition: all 0.4s ease;
-}
-
-.onoff-circle.on {
-  background-color: #28a745;
-  box-shadow: 0 0 30px rgba(40, 167, 69, 0.4);
-}
-
-.onoff-circle.off {
-  background-color: #c84d4d;
-  box-shadow: 0 0 30px rgba(200, 77, 77, 0.4);
-}
-
-.onoff-text {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-top: 15px;
-}
-
-.gauge-container {
-  width: 200px;
-  height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.display-value {
-  font-size: 4.5rem;
-  letter-spacing: -2px;
-  transition: color 0.3s ease;
-}
-
-.status-dot-wrapper {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 12px;
-    height: 12px;
-    cursor: pointer;
-}
-
-.status-dot {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: block;
-}
-
-.status-dot.online { background-color: #28a745; }
-.status-dot.offline { background-color: #dc3545; }
-
-.status-tooltip {
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-}
-
-.status-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #333;
-}
-
-.status-dot-wrapper:hover .status-tooltip {
-    opacity: 1;
-}
-
-.text-success { color: #28a745 !important; }
-.text-warning { color: #ffc107 !important; }
-.text-danger  { color: #dc3545 !important; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.info-panel { border: 1px solid #eee; }
-
-.delete-btn {
-  top: 10px;
-  left: 10px;
-  z-index: 5;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Component-specific styles only */
+/* Note: Shared styles are imported from src/assets/shared-styles.css */
 </style>
+

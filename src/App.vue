@@ -41,6 +41,7 @@
       <Interaction
         v-if="tab === 'interaction'"
         :devices="dashboard"
+        :is-simulate="isSimulate"
       />
 
       <AlarmHistory
