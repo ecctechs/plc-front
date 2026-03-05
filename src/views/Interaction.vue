@@ -144,8 +144,10 @@ export default {
     LevelProgressBar,
     AddElementModal
   },
+  emits: ['update-device'],
   props: {
-    devices: { type: Array, default: () => [] }
+    devices: { type: Array, default: () => [] },
+    isSimulate: { type: Boolean, default: false }
   },
   data() {
     return {
@@ -300,6 +302,14 @@ export default {
       const currentValue = this.getValue(element.address_id)
       const newValue = currentValue === 0 ? 1 : 0
 
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Updating local value:', { address_id: element.address_id, value: newValue })
+        this.plcValues[element.address_id] = newValue
+        this.$emit('update-device', { address_id: element.address_id, value: newValue })
+        return
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
@@ -340,6 +350,14 @@ export default {
         return
       }
 
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Updating local value:', { addressId, value })
+        this.plcValues[addressId] = value
+        this.$emit('update-device', { address_id: addressId, value: value })
+        return
+      }
+
       try {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
@@ -374,6 +392,14 @@ export default {
       
       if (!plcAddress) {
         console.error('No PLC address found for this element')
+        return
+      }
+
+      // Simulate mode: Update local value without calling API
+      if (this.isSimulate) {
+        console.log('[Simulate Mode] Lamp toggle:', { address_id: element.address_id, value: newValue ? 1 : 0 })
+        this.plcValues[element.address_id] = newValue ? 1 : 0
+        this.$emit('update-device', { address_id: element.address_id, value: newValue ? 1 : 0 })
         return
       }
 
