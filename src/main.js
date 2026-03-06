@@ -6,6 +6,8 @@ import "@peeraop21/v-calendar-buddhist/style.css";
 
 const app = createApp(App);
 
+app.config.devtools = true;
+
 app.use(VCalendar, {
   locale: "th-TH",
   firstDayOfWeek: 1,
