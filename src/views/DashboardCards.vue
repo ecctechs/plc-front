@@ -438,6 +438,22 @@ export default {
   line-height: 1.1;
 }
 
+/* Position number badge in edit mode */
+.number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+.delete-btn {
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
 h4.fw-bold {
   font-size: 0.95rem; 
   margin-bottom: 0.2rem;
