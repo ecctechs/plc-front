@@ -13,12 +13,13 @@
       </div>
     </div>
 
-    <Dashboard :addresses="devices" 
+    <Dashboard :addresses="sortedAddresses" 
     :edit-mode="editMode"
     @delete-card="deleteCard"/>
 
     <AddDashboardCard
       v-if="showAdd"
+      :current-card-count="sortedAddresses.length"
       @add="onAdd"
       @close="showAdd = false"
     />
@@ -45,6 +46,9 @@ export default {
   },
 
   computed: {
+    sortedAddresses() {
+      return [...this.devices].sort((a, b) => (a.position || 0) - (b.position || 0));
+    },
     dashboardAddresses() {
       return this.dashboardCards
         .sort((a, b) => a.order - b.order)

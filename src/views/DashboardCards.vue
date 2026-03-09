@@ -5,7 +5,6 @@
       <div v-for="addr in addresses" :key="addr.address_id" class="col">
 
         <div class="card shadow-sm p-4 text-center position-relative custom-card h-100 d-flex flex-column custom-card-height">
-          
           <!-- Delete icon (Edit mode only) -->
           <button
             v-if="editMode"
@@ -14,6 +13,7 @@
           >
             <i class="fas fa-trash"></i>
           </button>
+          <i v-if="editMode" class="number badge bg-primary">{{addr.position}}</i>
 
           <div class="status-dot-wrapper">
             <span class="status-dot" :class="addr.is_connected ? 'online' : 'offline'" role="button"></span>
