@@ -77,7 +77,7 @@ export default {
       }
     },
     lightStyle() {
-      const color = this.isOn ? (this.bgColor || '#22c55e') : (this.inactiveColor || '#6b7280')
+      const color = this.isOn ? (this.bgColor || '#22c55e') : (this.inactiveColor || '#FF0000')
       return {
         background: color,
         boxShadow: this.isOn 

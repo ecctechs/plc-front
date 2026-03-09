@@ -252,6 +252,7 @@
 .delete-btn {
   top: 10px;
   left: 10px;
+  margin-left: 35px;
   z-index: 5;
   border-radius: 50%;
   width: 25px;
@@ -261,7 +262,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+}
+
+/* ===== Position Number Badge ===== */
+.number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #0d6efd;
+  color: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.75rem;
+  z-index: 5;
 }
 
 /* ===== Transitions ===== */
