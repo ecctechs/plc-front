@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid mt-4">
     
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4">
       <div v-for="addr in addresses" :key="addr.address_id" class="col">
 
         <div class="card shadow-sm p-4 text-center position-relative custom-card h-100 d-flex flex-column">
