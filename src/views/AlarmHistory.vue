@@ -37,7 +37,7 @@
             <th class="py-3 text-center border-0">Threshold</th>
             <th class="py-3 text-center border-0">Actual Value</th>
             <th class="py-3 text-center border-0">Event Type</th>
-            <th class="pe-3 border-0">Time Stamp</th>
+            <th class="py-3 border-0">Time Stamp</th>
           </tr>
         </thead>
         <tbody>

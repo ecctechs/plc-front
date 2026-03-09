@@ -29,14 +29,14 @@
 
       <div v-for="(addr, index) in form.addresses" :key="index" class="address-card p-4 mb-4 border rounded shadow-sm bg-white position-relative">
         
-        <button 
-          v-if="form.addresses.length > 1" 
-          @click="removeAddress(index)" 
-          class="btn btn-danger btn-sm position-absolute"
-          style="top: -10px; right: -10px; border-radius: 50%; width: 30px; height: 30px; z-index: 10;"
-        >
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
+      <button 
+        v-if="form.addresses.length > 1" 
+        @click="removeAddress(index)" 
+        class="btn btn-danger btn-sm position-absolute d-flex align-items-center justify-content-center"
+        style="top: -8px; right: -8px; border-radius: 50%; width: 26px; height: 26px; z-index: 10; padding: 0;"
+      >
+        <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
+      </button>
 
         <div class="row g-4">
           <div class="col-md-5 border-end">
