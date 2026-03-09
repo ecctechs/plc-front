@@ -4,7 +4,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4">
       <div v-for="addr in addresses" :key="addr.address_id" class="col">
 
-        <div class="card shadow-sm p-4 text-center position-relative custom-card h-100 d-flex flex-column">
+        <div class="card shadow-sm p-4 text-center position-relative custom-card h-100 d-flex flex-column custom-card-height">
           
           <!-- Delete icon (Edit mode only) -->
           <button
@@ -64,7 +64,7 @@
                   </button>
                 </div>
                 <div class="col-6">
-                  <button class="btn btn-outline-primary btn-custom w-100" @click="openChart(addr)">
+                  <button class="btn btn-sm btn-outline-primary btn-custom w-100" @click="openChart(addr)">
                     Chart
                   </button>
                 </div>
@@ -293,8 +293,8 @@ export default {
             try {
               this.gauges[addr.address_id] = new RadialGauge({
                 renderTo: canvasEl,
-                width: 200,
-                height: 200,
+                width: 180,
+                height: 180,
                 minValue: min,
                 maxValue: max,
                 value: parseFloat(this.getDisplayValue(addr)),
@@ -398,7 +398,48 @@ export default {
 </script>
 
 <style scoped>
-/* Component-specific styles only */
-/* Note: Shared styles are imported from src/assets/shared-styles.css */
-</style>
+/* 1. กำหนดฐานความสูงขั้นต่ำให้ทุก Card เท่ากัน */
+.custom-card-height {
+  min-height: 380px; /* ปรับลดจากเดิม 10% */
+  height: 100%; 
+  padding: 1rem !important;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* กันเนื้อหาแลบออกนอกขอบโค้งของ Card */
+}
 
+/* 2. จัดการส่วน More Info ให้เป็นแบบ Overlay หรือขยายภายใน */
+.info-panel {
+  margin-top: auto; /* ดันไปล่างสุดของพื้นที่ว่าง */
+  padding: 0.5rem !important;
+  font-size: 0.7rem !important;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eee;
+  /* หากเนื้อหายาวเกินไป ให้ scroll ภายในเฉพาะจุด ไม่ให้ card เสียรูป */
+  max-height: 200px; 
+  overflow-y: auto; 
+}
+
+/* 3. ปรับขนาด Gauge ให้สมดุล */
+.gauge-container {
+  transform: scale(0.8);
+  transform-origin: center;
+  margin: -15px 0;
+}
+
+/* 4. ปรับขนาดปุ่มและตัวเลขให้เล็กลงตามสัดส่วน */
+.btn-custom {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.75rem !important;
+}
+
+.display-value {
+  font-size: 2.2rem !important; /* ลดลงเล็กน้อยเพื่อให้พอดีกับ card ที่สั้นลง */
+  line-height: 1.1;
+}
+
+h4.fw-bold {
+  font-size: 0.95rem; 
+  margin-bottom: 0.2rem;
+}
+</style>
