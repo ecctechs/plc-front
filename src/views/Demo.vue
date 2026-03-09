@@ -16,11 +16,11 @@
       </div>
     </div>
 
-    <div class="row g-3">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3">
       <div
         v-for="device in displayDevices"
         :key="device.address_id"
-        class="col-md-4"
+        class="col"
       >
         <div class="card shadow-sm h-100 " :class="{ 'opacity-75': !isSimulate }">
           <div class="card-body">

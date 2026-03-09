@@ -1,7 +1,11 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
+
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
 export default defineConfig({
   plugins: [vue()],
-})
+  define: {
+    __VUE_PROD_DEVTOOLS__: true
+  }
+});
