@@ -61,6 +61,20 @@
             </select>
           </div>
 
+          <!-- Position -->
+          <div class="mb-3" v-if="selectedAddress">
+            <label class="form-label fw-bold">Insert Position</label>
+            <select class="form-select" v-model.number="selectedPosition">
+              <option
+                v-for="n in parseInt(currentCardCount) + 1"
+                :key="n"
+                :value="n"
+              >
+                Position {{ n }} {{ n === parseInt(currentCardCount) + 1 ? '(End)' : '' }}
+              </option>
+            </select>
+          </div>
+
         </div>
 
         <!-- Footer -->
@@ -88,11 +102,19 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 export default {
   name: "AddDashboardCardModal",
 
+  props: {
+    currentCardCount: {
+      type: Number,
+      default: 0
+    }
+  },
+
   data() {
     return {
       selectedDeviceId: "",
       selectedAddressId: "",
       selectedDisplayType: "",
+      selectedPosition: 1,
       devices: []
     };
   },
@@ -140,7 +162,8 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             address_id: this.selectedAddress.id,
-            display_type: this.selectedDisplayType
+            display_type: this.selectedDisplayType,
+            position: this.selectedPosition
           })
         });
         
