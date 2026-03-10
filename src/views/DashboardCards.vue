@@ -32,7 +32,7 @@
           <div class="mb-2">
             <h4 
               class="fw-bold text-dark mb-0 text-uppercase"
-
+              :style="{ paddingTop: editMode ? '20px' : '0', transition: 'padding-top 0.3s ease' }"
             >{{ addr.device.name }}</h4>
             <div class="text-muted small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
           </div>
