@@ -15,13 +15,16 @@
 
     <Dashboard :addresses="sortedAddresses" 
     :edit-mode="editMode"
-    @delete-card="deleteCard"/>
+    @delete-card="deleteCard"
+    @edit-card="handleEditCard"/>
 
     <AddDashboardCard
-      v-if="showAdd"
+      v-if="showAdd || editingCard"
       :current-card-count="sortedAddresses.length"
+      :editing-card="editingCard"
       @add="onAdd"
-      @close="showAdd = false"
+      @update="onUpdate"
+      @close="closeModal"
     />
   </div>
 </template>
@@ -41,7 +44,8 @@ export default {
   data() {
     return {
       editMode: false,
-      showAdd: false
+      showAdd: false,
+      editingCard: null
     };
   },
 
@@ -60,6 +64,13 @@ export default {
   },
 
   methods: {
+    handleEditCard(card) {
+      this.editingCard = card;
+    },
+    closeModal() {
+      this.showAdd = false;
+      this.editingCard = null;
+    },
     async deleteCard(card) {
       // call API
       await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
@@ -70,6 +81,24 @@ export default {
     onAdd(payload) {
       this.$emit('add-card', payload);
       this.showAdd = false;
+    },
+    async onUpdate(payload) {
+      try {
+        await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedDeviceId: payload.selectedDeviceId,
+            selectedAddressId: payload.selectedAddressId,
+            selectedDisplayType: payload.selectedDisplayType,
+            selectedPosition: payload.selectedPosition
+          })
+        });
+        this.$emit('update-card', payload);
+      } catch (err) {
+        console.error('Failed to update card:', err);
+      }
+      this.closeModal();
     }
   }
 };

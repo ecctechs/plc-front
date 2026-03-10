@@ -4,7 +4,7 @@
       <div class="modal-content border-0 shadow">
         <!-- Header -->
         <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title">Add Dashboard Card</h5>
+          <h5 class="modal-title">{{ editingCard ? 'Edit Card' : 'Add Dashboard Card' }}</h5>
           <button class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
 
@@ -87,7 +87,7 @@
             :disabled="!canSubmit"
             @click="submit"
           >
-            Add Card
+            {{ editingCard ? 'Save Changes' : 'Add Card' }}
           </button>
         </div>
 
@@ -106,6 +106,10 @@ export default {
     currentCardCount: {
       type: Number,
       default: 0
+    },
+    editingCard: {
+      type: Object,
+      default: null
     }
   },
 
@@ -124,6 +128,21 @@ export default {
       const res = await fetch(`${BASE_API}/api/devices`);
       const data = await res.json();
       this.devices = data;
+      
+      // If editing, pre-fill form with existing card data
+      if (this.editingCard) {
+        // Find the device that contains this address
+        for (const device of this.devices) {
+          const address = device.addresses?.find(a => a.id === this.editingCard.address_id);
+          if (address) {
+            this.selectedDeviceId = device.id;
+            this.selectedAddressId = address.id;
+            this.selectedDisplayType = this.editingCard.display_type;
+            this.selectedPosition = this.editingCard.position || 1;
+            break;
+          }
+        }
+      }
     } catch (err) {
       console.error("Failed to load devices:", err);
       this.devices = [];
@@ -131,6 +150,9 @@ export default {
   },
 
   computed: {
+    isEditMode() {
+      return !!this.editingCard;
+    },
 
     selectedDevice() {
       return this.devices.find(
@@ -155,26 +177,35 @@ export default {
 
   methods: {
     async submit() {
-      try {
-        // POST to API
-        await fetch(`${BASE_API}/api/dashboard/cards`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+      if (this.isEditMode) {
+        // Emit update event
+        this.$emit('update', {
+          selectedDeviceId: this.selectedDeviceId,
+          selectedAddressId: this.selectedAddressId,
+          selectedDisplayType: this.selectedDisplayType,
+          selectedPosition: this.selectedPosition
+        });
+      } else {
+        try {
+          // POST to API
+          await fetch(`${BASE_API}/api/dashboard/cards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address_id: this.selectedAddress.id,
+              display_type: this.selectedDisplayType,
+              position: this.selectedPosition
+            })
+          });
+          
+          // Emit success event
+          this.$emit("add", {
             address_id: this.selectedAddress.id,
-            display_type: this.selectedDisplayType,
-            position: this.selectedPosition
-          })
-        });
-        
-        // Emit success event
-        this.$emit("add", {
-          address_id: this.selectedAddress.id,
-          display_type: this.selectedDisplayType
-        });
-      } catch (err) {
-        console.error("Failed to add card:", err);
-        // Optionally emit error event or show alert
+            display_type: this.selectedDisplayType
+          });
+        } catch (err) {
+          console.error("Failed to add card:", err);
+        }
       }
     }
   }

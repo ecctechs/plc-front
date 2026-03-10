@@ -5,6 +5,15 @@
       <div v-for="addr in addresses" :key="addr.address_id" class="col">
 
         <div class="card shadow-sm p-4 text-center position-relative custom-card h-100 d-flex flex-column custom-card-height">
+          <!-- Edit icon (Edit mode only) -->
+          <button
+            v-if="editMode"
+            class="btn btn-sm btn-warning position-absolute edit-btn"
+            @click="$emit('edit-card', addr)"
+          >
+            <i class="fas fa-edit"></i>
+          </button>
+
           <!-- Delete icon (Edit mode only) -->
           <button
             v-if="editMode"
@@ -13,7 +22,7 @@
           >
             <i class="fas fa-trash"></i>
           </button>
-          <i v-if="editMode" class="number badge bg-primary">{{addr.position}}</i>
+          <span v-if="editMode" class="number badge bg-primary">{{addr.position}}</span>
 
           <div class="status-dot-wrapper">
             <span class="status-dot" :class="addr.is_connected ? 'online' : 'offline'" role="button"></span>
@@ -21,7 +30,10 @@
           </div>
 
           <div class="mb-2">
-            <h4 class="fw-bold text-dark mb-0 text-uppercase">{{ addr.device.name }}</h4>
+            <h4 
+              class="fw-bold text-dark mb-0 text-uppercase"
+
+            >{{ addr.device.name }}</h4>
             <div class="text-muted small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
           </div>
 

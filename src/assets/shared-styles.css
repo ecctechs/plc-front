@@ -251,8 +251,22 @@
 /* ===== Delete Button ===== */
 .delete-btn {
   top: 10px;
-  left: 10px;
-  margin-left: 35px;
+  left: 38px;
+  z-index: 5;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 0.6rem !important;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Edit Button ===== */
+.edit-btn {
+  top: 10px;
+  left: 66px;
   z-index: 5;
   border-radius: 50%;
   width: 25px;
@@ -281,6 +295,7 @@
   font-size: 0.75rem;
   z-index: 5;
 }
+
 
 /* ===== Transitions ===== */
 .fade-enter-active,
