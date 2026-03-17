@@ -1,11 +1,11 @@
 <template>
-  <div class="card p-4 shadow-sm border-0 bg-white">
+  <div class="container-fluid mt-4">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
-        <h5 class="mb-1 text-primary fw-bold d-flex align-items-center">
+        <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
           <i class="bi bi-clock-history me-2"></i>ประวัติการแจ้งเตือน
-        </h5>
+        </h3>
         <p class="text-muted small mb-0">
           แสดงเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC ทั้งหมด
         </p>

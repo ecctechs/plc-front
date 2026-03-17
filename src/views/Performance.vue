@@ -33,7 +33,7 @@
 
     <div class="row g-4 mb-4">
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+        <div class="card shadow-sm border-start border-success border-4 h-100">
           <div class="card-body">
             <h6 class="text-muted mb-2">Overall Performance</h6>
             <div class="d-flex align-items-baseline gap-2">
@@ -45,7 +45,7 @@
       </div>
 
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card shadow-sm h-100">
           <div class="card-body">
             <h6 class="text-muted mb-2">{{ summaryLabels.card2 }}</h6>
             <h2 class="fw-bold mb-0 text-primary">{{ summaryValues.card2 }}</h2>
@@ -55,7 +55,7 @@
       </div>
 
       <div class="col-md-4">
-        <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
+        <div class="card shadow-sm border-start border-danger border-4 h-100">
           <div class="card-body">
             <h6 class="text-muted mb-2">{{ summaryLabels.card3 }}</h6>
             <h2 class="fw-bold mb-0 text-danger">{{ summaryValues.card3 }}</h2>
@@ -67,7 +67,7 @@
 
     <div class="row g-4">
       <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card shadow-sm h-100">
           <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0">Trend Analysis ({{ dataType }})</h5>
             <span class="badge bg-light text-dark border">Granularity: Hour</span>
@@ -88,7 +88,7 @@
       </div>
 
       <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card shadow-sm h-100">
           <div class="card-header bg-white border-0 pt-4 px-4">
             <h5 class="fw-bold mb-0">Breakdown</h5>
           </div>
@@ -110,7 +110,7 @@
          <button class="btn btn-sm btn-outline-secondary mb-2" @click="exportData">Export to Excel</button>
       </div>
       <div class="col-12">
-        <div class="card border-0 shadow-sm overflow-hidden mb-5">
+        <div class="card shadow-sm overflow-hidden mb-5">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 text-nowrap">
               <thead class="table-light text-muted small">

@@ -1,9 +1,9 @@
 <template>
-  <div class="card shadow-sm mx-auto mt-4" style="max-width: 1000px; border-radius: 15px;">
+  <div class="card shadow-sm">
     <div class="card-body p-4">
-     <div class="mb-4 pb-3 border-bottom">
-        <h4 class="fw-bold m-0"><i class="bi bi-gear-fill text-primary me-2"></i>PLC Address Debug (Test)</h4>
-      </div>
+      <h5 class="fw-bold mb-4">
+        <i class="bi bi-terminal text-primary me-2"></i>PLC Debug
+      </h5>
     <div class="border rounded p-3 mb-4">
     <!-- ===== One Row ===== -->
     <div class="row g-2 align-items-end mb-3">

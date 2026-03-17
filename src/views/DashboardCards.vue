@@ -20,7 +20,7 @@
             class="btn btn-sm btn-danger position-absolute delete-btn"
             @click="handleDeleteCard(addr)"
           >
-            <i class="fas fa-trash"></i>
+            <i class="fas fa-trash-alt"></i>
           </button>
           <span v-if="editMode" class="number badge bg-primary">{{addr.position}}</span>
 

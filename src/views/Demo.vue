@@ -1,7 +1,9 @@
 <template>
-  <div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h5 class="mb-0"> Demo / Simulate Mode</h5>
+  <div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+      <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
+          <i class="bi bi-clock-history me-2"></i>Demo / Simulate Mode
+      </h3>
 
       <div class="form-check form-switch">
         <input
