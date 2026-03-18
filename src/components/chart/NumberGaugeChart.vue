@@ -42,7 +42,7 @@
 
             <div class="d-flex flex-column align-items-center mt-3">
               <div class="d-flex gap-2 align-items-center justify-content-center">
-                <span class="small fw-bold text-muted">Scale Y:</span>
+                <span class="small fw-bold text-muted">Min:</span>
                 <input type="number" 
                        class="form-control form-control-sm" 
                        :class="{'is-invalid': isScaleInvalid}" 
@@ -50,7 +50,7 @@
                        v-model.number="limitLower" 
                        @input="handleScaleChange" 
                        placeholder="Lower">
-                <span class="text-muted">to</span>
+                <span class="small fw-bold text-muted">Max:</span>
                 <input type="number" 
                        class="form-control form-control-sm" 
                        :class="{'is-invalid': isScaleInvalid}" 

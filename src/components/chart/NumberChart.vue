@@ -42,22 +42,22 @@
 
             <div class="d-flex flex-column align-items-center mt-3">
               <div class="d-flex gap-2 align-items-center justify-content-center">
-                <span class="small fw-bold text-muted">Scale Y:</span>
+                <span class="small fw-bold text-muted">Min:</span>
                 <input type="number" 
                        class="form-control form-control-sm" 
                        :class="{'is-invalid': isScaleInvalid}" 
                        style="width: 100px;" 
                        v-model.number="limitLower" 
                        @input="handleScaleChange" 
-                       placeholder="Lower">
-                <span class="text-muted">to</span>
+                       :placeholder="actualMin">
+                <span class="small fw-bold text-muted">Max:</span>
                 <input type="number" 
                        class="form-control form-control-sm" 
                        :class="{'is-invalid': isScaleInvalid}" 
                        style="width: 100px;" 
                        v-model.number="limitUpper" 
                        @input="handleScaleChange" 
-                       placeholder="Upper">
+                       :placeholder="actualMax">
               </div>
               <small v-if="isScaleInvalid" class="text-danger mt-1" style="font-size: 11px;">
                 * ค่า Upper ต้องมากกว่า Lower

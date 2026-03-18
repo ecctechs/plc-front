@@ -43,11 +43,11 @@
 
     <!-- Modal -->
     <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
+      <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-dark text-white">
             <h5 class="modal-title">{{ isEdit ? 'Edit Room' : 'Add Room' }}</h5>
-            <button type="button" class="btn-close" @click="closeModal()"></button>
+            <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">

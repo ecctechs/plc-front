@@ -1,11 +1,11 @@
 <template>
   <!-- Modal -->
   <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-dark text-white">
           <h5 class="modal-title">{{ isEdit ? 'Edit Device' : 'Add Device' }}</h5>
-          <button type="button" class="btn-close" @click="closeModal()"></button>
+          <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
         </div>
         
         <div class="modal-body p-4">
