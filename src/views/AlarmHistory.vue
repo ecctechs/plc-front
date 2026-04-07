@@ -33,7 +33,7 @@
           <tr>
             <th class="ps-3 py-3 border-0">Device Name</th>
             <th class="py-3 border-0">Alarm Name</th>
-            <th class="py-3 text-center border-0">Condition</th>
+            <th class="py-3 text-center border-0">Room Name</th>
             <th class="py-3 text-center border-0">Threshold</th>
             <th class="py-3 text-center border-0">Actual Value</th>
             <th class="py-3 text-center border-0">Event Type</th>
@@ -41,8 +41,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading">
-            <td colspan="7" class="text-center py-5">
+            <tr v-if="loading">
+              <td colspan="8" class="text-center py-5">
               <div class="spinner-border text-primary" role="status"></div>
               <p class="text-muted mt-2 mb-0">กำลังโหลดข้อมูล...</p>
             </td>
@@ -57,7 +57,7 @@
 
             <td class="text-center">
               <span class="badge bg-light text-dark border fw-normal px-2">
-                {{ item.rule?.condition_type }}
+                {{ item.device.room?.name || '-' }}
               </span>
             </td>
 
@@ -105,7 +105,7 @@
           </tr>
 
           <tr v-else>
-            <td colspan="7" class="text-center py-5">
+            <td colspan="8" class="text-center py-5">
               <div class="py-4">
                 <i class="bi bi-database-exclamation fs-1 text-muted opacity-50"></i>
                 <p class="text-muted mt-2">ไม่พบประวัติการแจ้งเตือนในช่วงวันที่เลือก</p>
