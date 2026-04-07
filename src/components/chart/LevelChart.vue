@@ -70,6 +70,7 @@ export default {
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
     alarmTime: { type: String, default: null }, // รับเวลาที่เกิด Alarm มาจากหน้า List
+    eventType: { type: String, default: null },
     filterApplied: { type: Number, default: 0 }
   },
 
@@ -248,19 +249,25 @@ export default {
     },
 
     getAlarmAnnotation(alarmDate) {
+      const isRecovery = this.eventType === 'RECOVER';
+      const label = isRecovery 
+        ? `✅ RECOVERY AT ${this.formatTimeLabel(alarmDate)}`
+        : `🚨 ALARM AT ${this.formatTimeLabel(alarmDate)}`;
+      const bgColor = isRecovery ? '#22c55e' : '#ef4444';
+      
       return {
         annotations: {
           alarmLine: {
             type: 'line',
             xMin: alarmDate,
             xMax: alarmDate,
-            borderColor: '#ef4444',
+            borderColor: isRecovery ? '#22c55e' : '#ef4444',
             borderWidth: 2,
             borderDash: [6, 6],
             label: {
               display: true,
-              content: `🚨 ALARM AT ${this.formatTimeLabel(alarmDate)}`,
-              backgroundColor: '#ef4444',
+              content: label,
+              backgroundColor: bgColor,
               color: '#fff',
               position: 'start',
               yAdjust: -10

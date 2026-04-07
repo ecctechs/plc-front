@@ -116,6 +116,7 @@
         :start-date="appliedStartDate" 
         :end-date="appliedEndDate" 
         :alarmTime="alarmTime"
+        :eventType="eventType"
         :filter-applied="filterApplied"
       />
     </div>
@@ -138,6 +139,7 @@ export default {
     initialStart: String,
     initialEnd: String,
     alarmTime: String,
+    eventType: String,
   },
   data() {
 

@@ -184,6 +184,7 @@
                 :initial-start="chartStartDate"
                 :initial-end="chartEndDate"
                 :alarm-time="selectedAlarmTime" 
+                :event-type="selectedEventType"
               />
             </div>
           </div>
@@ -214,6 +215,7 @@ export default {
       chartStartDate: null,
       chartEndDate: null,
       selectedAlarmTime: null,
+      selectedEventType: null,
       currentPage: 1,
       itemsPerPage: 20,
       rooms: [],
@@ -317,6 +319,7 @@ export default {
       this.chartStartDate = this.formatLocalDateTime(new Date(eventTime.getTime() - offsetMs));
       this.chartEndDate   = this.formatLocalDateTime(new Date(eventTime.getTime() + offsetMs));
       this.selectedAlarmTime = item.created_at;
+      this.selectedEventType = item.event_type;
       this.showChart = true;
     },
 
