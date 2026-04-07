@@ -41,15 +41,7 @@
             </div>
 
             <div class="d-flex flex-column align-items-center mt-3">
-              <div class="d-flex gap-2 align-items-center justify-content-center">
-                <span class="small fw-bold text-muted">Min:</span>
-                <input type="number" 
-                       class="form-control form-control-sm" 
-                       :class="{'is-invalid': isScaleInvalid}" 
-                       style="width: 100px;" 
-                       v-model.number="limitLower" 
-                       @input="handleScaleChange" 
-                       :placeholder="actualMin">
+              <div class="d-flex gap-2 align-items-center justify-content-center">           
                 <span class="small fw-bold text-muted">Max:</span>
                 <input type="number" 
                        class="form-control form-control-sm" 
@@ -58,6 +50,14 @@
                        v-model.number="limitUpper" 
                        @input="handleScaleChange" 
                        :placeholder="actualMax">
+                        <span class="small fw-bold text-muted">Min:</span>
+                <input type="number" 
+                       class="form-control form-control-sm" 
+                       :class="{'is-invalid': isScaleInvalid}" 
+                       style="width: 100px;" 
+                       v-model.number="limitLower" 
+                       @input="handleScaleChange" 
+                       :placeholder="actualMin">
               </div>
               <small v-if="isScaleInvalid" class="text-danger mt-1" style="font-size: 11px;">
                 * ค่า Upper ต้องมากกว่า Lower
@@ -107,6 +107,7 @@
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
+import { showConfirm } from '../../utils/swalHelper'
 
 Chart.register(annotationPlugin)
 
@@ -119,7 +120,8 @@ export default {
     device: { type: Object, required: true },
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
-    alarmTime: { type: String, default: null }
+    alarmTime: { type: String, default: null },
+    filterApplied: { type: Number, default: 0 }
   },
 
   data() {
@@ -141,14 +143,20 @@ export default {
         connected: 0,
         disconnected: 0
       },
-      refreshTimer: null
+      refreshTimer: null,
+      isFetching: false,
+      isInitialLoad: true
     }
   },
 
   watch: {
     startDate: 'restartAutoRefresh',
     endDate: 'restartAutoRefresh',
-    'device.address_id': 'restartAutoRefresh'
+    'device.address_id': 'restartAutoRefresh',
+    filterApplied() {
+      // เมื่อผู้ใช้กดปุ่ม apply ให้รีเซ็ต flag เพื่อให้แสดง dialog เตือนได้
+      this.isInitialLoad = false
+    }
   },
 
   mounted() {
@@ -162,6 +170,19 @@ export default {
   },
 
   methods: {
+    calculateEstimatedDataCount() {
+      if (!this.startDate || !this.endDate) return 0
+      
+      const start = new Date(this.startDate).getTime()
+      const end = new Date(this.endDate).getTime()
+      const refreshRate = this.device.refresh_rate_ms || 5000
+      
+      const timeRangeMs = end - start
+      const estimatedCount = Math.ceil(timeRangeMs / refreshRate)
+      
+      return estimatedCount
+    },
+
     formatDateTime(date) {
       const d = new Date(date)
       return d.toLocaleString('th-TH', {
@@ -192,6 +213,23 @@ export default {
     },
 
     async fetchData(isSilent = false) {
+      // ตรวจสอบจำนวนข้อมูลที่จะดึงก่อน (ยกเว้นการโหลดครั้งแรก)
+      const dataCount = this.calculateEstimatedDataCount()
+      if (dataCount > 500 && !isSilent && !this.isInitialLoad) {
+        const confirmed = await showConfirm(
+          'ยืนยันดึงข้อมูลจำนวนมาก',
+          `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`,
+          'ดึงข้อมูล'
+        )
+        if (!confirmed) {
+          // ยกเลิก - ไม่ดึงข้อมูล แต่ยังคงอนุญาตให้ auto-refresh ทำงานได้
+          return
+        }
+      }
+
+      // หลังจากครั้งแรก ให้ข้ามไปเช็คการแจ้งเตือนในครั้งต่อไป
+      this.isInitialLoad = false
+
       if (!isSilent) this.loading = true
       try {
         let url = this.alarmTime 

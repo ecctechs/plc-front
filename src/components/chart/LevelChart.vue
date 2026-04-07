@@ -57,6 +57,7 @@
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
+import { showConfirm } from '../../utils/swalHelper'
 
 Chart.register(annotationPlugin)
 
@@ -68,7 +69,8 @@ export default {
     device: { type: Object, required: true },
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
-    alarmTime: { type: String, default: null } // รับเวลาที่เกิด Alarm มาจากหน้า List
+    alarmTime: { type: String, default: null }, // รับเวลาที่เกิด Alarm มาจากหน้า List
+    filterApplied: { type: Number, default: 0 }
   },
 
   data() {
@@ -78,7 +80,9 @@ export default {
       charts: {},
       levels: [], 
       stats: { connected: 0, disconnected: 0 },
-      refreshTimer: null
+      refreshTimer: null,
+      isFetching: false,
+      isInitialLoad: true
     }
   },
 
@@ -86,7 +90,11 @@ export default {
     startDate: "restartAutoRefresh",
     endDate: "restartAutoRefresh",
     alarmTime: "restartAutoRefresh",
-    "device.address_id": "restartAutoRefresh"
+    "device.address_id": "restartAutoRefresh",
+    filterApplied() {
+      // เมื่อผู้ใช้กดปุ่ม apply ให้รีเซ็ต flag เพื่อให้แสดง dialog เตือนได้
+      this.isInitialLoad = false
+    }
   },
 
   mounted() {
@@ -100,6 +108,19 @@ export default {
   },
 
   methods: {
+    calculateEstimatedDataCount() {
+      if (!this.startDate || !this.endDate) return 0
+      
+      const start = new Date(this.startDate).getTime()
+      const end = new Date(this.endDate).getTime()
+      const refreshRate = this.device.refresh_rate_ms || 5000
+      
+      const timeRangeMs = end - start
+      const estimatedCount = Math.ceil(timeRangeMs / refreshRate)
+      
+      return estimatedCount
+    },
+
     formatTimeLabel(date) {
       if (!date) return ''
       return new Date(date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -122,6 +143,23 @@ export default {
     },
 
     async fetchData(isSilent = false) {
+      // ตรวจสอบจำนวนข้อมูลที่จะดึงก่อน (ยกเว้นการโหลดครั้งแรก)
+      const dataCount = this.calculateEstimatedDataCount()
+      if (dataCount > 500 && !isSilent && !this.isInitialLoad) {
+        const confirmed = await showConfirm(
+          'ยืนยันดึงข้อมูลจำนวนมาก',
+          `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`,
+          'ดึงข้อมูล'
+        )
+        if (!confirmed) {
+          // ยกเลิก - ไม่ดึงข้อมูล แต่ยังคงอนุญาตให้ auto-refresh ทำงานได้
+          return
+        }
+      }
+
+      // หลังจากครั้งแรก ให้ข้ามไปเช็คการแจ้งเตือนในครั้งต่อไป
+      this.isInitialLoad = false
+
       if (!isSilent) this.loading = true;
       try {
         // Format date as YYYY-MM-DD HH:mm:ss (without T and Z)

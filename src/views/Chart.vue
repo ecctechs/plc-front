@@ -99,6 +99,13 @@
           <small>น.</small>
         </div>
       </div>
+
+      <!-- Apply Button -->
+      <div class="col-sm-auto d-flex align-items-center">
+        <button class="btn btn-primary btn-sm" @click="applyFilter">
+          <i class="bi bi-search"></i> ค้นหา
+        </button>
+      </div>
     </div>
 
     <!-- Chart -->
@@ -106,9 +113,10 @@
       <component 
         :is="chartComponent" 
         :device="device" 
-        :start-date="startDate" 
-        :end-date="endDate" 
+        :start-date="appliedStartDate" 
+        :end-date="appliedEndDate" 
         :alarmTime="alarmTime"
+        :filter-applied="filterApplied"
       />
     </div>
 
@@ -161,6 +169,11 @@ export default {
       endH: String(end.getHours()).padStart(2,'0'),
       endM: String(end.getMinutes()).padStart(2,'0'),
       endS: String(end.getSeconds()).padStart(2,'0'),
+
+      // เก็บค่าที่ apply แล้ว
+      appliedStartDate: null,
+      appliedEndDate: null,
+      filterApplied: 0
     }
   },
   computed: {
@@ -181,6 +194,7 @@ export default {
     },
 
     startDate() {
+      // ไม่ emit อัตโนมัติ รอกดปุ่ม Apply
       return this.combineDateTime(
         this.startDateOnly,
         this.startH,
@@ -190,6 +204,7 @@ export default {
     },
 
     endDate() {
+      // ไม่ emit อัตโนมัติ รอกดปุ่ม Apply
       return this.combineDateTime(
         this.endDateOnly,
         this.endH,
@@ -209,8 +224,12 @@ export default {
     }
   },
   watch: {
-    startDate() { this.emitChange() },
-    endDate() { this.emitChange() }
+    // เอาออก ไม่ให้ auto emit ตอนเปลี่ยนวันที่/เวลา
+  },
+  created() {
+    // ตั้งค่าเริ่มต้นเมื่อ component สร้าง
+    this.appliedStartDate = this.startDate
+    this.appliedEndDate = this.endDate
   },
   methods: {
 
@@ -241,6 +260,13 @@ export default {
         pad(d.getMinutes()) + ':' +
         pad(d.getSeconds())
       )
+    },
+
+    applyFilter() {
+      this.appliedStartDate = this.startDate
+      this.appliedEndDate = this.endDate
+      this.filterApplied++ // เพิ่ม counter เพื่อบอก chart ว่าผู้ใช้กด apply
+      this.emitChange()
     },
 
     emitChange() {
