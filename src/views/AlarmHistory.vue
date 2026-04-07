@@ -13,6 +13,19 @@
 
       <div class="d-flex flex-wrap gap-2 align-items-end justify-content-start justify-content-md-end">
         <div class="filter-group">
+          <label class="form-label small fw-bold text-secondary">Device Name</label>
+          <input type="text" v-model="filter.deviceName" placeholder="ค้นหาชื่อ Device" class="form-control form-control-sm shadow-sm">
+        </div>
+        <div class="filter-group">
+          <label class="form-label small fw-bold text-secondary">Room Name</label>
+          <select v-model="filter.room" class="form-select form-select-sm shadow-sm">
+            <option value="">ทุกห้อง</option>
+            <option v-for="room in rooms" :key="room.id" :value="room.name">
+              {{ room.name }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-group">
           <label class="form-label small fw-bold text-secondary">จากวันที่</label>
           <input type="date" v-model="filter.startDate" class="form-control form-control-sm shadow-sm">
         </div>
@@ -48,7 +61,7 @@
             </td>
           </tr>
 
-          <tr v-for="item in paginatedHistory" :key="item.id" v-else-if="history.length > 0">
+          <tr v-for="item in paginatedHistory" :key="item.id" v-else-if="filteredHistory.length > 0">
             <td class="ps-3">
               <div class="fw-bold text-dark">{{ item.device?.name || 'Unknown' }}</div>
               <!-- <div class="text-muted extra-small">ID: {{ item.device?.address_id || '-' }}</div> -->
@@ -116,9 +129,9 @@
       </table>
     </div>
 
-    <div v-if="history.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 px-2">
+    <div v-if="filteredHistory.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 px-2">
       <div class="text-muted small">
-        แสดง <strong>{{ startIndex + 1 }}</strong> ถึง <strong>{{ Math.min(endIndex, history.length) }}</strong> จากทั้งหมด <strong>{{ history.length }}</strong> รายการ
+        แสดง <strong>{{ startIndex + 1 }}</strong> ถึง <strong>{{ Math.min(endIndex, filteredHistory.length) }}</strong> จากทั้งหมด <strong>{{ filteredHistory.length }}</strong> รายการ
       </div>
       
       <nav aria-label="Page navigation">
@@ -203,7 +216,10 @@ export default {
       selectedAlarmTime: null,
       currentPage: 1,
       itemsPerPage: 20,
+      rooms: [],
       filter: {
+        deviceName: "",
+        room: "",
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
       }
@@ -211,8 +227,25 @@ export default {
   },
 
   computed: {
+    filteredHistory() {
+      let result = this.history;
+      
+      if (this.filter.deviceName) {
+        const search = this.filter.deviceName.toLowerCase();
+        result = result.filter(item => {
+          const deviceName = item.device?.name || '';
+          return deviceName.toLowerCase().includes(search);
+        });
+      }
+      
+      if (this.filter.room) {
+        result = result.filter(item => item.device?.room.name === this.filter.room);
+      }
+      
+      return result;
+    },
     totalPages() {
-      return Math.ceil(this.history.length / this.itemsPerPage) || 1;
+      return Math.ceil(this.filteredHistory.length / this.itemsPerPage) || 1;
     },
     startIndex() {
       return (this.currentPage - 1) * this.itemsPerPage;
@@ -221,7 +254,7 @@ export default {
       return this.startIndex + this.itemsPerPage;
     },
     paginatedHistory() {
-      return this.history.slice(this.startIndex, this.endIndex);
+      return this.filteredHistory.slice(this.startIndex, this.endIndex);
     },
     visiblePages() {
       const range = 2; // Show 2 pages before and after current
@@ -243,6 +276,7 @@ export default {
 
   mounted() {
     this.fetchHistory()
+    this.loadRooms()
   },
 
   methods: {
@@ -302,6 +336,17 @@ export default {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
+    },
+
+    async loadRooms() {
+      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      try {
+        const res = await fetch(`${BASE_API}/api/rooms`);
+        const data = await res.json();
+        this.rooms = data.data || [];
+      } catch (err) {
+        console.error("Load rooms error:", err);
+      }
     }
   }
 }
