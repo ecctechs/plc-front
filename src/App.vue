@@ -32,10 +32,12 @@
         v-if="tab === 'demo'"
         :devices="dashboard"
         :is-simulate="isSimulate"
+        :is-run-all-random="isRunAllRandom"
         :auto-timers="autoTimers"
         @update:is-simulate="isSimulate = $event"
         @update-device="handleDeviceUpdate"
         @toggle-auto="handleToggleAuto"
+        @toggle-run-all-random="toggleRunAllRandom"
       />
 
       <Interaction
@@ -70,6 +72,7 @@ export default {
       tab: "dashboard",
       dashboard: [],
       isSimulate: false,
+      isRunAllRandom: false,
       pollTimer: null,
       autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
     };
@@ -90,6 +93,7 @@ export default {
       if (val) {
         this.stopPolling();
       } else {
+        this.isRunAllRandom = false;
         this.stopAllAuto(); // ปิดจำลอง = ปิด auto ทั้งหมด
         this.startPolling();
       }
@@ -167,6 +171,33 @@ export default {
 
     stopAllAuto() {
       this.autoTimers.clear();
+    },
+
+    toggleRunAllRandom() {
+      this.isRunAllRandom = !this.isRunAllRandom;
+      if (this.isRunAllRandom) {
+        this.runAllRandomCycle();
+      }
+    },
+
+    runAllRandomCycle() {
+      if (!this.isRunAllRandom || !this.isSimulate) return;
+
+      this.dashboard.forEach(device => {
+        let newValue;
+        const min = device.min ?? 0;
+        const max = device.max ?? 100;
+
+        if (device.data_type === 'onoff') {
+          newValue = Math.random() > 0.5 ? 1 : 0;
+        } else {
+          newValue = +(min + Math.random() * (max - min)).toFixed(2);
+        }
+
+        this.handleDeviceUpdate({ address_id: device.address_id, value: newValue });
+      });
+
+      setTimeout(() => this.runAllRandomCycle(), 2000);
     },
 
     handleDeviceUpdate(payload) {

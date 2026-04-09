@@ -5,16 +5,28 @@
           <i class="bi bi-clock-history me-2"></i>Demo / Simulate Mode
       </h3>
 
-      <div class="form-check form-switch">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          :checked="isSimulate"
-          @change="$emit('update:is-simulate', $event.target.checked)"
-        />
-        <label class="form-check-label fw-bold">
-          Simulate Mode {{ isSimulate ? 'ON' : 'OFF' }}
-        </label>
+      <div class="d-flex align-items-center gap-3">
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            :checked="isSimulate"
+            @change="$emit('update:is-simulate', $event.target.checked)"
+          />
+          <label class="form-check-label fw-bold">
+            Simulate Mode {{ isSimulate ? 'ON' : 'OFF' }}
+          </label>
+        </div>
+
+        <button
+          class="btn btn-sm"
+          :class="isRunAllRandom ? 'btn-danger' : 'btn-outline-warning'"
+          :disabled="!isSimulate"
+          @click="$emit('toggle-run-all-random')"
+        >
+          <i class="bi" :class="isRunAllRandom ? 'bi-stop-fill' : 'bi-shuffle'"></i>
+          {{ isRunAllRandom ? 'Stop Random' : 'Run Random All' }}
+        </button>
       </div>
     </div>
 
@@ -131,9 +143,10 @@ export default {
   props: {
     devices: Array,
     isSimulate: Boolean,
+    isRunAllRandom: Boolean,
     autoTimers: Object // รับ Set() มาจาก App.vue
   },
-  emits: ['update:is-simulate', 'update-device', 'toggle-auto'],
+  emits: ['update:is-simulate', 'update-device', 'toggle-auto', 'toggle-run-all-random'],
 
   computed: {
     displayDevices() {
