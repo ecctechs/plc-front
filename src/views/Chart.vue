@@ -5,17 +5,17 @@
     <div class="row align-items-center mb-4 border-bottom pb-3 text-center">
       
       <div class="col-md-4">
-        <small class="text-uppercase text-muted fw-bold d-block">Value Name</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Value') }} Name</small>
         <h4 class="mb-0 text-primary">{{ device.label }}</h4>
       </div>
 
       <div class="col-md-4 border-start border-end">
-        <small class="text-uppercase text-muted fw-bold d-block">PLC Address</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Address') }}</small>
         <code class="fs-5 px-2 bg-light rounded">{{ device.plc_address }}</code>
       </div>
 
       <div class="col-md-4">
-        <small class="text-uppercase text-muted fw-bold d-block">Refresh Rate</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Refresh Rate') }}</small>
         <span class="fs-5">{{ device.refresh_rate_ms }} <small class="text-muted">ms</small></span>
       </div>
 
@@ -24,7 +24,7 @@
     <!-- Filter -->
     <div class="row g-3 mb-4 bg-light p-3 rounded">
       <div class="col-sm-auto d-flex align-items-center">
-        <span class="fw-bold me-2">Filter:</span>
+        <span class="fw-bold me-2">{{ locale.t('Filter') }}:</span>
       </div>
 
       <!-- START -->
@@ -103,7 +103,7 @@
       <!-- Apply Button -->
       <div class="col-sm-auto d-flex align-items-center">
         <button class="btn btn-primary btn-sm" @click="applyFilter">
-          <i class="bi bi-search"></i> ค้นหา
+          <i class="bi bi-search"></i> {{ locale.t('Search') }}
         </button>
       </div>
     </div>
@@ -133,6 +133,9 @@ import { formatISO } from '../utils/date-utils'
 
 export default {
   name: "Chart",
+  
+  inject: ['locale'],
+  
   components: { OnOffChart, NumberChart, NumberGaugeChart, LevelChart },
   props: {
     device: Object,

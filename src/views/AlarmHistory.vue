@@ -4,38 +4,38 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
         <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>ประวัติการแจ้งเตือน
+          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Alarm History') }}
         </h3>
         <p class="text-muted small mb-0">
-          แสดงเหตุการณ์ TRIGGER และ RECOVERY จากระบบ PLC ทั้งหมด
+          {{ locale.t('Show TRIGGER and RECOVERY events from PLC system') }}
         </p>
       </div>
 
       <div class="d-flex flex-wrap gap-2 align-items-end justify-content-start justify-content-md-end">
         <div class="filter-group">
-          <label class="form-label small fw-bold text-secondary">Device Name</label>
-          <input type="text" v-model="filter.deviceName" placeholder="ค้นหาชื่อ Device" class="form-control form-control-sm shadow-sm">
+          <label class="form-label small fw-bold text-secondary">{{ locale.t('Device') }} Name</label>
+          <input type="text" v-model="filter.deviceName" :placeholder="locale.t('Search') + ' ' + locale.t('Device') + ' Name'" class="form-control form-control-sm shadow-sm">
         </div>
         <div class="filter-group">
-          <label class="form-label small fw-bold text-secondary">Room Name</label>
+          <label class="form-label small fw-bold text-secondary">{{ locale.t('Room') }} Name</label>
           <select v-model="filter.room" class="form-select form-select-sm shadow-sm">
-            <option value="">ทุกห้อง</option>
+            <option value="">{{ locale.t('All Rooms') }}</option>
             <option v-for="room in rooms" :key="room.id" :value="room.name">
               {{ room.name }}
             </option>
           </select>
         </div>
         <div class="filter-group">
-          <label class="form-label small fw-bold text-secondary">จากวันที่</label>
+          <label class="form-label small fw-bold text-secondary">{{ locale.t('From date') }}</label>
           <input type="date" v-model="filter.startDate" class="form-control form-control-sm shadow-sm">
         </div>
         <div class="filter-group">
-          <label class="form-label small fw-bold text-secondary">ถึงวันที่</label>
+          <label class="form-label small fw-bold text-secondary">{{ locale.t('To date') }}</label>
           <input type="date" v-model="filter.endDate" class="form-control form-control-sm shadow-sm">
         </div>
         <button @click="fetchHistory" :disabled="loading" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">
           <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
-          <i v-else class="bi bi-search me-1"></i> ค้นหา
+          <i v-else class="bi bi-search me-1"></i> {{ locale.t('Search') }}
         </button>
       </div>
     </div>
@@ -44,27 +44,26 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
           <tr>
-            <th class="ps-3 py-3 border-0">Device Name</th>
-            <th class="py-3 border-0">Alarm Name</th>
-            <th class="py-3 text-center border-0">Room Name</th>
-            <th class="py-3 text-center border-0">Threshold</th>
-            <th class="py-3 text-center border-0">Actual Value</th>
-            <th class="py-3 text-center border-0">Event Type</th>
-            <th class="py-3 border-0">Time Stamp</th>
+            <th class="ps-3 py-3 border-0">{{ locale.t('Device') }} Name</th>
+            <th class="py-3 border-0">{{ locale.t('Alarm') }} Name</th>
+            <th class="py-3 text-center border-0">{{ locale.t('Room') }} Name</th>
+            <th class="py-3 text-center border-0">{{ locale.t('Threshold') }}</th>
+            <th class="py-3 text-center border-0">{{ locale.t('Actual Value') }}</th>
+            <th class="py-3 text-center border-0">{{ locale.t('Event Type') }}</th>
+            <th class="py-3 border-0">{{ locale.t('Time Stamp') }}</th>
           </tr>
         </thead>
         <tbody>
             <tr v-if="loading">
               <td colspan="8" class="text-center py-5">
               <div class="spinner-border text-primary" role="status"></div>
-              <p class="text-muted mt-2 mb-0">กำลังโหลดข้อมูล...</p>
+              <p class="text-muted mt-2 mb-0">{{ locale.t('Loading...') }}</p>
             </td>
           </tr>
 
           <tr v-for="item in paginatedHistory" :key="item.id" v-else-if="filteredHistory.length > 0">
             <td class="ps-3">
               <div class="fw-bold text-dark">{{ item.device?.name || 'Unknown' }}</div>
-              <!-- <div class="text-muted extra-small">ID: {{ item.device?.address_id || '-' }}</div> -->
             </td>
             <td>{{ item.rule?.name || 'N/A' }}</td>
 
@@ -97,7 +96,7 @@
                     {{ item.value }}
                   </span>
                   <small class="view-chart-text text-muted">
-                    <i class="bi bi-graph-up"></i> ดูกราฟ
+                    <i class="bi bi-graph-up"></i> {{ locale.t('View Chart') }}
                   </small>
                 </div>
               </a>
@@ -121,7 +120,7 @@
             <td colspan="8" class="text-center py-5">
               <div class="py-4">
                 <i class="bi bi-database-exclamation fs-1 text-muted opacity-50"></i>
-                <p class="text-muted mt-2">ไม่พบประวัติการแจ้งเตือนในช่วงวันที่เลือก</p>
+                <p class="text-muted mt-2">{{ locale.t('No alarm history found in selected date range') }}</p>
               </div>
             </td>
           </tr>
@@ -131,7 +130,7 @@
 
     <div v-if="filteredHistory.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 px-2">
       <div class="text-muted small">
-        แสดง <strong>{{ startIndex + 1 }}</strong> ถึง <strong>{{ Math.min(endIndex, filteredHistory.length) }}</strong> จากทั้งหมด <strong>{{ filteredHistory.length }}</strong> รายการ
+        {{ locale.t('Showing') }} <strong>{{ startIndex + 1 }}</strong> {{ locale.t('to') }} <strong>{{ Math.min(endIndex, filteredHistory.length) }}</strong> {{ locale.t('of') }} <strong>{{ filteredHistory.length }}</strong> {{ locale.t('entries') }}
       </div>
       
       <nav aria-label="Page navigation">
@@ -203,6 +202,9 @@ import Chart from './Chart.vue'
 
 export default {
   components: { Chart },
+  
+  inject: ['locale'],
+  
   props: {
     devices: { type: Array, default: () => [] }
   },

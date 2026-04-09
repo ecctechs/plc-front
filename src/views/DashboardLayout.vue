@@ -3,14 +3,14 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>Dashboard
+          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Dashboard') }}
       </h3>
       <div>
         <button class="btn btn-outline-secondary me-2" @click="editMode = !editMode">
-          {{ editMode ? 'Exit Edit' : 'Edit Mode' }}
+          {{ editMode ? locale.t('Exit Edit') : locale.t('Edit Mode') }}
         </button>
         <button v-if="editMode" class="btn btn-primary" @click="showAdd = true">
-          + Add Card
+          + {{ locale.t('Add Card') }}
         </button>
       </div>
     </div>
@@ -19,7 +19,7 @@
     <div class="row g-3 mb-4">
       <div class="col-md-3">
         <select v-model="filters.room" class="form-select" @change="applyFilters">
-          <option value="">All Rooms</option>
+          <option value="">{{ locale.t('All Rooms') }}</option>
           <option v-for="room in rooms" :key="room.id" :value="room.name">
             {{ room.name }}
           </option>
@@ -27,7 +27,7 @@
       </div>
       <div class="col-md-3">
         <select v-model="filters.deviceType" class="form-select" @change="applyFilters">
-          <option value="">All Device Types</option>
+          <option value="">{{ locale.t('All Device Types') }}</option>
           <option v-for="type in deviceTypes" :key="type.id" :value="type.name">
             {{ type.name }}
           </option>
@@ -58,6 +58,8 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   components: { Dashboard, AddDashboardCard },
+
+  inject: ['locale'],
 
   props: {
     devices:Array,

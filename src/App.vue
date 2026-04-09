@@ -1,16 +1,25 @@
 <template>
   <div class="container-fluid mt-4">
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
-        <button
-          class="nav-link text-capitalize"
-          :class="{ active: tab === t }"
-          @click="tab = t"
-        >
-          {{ t === 'alarmhistory' ? 'Alarm History' : t }}
-        </button>
-      </li>
-    </ul>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
+      <ul class="nav nav-tabs mb-0">
+        <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
+          <button
+            class="nav-link text-capitalize"
+            :class="{ active: tab === t }"
+            @click="tab = t"
+          >
+            {{ locale.t(tabLabels[t]) }}
+          </button>
+        </li>
+      </ul>
+
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        @click="locale.toggle()"
+      >
+        <i class="bi bi-globe"></i> {{ locale.current === 'th' ? 'EN' : 'TH' }}
+      </button>
+    </div>
 
     <div class="tab-content">
 
@@ -67,9 +76,18 @@ export default {
   name: "App",
   components: { DashboardLayout, Setting, Demo, AlarmHistory, Interaction },
 
+  inject: ['locale'],
+
   data() {
     return {
       tab: "dashboard",
+      tabLabels: {
+        dashboard: 'Dashboard',
+        setting: 'Setting',
+        demo: 'Demo',
+        alarmhistory: 'Alarm History',
+        interaction: 'Interaction'
+      },
       dashboard: [],
       isSimulate: false,
       isRunAllRandom: false,

@@ -3,10 +3,10 @@
     <div class="card-body p-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold m-0">
-          <i class="bi bi-ui-chips text-primary me-2"></i>Type Setting
+          <i class="bi bi-ui-chips text-primary me-2"></i>{{ locale.t('Type Setting') }}
         </h5>
         <button class="btn btn-primary" @click="openModal()">
-          <i class="fa-solid fa-plus me-1"></i> Add Type
+          <i class="fa-solid fa-plus me-1"></i> {{ locale.t('Add Type') }}
         </button>
       </div>
 
@@ -15,12 +15,12 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-dark">
             <tr>
-              <th class="ps-3 py-3" style="width: 25%">Device Type</th>
+              <th class="ps-3 py-3" style="width: 25%">{{ locale.t('Device Type') }}</th>
               <th class="py-3 text-center" style="width: 15%">ON/OFF</th>
               <th class="py-3 text-center" style="width: 15%">Number</th>
               <th class="py-3 text-center" style="width: 18%">Number Gauge</th>
               <th class="py-3 text-center" style="width: 15%">Level</th>
-              <th class="py-3 text-center" style="width: 12%">Actions</th>
+              <th class="py-3 text-center" style="width: 12%">{{ locale.t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -45,10 +45,10 @@
                 <span v-else class="text-muted">-</span>
               </td>
               <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary me-1" @click="openModal(type)" title="Edit">
+                <button class="btn btn-sm btn-outline-primary me-1" @click="openModal(type)" :title="locale.t('Edit')">
                   <i class="fa-solid fa-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(type)" title="Delete">
+                <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(type)" :title="locale.t('Delete')">
                   <i class="fa-solid fa-trash-alt"></i>
                 </button>
               </td>
@@ -56,7 +56,7 @@
             <tr v-if="deviceTypes.length === 0">
               <td colspan="6" class="text-center text-muted py-4">
                 <i class="fa-solid fa-box-open d-block mb-2" style="font-size: 2rem;"></i>
-                No Device Types found. Click "Add Device Type" to create one.
+                {{ locale.t('No Device Types found.') }}
               </td>
             </tr>
           </tbody>
@@ -69,20 +69,20 @@
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
           <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">{{ isEdit ? 'Edit Device Type' : 'Add Device Type' }}</h5>
+            <h5 class="modal-title">{{ isEdit ? locale.t('Edit Device Type') : locale.t('Add Device Type') }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label class="form-label fw-bold">Name</label>
+              <label class="form-label fw-bold">{{ locale.t('Name') }}</label>
               <input v-model="form.name" type="text" class="form-control" placeholder="e.g., Heater" />
             </div>
             <div class="mb-3">
-              <label class="form-label fw-bold">Description</label>
+              <label class="form-label fw-bold">{{ locale.t('Description') }}</label>
               <textarea v-model="form.description" class="form-control" rows="2" placeholder="Optional description"></textarea>
             </div>
             <div class="mb-3">
-              <label class="form-label fw-bold">Display Types</label>
+              <label class="form-label fw-bold">{{ locale.t('Display Types') }}</label>
               <div class="d-flex flex-wrap gap-3">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="onoff" v-model="form.display_types" />
@@ -104,10 +104,10 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary" @click="closeModal()">{{ locale.t('Cancel') }}</button>
             <button type="button" class="btn btn-primary" @click="save()" :disabled="loading">
               <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
-              {{ isEdit ? 'Update' : 'Create' }}
+              {{ isEdit ? locale.t('Update') : locale.t('Create') }}
             </button>
           </div>
         </div>
@@ -124,6 +124,9 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "TypeSetting",
+  
+  inject: ['locale'],
+  
   data() {
     return {
       deviceTypes: [],

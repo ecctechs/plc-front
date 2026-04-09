@@ -4,29 +4,29 @@
     <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title">{{ isEdit ? 'Edit Device' : 'Add Device' }}</h5>
+          <h5 class="modal-title">{{ isEdit ? locale.t('Edit Device') : locale.t('Add Device') }}</h5>
           <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
         </div>
         
         <div class="modal-body p-4">
           <div class="row g-3 mb-4">
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Device Name</label>
-              <input v-model="form.name" class="form-control" placeholder="เช่น Machine A" />
+              <label class="form-label fw-bold small">{{ locale.t('Device') }} Name</label>
+              <input v-model="form.name" class="form-control" :placeholder="locale.t('Device') + ' A'" />
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Device Type</label>
+              <label class="form-label fw-bold small">{{ locale.t('Device Type') }}</label>
               <select v-model="form.device_type_id" class="form-select" @change="onDeviceTypeChange">
-                <option value="">Select Type</option>
+                <option value="">Select {{ locale.t('Type') }}</option>
                 <option v-for="type in deviceTypes" :key="type.id" :value="type.id">
                   {{ type.name }}
                 </option>
               </select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Room</label>
+              <label class="form-label fw-bold small">{{ locale.t('Room') }}</label>
               <select v-model="form.room_id" class="form-select">
-                <option value="">Select Room</option>
+                <option value="">Select {{ locale.t('Room') }}</option>
                 <option v-for="room in rooms" :key="room.id" :value="room.id">
                   {{ room.name }}
                 </option>
@@ -34,7 +34,7 @@
             </div>
           </div>
 
-          <h5 class="fw-bold mb-4 text-secondary">Addresses Point ({{ form.addresses.length }})</h5>
+          <h5 class="fw-bold mb-4 text-secondary">{{ locale.t('Address') }} Point ({{ form.addresses.length }})</h5>
 
           <div v-for="(addr, index) in form.addresses" :key="index" class="address-card p-4 mb-4 border rounded shadow-sm bg-white position-relative">
             
@@ -50,13 +50,13 @@
             <div class="row g-4">
               <div class="col-md-5 border-end">
                 <div class="mb-3">
-                  <label class="form-label small fw-bold">Label Name</label>
-                  <input v-model="addr.label" class="form-control" placeholder="เช่น Speed, Status" />
+                  <label class="form-label small fw-bold">{{ locale.t('Label') }} Name</label>
+                  <input v-model="addr.label" class="form-control" :placeholder="locale.t('Label') + ' A'" />
                 </div>
                 <div>
-                  <label class="form-label small fw-bold">Display Type</label>
+                  <label class="form-label small fw-bold">Display {{ locale.t('Type') }}</label>
                   <select v-model="addr.data_type" class="form-select" @change="onTypeChange(addr)" :disabled="!form.device_type_id">
-                    <option value="">Select Type</option>
+                    <option value="">Select {{ locale.t('Type') }}</option>
                     <option v-for="dt in availableDisplayTypes" :key="dt" :value="dt">{{ getDisplayTypeLabel(dt) }}</option>
                   </select>
                 </div>
@@ -94,17 +94,17 @@
           </div>
 
           <button @click="addAddress" class="btn btn-outline-primary w-100 py-3 mb-4 border-dashed">
-            <i class="bi bi-plus-circle me-2"></i> Add New Address Point
+            <i class="bi bi-plus-circle me-2"></i> {{ locale.t('Add') }} New {{ locale.t('Address') }} Point
           </button>
 
 
         </div>
         
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-secondary" @click="closeModal()">{{ locale.t('Cancel') }}</button>
           <button class="btn btn-success btn fw-bold" @click="saveDevice" :disabled="loading">
             <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-            {{ isEdit ? 'Update' : 'บันทึกข้อมูลเทั้งหมด' }}
+            {{ isEdit ? locale.t('Update') : locale.t('Save') }}
           </button>
         </div>
       </div>
@@ -125,6 +125,9 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 export default {
   components: { AddressForm, DisplayNumber, DisplayLevel, AlertForm },
   emits: ['saved'],
+  
+  inject: ['locale'],
+  
   props: {
     reloadDevices: {
       type: Function,

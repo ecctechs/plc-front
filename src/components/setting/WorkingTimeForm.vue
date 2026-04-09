@@ -2,21 +2,21 @@
   <div class="card shadow-sm">
     <div class="card-body p-4">
       <h5 class="fw-bold mb-4">
-        <i class="bi bi-clock text-primary me-2"></i>Working Time
+        <i class="bi bi-clock text-primary me-2"></i>{{ locale.t('Working Time') }}
       </h5>
-      <p class="text-muted small mb-4">กำหนดเวลาทำงานและเวลาพักแยกตามรายวัน</p>
+      <p class="text-muted small mb-4">{{ locale.t('Define work and break schedules') }}</p>
 
       <div v-for="day in dayList" :key="day.id" 
            class="day-row mb-4 p-3 border rounded shadow-sm"
            :class="{'bg-light opacity-75': !day.active, 'border-primary-subtle': day.active}">
-        
+       
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="text-primary mb-0 fw-bold text-capitalize">
             <i class="fas fa-calendar-day me-2"></i>{{ day.id }}
           </h5>
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" v-model="day.active" :id="'switch-' + day.id">
-            <label class="form-check-label" :for="'switch-' + day.id">ทำงานวันนี้</label>
+            <label class="form-check-label" :for="'switch-' + day.id">{{ locale.t('Work today') }}</label>
           </div>
         </div>
 
@@ -24,10 +24,10 @@
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
-                <i class="fas fa-briefcase me-1"></i> Working Hours
+                <i class="fas fa-briefcase me-1"></i> {{ locale.t('Working Hours') }}
               </label>
               <button @click="addSlot(day.id, 'working_hours')" class="btn btn-xs btn-primary">
-                <i class="fas fa-plus me-1"></i> Add Shift
+                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Shift') }}
               </button>
             </div>
             
@@ -45,17 +45,17 @@
               </div>
             </div>
             <div v-if="schedule[day.id].working_hours.length === 0" class="alert alert-warning py-1 small">
-              <i class="fas fa-exclamation-circle me-1"></i> ต้องมีอย่างน้อย 1 ช่วงเวลา
+              <i class="fas fa-exclamation-circle me-1"></i> {{ locale.t('At least 1 time period required') }}
             </div>
           </div>
 
           <div class="mb-1">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
-                <i class="fas fa-coffee me-1"></i> Break Times
+                <i class="fas fa-coffee me-1"></i> {{ locale.t('Break Times') }}
               </label>
               <button @click="addSlot(day.id, 'break_times')" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-plus me-1"></i> Add Break
+                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Break') }}
               </button>
             </div>
 
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div v-else class="text-center py-2 text-muted small italic">
-          <i class="fas fa-bed me-2"></i> วันหยุดประจำสัปดาห์
+          <i class="fas fa-bed me-2"></i> {{ locale.t('Weekly day off') }}
         </div>
       </div>
 
@@ -83,7 +83,7 @@
         <button class="btn btn-success w-100 py-2 shadow fw-bold" :disabled="loading" @click="save">
           <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
           <i v-else class="fas fa-save me-2"></i>
-          {{ loading ? 'SAVING DATA...' : 'SAVE WORKING TIME' }}
+          {{ loading ? locale.t('Saving...') : locale.t('Save Working Time') }}
         </button>
       </div>
     </div>
@@ -97,6 +97,9 @@ const API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "WorkingTimeConfig",
+  
+  inject: ['locale'],
+  
   data() {
     return {
       loading: false,

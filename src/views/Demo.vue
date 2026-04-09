@@ -2,7 +2,7 @@
   <div class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>Demo / Simulate Mode
+          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Demo / Simulate Mode') }}
       </h3>
 
       <div class="d-flex align-items-center gap-3">
@@ -14,7 +14,7 @@
             @change="$emit('update:is-simulate', $event.target.checked)"
           />
           <label class="form-check-label fw-bold">
-            Simulate Mode {{ isSimulate ? 'ON' : 'OFF' }}
+            {{ locale.t('Simulate Mode') }} {{ isSimulate ? locale.t('ON') : locale.t('OFF') }}
           </label>
         </div>
 
@@ -25,7 +25,7 @@
           @click="$emit('toggle-run-all-random')"
         >
           <i class="bi" :class="isRunAllRandom ? 'bi-stop-fill' : 'bi-shuffle'"></i>
-          {{ isRunAllRandom ? 'Stop Random' : 'Run Random All' }}
+          {{ isRunAllRandom ? locale.t('Stop Random') : locale.t('Run Random All') }}
         </button>
       </div>
     </div>
@@ -46,12 +46,6 @@
                   {{ device.plc_address }} · {{ device.data_type }}
                 </small>
               </div>
-              <!-- <span
-                class="badge"
-                :class="device.is_connected ? 'bg-success' : 'bg-secondary'"
-              >
-                {{ device.is_connected ? 'Connected' : 'Offline' }}
-              </span> -->
             </div>
 
             <div class="my-4">
@@ -84,7 +78,7 @@
               <template v-else-if="hasRange(device)">
                 <div class="mb-3">
                   <div class="d-flex justify-content-between mb-1">
-                    <span class="small text-muted">Value: <strong>{{ device.last_value ?? 0 }}</strong></span>
+                    <span class="small text-muted">{{ locale.t('Value') }}: <strong>{{ device.last_value ?? 0 }}</strong></span>
                     <span class="small text-muted">{{ device.min }} - {{ device.max }}</span>
                   </div>
                   
@@ -110,29 +104,13 @@
               </template>
             </div>
 
-            <!-- <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-              <button
-                class="btn btn-sm"
-                :class="isAuto(device) ? 'btn-danger' : 'btn-outline-primary'"
-                :disabled="!isSimulate"
-                @click="$emit('toggle-auto', device)"
-              >
-                <i class="bi" :class="isAuto(device) ? 'bi-stop-fill' : 'bi-play-fill'"></i>
-                {{ isAuto(device) ? 'Stop Auto' : 'Auto Random' }}
-              </button>
-
-              <small class="text-muted" style="font-size: 0.75rem;">
-                {{ formatTime(device.updated_at) }}
-              </small>
-            </div> -->
-
           </div>
         </div>
       </div>
     </div>
 
     <div v-if="!devices.length" class="text-center text-muted py-5">
-      No devices found.
+      {{ locale.t('No devices found.') }}
     </div>
   </div>
 </template>
@@ -140,11 +118,14 @@
 <script>
 export default {
   name: 'Demo',
+  
+  inject: ['locale'],
+
   props: {
     devices: Array,
     isSimulate: Boolean,
     isRunAllRandom: Boolean,
-    autoTimers: Object // รับ Set() มาจาก App.vue
+    autoTimers: Object
   },
   emits: ['update:is-simulate', 'update-device', 'toggle-auto', 'toggle-run-all-random'],
 
@@ -176,7 +157,6 @@ export default {
         val = newValue ? 1 : 0;
       } else {
         val = parseFloat(newValue) || 0;
-        // Clamp value
         val = Math.min(device.max, Math.max(device.min, val));
       }
 

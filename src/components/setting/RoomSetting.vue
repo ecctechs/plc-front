@@ -3,10 +3,10 @@
     <div class="card-body p-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold m-0">
-          <i class="bi bi-door-open text-primary me-2"></i>Rooms Setting
+          <i class="bi bi-door-open text-primary me-2"></i>{{ locale.t('Room Setting') }}
         </h5>
         <button class="btn btn-primary" @click="openModal()">
-          <i class="fa-solid fa-plus me-1"></i> Add Room
+          <i class="fa-solid fa-plus me-1"></i> {{ locale.t('Add Room') }}
         </button>
       </div>
 
@@ -15,8 +15,8 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-dark">
             <tr>
-              <th class="ps-3 py-3">Room Name</th>
-              <th class="py-3 text-center" style="width: 150px;">Actions</th>
+              <th class="ps-3 py-3">{{ locale.t('Room') }} Name</th>
+              <th class="py-3 text-center" style="width: 150px;">{{ locale.t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -33,7 +33,7 @@
             </tr>
             <tr v-if="rooms.length === 0">
               <td colspan="2" class="text-center text-muted py-4">
-                No rooms found. Click "Add Room" to create one.
+                {{ locale.t('No rooms found.') }}
               </td>
             </tr>
           </tbody>
@@ -46,20 +46,20 @@
       <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content border-0 shadow-lg">
           <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">{{ isEdit ? 'Edit Room' : 'Add Room' }}</h5>
+            <h5 class="modal-title">{{ isEdit ? locale.t('Edit Room') : locale.t('Add Room') }}</h5>
             <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label class="form-label fw-bold">Room Name</label>
+              <label class="form-label fw-bold">{{ locale.t('Room') }} Name</label>
               <input v-model="form.name" type="text" class="form-control" placeholder="e.g., Room 1" />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary" @click="closeModal()">{{ locale.t('Cancel') }}</button>
             <button type="button" class="btn btn-primary" @click="save()" :disabled="loading">
               <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
-              {{ isEdit ? 'Update' : 'Create' }}
+              {{ isEdit ? locale.t('Update') : locale.t('Create') }}
             </button>
           </div>
         </div>
@@ -76,6 +76,9 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "RoomSetting",
+  
+  inject: ['locale'],
+  
   data() {
     return {
       rooms: [],

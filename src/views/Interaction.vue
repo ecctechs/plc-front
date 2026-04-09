@@ -2,21 +2,21 @@
   <div class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>Interaction Layout
+          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Interaction') }}
       </h3>
       <button class="btn btn-primary" @click="showAddElementModal = true">
-        <i class="bi bi-plus-circle me-1"></i> Add Element
+        <i class="bi bi-plus-circle me-1"></i> {{ locale.t('Add Element') }}
       </button>
     </div>
 
     <div class="layout-selector">
-        <label for="layout-select">Select Layout:</label>
+        <label for="layout-select">{{ locale.t('Select Layout') }}:</label>
         <select 
           id="layout-select" 
           v-model="selectedLayoutId" 
           @change="onLayoutChange"
         >
-          <option value="" disabled>-- Select a layout --</option>
+          <option value="" disabled>-- {{ locale.t('Select a layout') }} --</option>
           <option 
             v-for="layout in layouts" 
             :key="layout.id" 
@@ -27,7 +27,7 @@
         </select>
       </div>
 
-    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="loading" class="loading">{{ locale.t('Loading...') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="image-container">
       <div 
@@ -141,6 +141,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001
 
 export default {
   name: 'Interaction',
+  
+  inject: ['locale'],
+  
   components: {
     StatusLamp,
     NumberDisplay,

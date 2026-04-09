@@ -2,9 +2,9 @@
   <div class="container-fluid mt-4">
     <div class="setting-header mb-4">
       <h3 class="fw-bold text-primary">
-        <i class="bi bi-gear-wide-connected me-2"></i>System Settings
+        <i class="bi bi-gear-wide-connected me-2"></i>{{ locale.t('System Settings') }}
       </h3>
-      <p class="text-muted mb-0">จัดการการตั้งค่าระบบ PLC Monitoring</p>
+      <p class="text-muted mb-0">{{ locale.t('Manage PLC system settings') }}</p>
     </div>
 
     <!-- Section 1: Type + Room (70% + 30%) -->
@@ -47,6 +47,9 @@ import DeviceForm from "../components/setting/DeviceForm.vue";
 export default {
   name: "Setting",
   emits: ["add-device"],
+  
+  inject: ['locale'],
+  
   components: {
     TypeSetting,
     RoomSetting,

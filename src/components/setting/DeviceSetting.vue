@@ -6,7 +6,7 @@
           <i class="bi bi-person-badge text-primary me-2"></i>Device Setting
         </h5>
         <button class="btn btn-primary" @click="$emit('add')">
-          <i class="fa-solid fa-plus me-1"></i> Add Device
+          <i class="fa-solid fa-plus me-1"></i> {{ locale.t('Add Device') }}
         </button>
       </div>
 
@@ -17,13 +17,13 @@
             v-model="filters.deviceName" 
             type="text" 
             class="form-control" 
-            placeholder="Search by Device Name..."
+            :placeholder="locale.t('Search') + ' by Device Name...'"
             @input="applyFilters"
           />
         </div>
         <div class="col-md-4">
           <select v-model="filters.roomName" class="form-select" @change="applyFilters">
-            <option value="">All Rooms</option>
+            <option value="">{{ locale.t('All Rooms') }}</option>
             <option v-for="room in rooms" :key="room.id" :value="room.name">
               {{ room.name }}
             </option>
@@ -36,12 +36,12 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-dark">
             <tr>
-              <th class="ps-3 py-3">Device Name</th>
-              <th class="py-3">Label Name</th>
+              <th class="ps-3 py-3">{{ locale.t('Device') }} Name</th>
+              <th class="py-3">{{ locale.t('Label') }} Name</th>
               <th class="py-3 text-center">Display Type</th>
-              <th class="py-3">Address</th>
-              <th class="py-3">Room Name</th>
-              <th class="py-3 text-center">Actions</th>
+              <th class="py-3">{{ locale.t('Address') }}</th>
+              <th class="py-3">{{ locale.t('Room') }} Name</th>
+              <th class="py-3 text-center">{{ locale.t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -72,7 +72,7 @@
             </template>
             <tr v-if="paginatedDevices.length === 0">
               <td colspan="6" class="text-center text-muted py-4">
-                No devices found.
+                {{ locale.t('No devices found.') }}
               </td>
             </tr>
           </tbody>
@@ -82,7 +82,7 @@
       <!-- Pagination -->
       <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3">
         <span class="text-muted small">
-          แสดง {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredDevices.length) }} จาก {{ filteredDevices.length }} รายการ
+          {{ locale.t('Showing') }} {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredDevices.length) }} {{ locale.t('of') }} {{ filteredDevices.length }} {{ locale.t('entries') }}
         </span>
         <nav>
           <ul class="pagination pagination-sm mb-0">
@@ -109,6 +109,9 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "DeviceSetting",
+  
+  inject: ['locale'],
+  
   data() {
     return {
       devices: [],
