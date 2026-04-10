@@ -122,6 +122,24 @@ export default {
       return estimatedCount
     },
 
+    downsampleData(data, maxPoints = 200) {
+      if (data.length <= maxPoints) return data
+      
+      const step = Math.ceil(data.length / maxPoints)
+      const result = []
+      
+      for (let i = 0; i < data.length; i += step) {
+        result.push(data[i])
+        if (result.length >= maxPoints) break
+      }
+      
+      if (result[result.length - 1] !== data[data.length - 1]) {
+        result.push(data[data.length - 1])
+      }
+      
+      return result
+    },
+
     formatTimeLabel(date) {
       if (!date) return ''
       return new Date(date).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -234,7 +252,8 @@ export default {
 
         if (!this.isEmpty) {
           this.processStats(series);
-          this.renderCharts(series);
+          const sampledData = this.downsampleData(series);
+          this.renderCharts(sampledData);
         }
       } catch (err) {
         console.error("Fetch Level Error:", err);
