@@ -184,6 +184,24 @@ export default {
       return estimatedCount
     },
 
+    downsampleData(data, maxPoints = 200) {
+      if (data.length <= maxPoints) return data
+      
+      const step = Math.ceil(data.length / maxPoints)
+      const result = []
+      
+      for (let i = 0; i < data.length; i += step) {
+        result.push(data[i])
+        if (result.length >= maxPoints) break
+      }
+      
+      if (result[result.length - 1] !== data[data.length - 1]) {
+        result.push(data[data.length - 1])
+      }
+      
+      return result
+    },
+
     formatDateTime(date) {
       const d = new Date(date)
       return d.toLocaleString('th-TH', {
@@ -255,7 +273,8 @@ export default {
         this.lastData = processed
         this.isEmpty = false
         this.processStats(processed)
-        this.renderCharts(processed)
+        const sampledData = this.downsampleData(processed)
+        this.renderCharts(sampledData)
 
         if (this.alarmTime) this.stopAutoRefresh()
       } catch (err) {

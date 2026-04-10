@@ -22,14 +22,14 @@
     </div>
 
     <!-- Filter -->
-    <div class="row g-3 mb-4 bg-light p-3 rounded">
-      <div class="col-sm-auto d-flex align-items-center">
-        <span class="fw-bold me-2">{{ locale.t('Filter') }}:</span>
+    <div class="row g-3 mb-4 bg-light p-3 rounded flex-nowrap filter-row">
+      <div class="col-auto d-flex align-items-center">
+        <!-- <span class="fw-bold me-2">{{ locale.t('Filter') }}:</span> -->
       </div>
 
       <!-- START -->
-      <div class="col-sm-5">
-        <div class="d-flex gap-2 align-items-center">
+      <div class="col-auto">
+        <div class="d-flex gap-2 align-items-center flex-nowrap">
 
           <VDatePicker v-model="startDateOnly" mode="date" locale="th-TH">
             <template #default="{ inputEvents }">
@@ -66,8 +66,8 @@
       </div>
 
       <!-- END -->
-      <div class="col-sm-5">
-        <div class="d-flex gap-2 align-items-center">
+      <div class="col-auto">
+        <div class="d-flex gap-2 align-items-center flex-nowrap">
 
           <VDatePicker v-model="endDateOnly" mode="date" locale="th-TH">
             <template #default="{ inputEvents }">
@@ -101,7 +101,7 @@
       </div>
 
       <!-- Apply Button -->
-      <div class="col-sm-auto d-flex align-items-center">
+      <div class="col-auto d-flex align-items-center">
         <button class="btn btn-primary btn-sm" @click="applyFilter">
           <i class="bi bi-search"></i> {{ locale.t('Search') }}
         </button>
@@ -287,4 +287,20 @@ export default {
 <style scoped>
 .text-uppercase { letter-spacing: 0.5px; font-size: 0.75rem; }
 .chart-area { min-height: 400px; background-color: #f8f9fa; }
+
+.filter-row {
+  overflow-x: auto;
+  flex-wrap: nowrap !important;
+}
+
+.filter-row .form-control-sm,
+.filter-row .form-select-sm {
+  max-width: 110px;
+  min-width: 80px;
+}
+
+.filter-row select {
+  max-width: 60px;
+  min-width: 50px;
+}
 </style>
