@@ -231,9 +231,10 @@ export default {
   },
 
   computed: {
-    filteredHistory() {
+   filteredHistory() {
       let result = this.history;
-      
+
+      // Filter Device Name
       if (this.filter.deviceName) {
         const search = this.filter.deviceName.toLowerCase();
         result = result.filter(item => {
@@ -241,11 +242,18 @@ export default {
           return deviceName.toLowerCase().includes(search);
         });
       }
-      
+
+      // Filter Room (แก้ไขตรงนี้)
       if (this.filter.room) {
-        result = result.filter(item => item.device?.room.name === this.filter.room);
+        result = result.filter(item => {
+          // ดึงค่า Room Name ออกมาแบบดัก Error ทุกจุด
+          // ตรวจสอบทั้ง item.device.room.name และ item.device.room_name
+          const currentRoomName = item.device?.room?.name || item.device?.room_name;
+          
+          return currentRoomName === this.filter.room;
+        });
       }
-      
+
       return result;
     },
     totalPages() {
