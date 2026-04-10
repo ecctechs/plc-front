@@ -5,17 +5,17 @@
     <div class="row align-items-center mb-4 border-bottom pb-3 text-center">
       
       <div class="col-md-4">
-        <small class="text-uppercase text-muted fw-bold d-block">Value Name</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Value') }} Name</small>
         <h4 class="mb-0 text-primary">{{ device.label }}</h4>
       </div>
 
       <div class="col-md-4 border-start border-end">
-        <small class="text-uppercase text-muted fw-bold d-block">PLC Address</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Address') }}</small>
         <code class="fs-5 px-2 bg-light rounded">{{ device.plc_address }}</code>
       </div>
 
       <div class="col-md-4">
-        <small class="text-uppercase text-muted fw-bold d-block">Refresh Rate</small>
+        <small class="text-uppercase text-muted fw-bold d-block">{{ locale.t('Refresh Rate') }}</small>
         <span class="fs-5">{{ device.refresh_rate_ms }} <small class="text-muted">ms</small></span>
       </div>
 
@@ -24,7 +24,7 @@
     <!-- Filter -->
     <div class="row g-3 mb-4 bg-light p-3 rounded">
       <div class="col-sm-auto d-flex align-items-center">
-        <span class="fw-bold me-2">Filter:</span>
+        <span class="fw-bold me-2">{{ locale.t('Filter') }}:</span>
       </div>
 
       <!-- START -->
@@ -99,6 +99,13 @@
           <small>น.</small>
         </div>
       </div>
+
+      <!-- Apply Button -->
+      <div class="col-sm-auto d-flex align-items-center">
+        <button class="btn btn-primary btn-sm" @click="applyFilter">
+          <i class="bi bi-search"></i> {{ locale.t('Search') }}
+        </button>
+      </div>
     </div>
 
     <!-- Chart -->
@@ -106,9 +113,11 @@
       <component 
         :is="chartComponent" 
         :device="device" 
-        :start-date="startDate" 
-        :end-date="endDate" 
+        :start-date="appliedStartDate" 
+        :end-date="appliedEndDate" 
         :alarmTime="alarmTime"
+        :eventType="eventType"
+        :filter-applied="filterApplied"
       />
     </div>
 
@@ -124,12 +133,16 @@ import { formatISO } from '../utils/date-utils'
 
 export default {
   name: "Chart",
+  
+  inject: ['locale'],
+  
   components: { OnOffChart, NumberChart, NumberGaugeChart, LevelChart },
   props: {
     device: Object,
     initialStart: String,
     initialEnd: String,
     alarmTime: String,
+    eventType: String,
   },
   data() {
 
@@ -161,6 +174,11 @@ export default {
       endH: String(end.getHours()).padStart(2,'0'),
       endM: String(end.getMinutes()).padStart(2,'0'),
       endS: String(end.getSeconds()).padStart(2,'0'),
+
+      // เก็บค่าที่ apply แล้ว
+      appliedStartDate: null,
+      appliedEndDate: null,
+      filterApplied: 0
     }
   },
   computed: {
@@ -181,6 +199,7 @@ export default {
     },
 
     startDate() {
+      // ไม่ emit อัตโนมัติ รอกดปุ่ม Apply
       return this.combineDateTime(
         this.startDateOnly,
         this.startH,
@@ -190,6 +209,7 @@ export default {
     },
 
     endDate() {
+      // ไม่ emit อัตโนมัติ รอกดปุ่ม Apply
       return this.combineDateTime(
         this.endDateOnly,
         this.endH,
@@ -209,8 +229,12 @@ export default {
     }
   },
   watch: {
-    startDate() { this.emitChange() },
-    endDate() { this.emitChange() }
+    // เอาออก ไม่ให้ auto emit ตอนเปลี่ยนวันที่/เวลา
+  },
+  created() {
+    // ตั้งค่าเริ่มต้นเมื่อ component สร้าง
+    this.appliedStartDate = this.startDate
+    this.appliedEndDate = this.endDate
   },
   methods: {
 
@@ -241,6 +265,13 @@ export default {
         pad(d.getMinutes()) + ':' +
         pad(d.getSeconds())
       )
+    },
+
+    applyFilter() {
+      this.appliedStartDate = this.startDate
+      this.appliedEndDate = this.endDate
+      this.filterApplied++ // เพิ่ม counter เพื่อบอก chart ว่าผู้ใช้กด apply
+      this.emitChange()
     },
 
     emitChange() {

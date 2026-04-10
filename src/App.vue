@@ -1,16 +1,25 @@
 <template>
   <div class="container-fluid mt-4">
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
-        <button
-          class="nav-link text-capitalize"
-          :class="{ active: tab === t }"
-          @click="tab = t"
-        >
-          {{ t === 'alarmhistory' ? 'Alarm History' : t }}
-        </button>
-      </li>
-    </ul>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
+      <ul class="nav nav-tabs mb-0">
+        <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
+          <button
+            class="nav-link text-capitalize"
+            :class="{ active: tab === t }"
+            @click="tab = t"
+          >
+            {{ locale.t(tabLabels[t]) }}
+          </button>
+        </li>
+      </ul>
+
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        @click="locale.toggle()"
+      >
+        <i class="bi bi-globe"></i> {{ locale.current === 'th' ? 'EN' : 'TH' }}
+      </button>
+    </div>
 
     <div class="tab-content">
 
@@ -32,10 +41,12 @@
         v-if="tab === 'demo'"
         :devices="dashboard"
         :is-simulate="isSimulate"
+        :is-run-all-random="isRunAllRandom"
         :auto-timers="autoTimers"
         @update:is-simulate="isSimulate = $event"
         @update-device="handleDeviceUpdate"
         @toggle-auto="handleToggleAuto"
+        @toggle-run-all-random="toggleRunAllRandom"
       />
 
       <Interaction
@@ -65,11 +76,21 @@ export default {
   name: "App",
   components: { DashboardLayout, Setting, Demo, AlarmHistory, Interaction },
 
+  inject: ['locale'],
+
   data() {
     return {
       tab: "dashboard",
+      tabLabels: {
+        dashboard: 'Dashboard',
+        setting: 'Setting',
+        demo: 'Demo',
+        alarmhistory: 'Alarm History',
+        interaction: 'Interaction'
+      },
       dashboard: [],
       isSimulate: false,
+      isRunAllRandom: false,
       pollTimer: null,
       autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
     };
@@ -90,6 +111,7 @@ export default {
       if (val) {
         this.stopPolling();
       } else {
+        this.isRunAllRandom = false;
         this.stopAllAuto(); // ปิดจำลอง = ปิด auto ทั้งหมด
         this.startPolling();
       }
@@ -167,6 +189,33 @@ export default {
 
     stopAllAuto() {
       this.autoTimers.clear();
+    },
+
+    toggleRunAllRandom() {
+      this.isRunAllRandom = !this.isRunAllRandom;
+      if (this.isRunAllRandom) {
+        this.runAllRandomCycle();
+      }
+    },
+
+    runAllRandomCycle() {
+      if (!this.isRunAllRandom || !this.isSimulate) return;
+
+      this.dashboard.forEach(device => {
+        let newValue;
+        const min = device.min ?? 0;
+        const max = device.max ?? 100;
+
+        if (device.data_type === 'onoff') {
+          newValue = Math.random() > 0.5 ? 1 : 0;
+        } else {
+          newValue = +(min + Math.random() * (max - min)).toFixed(2);
+        }
+
+        this.handleDeviceUpdate({ address_id: device.address_id, value: newValue });
+      });
+
+      setTimeout(() => this.runAllRandomCycle(), 2000);
     },
 
     handleDeviceUpdate(payload) {

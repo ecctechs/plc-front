@@ -104,7 +104,7 @@
               class="form-control form-control-sm flex-grow-1" 
               :class="{'is-invalid': hasError(index, 'email')}"
               placeholder="อีเมล (คั่นด้วยจุลภาค)"
-              :value="alarm.email_recipients.join(', ')"
+              :value="(alarm.email_recipients || []).join(', ')"
               @input="(e) => updateEmails(index, e.target.value)"
             >
           </div>
@@ -118,11 +118,15 @@
 </template>
 
 <script>
+const BASE_API = import.meta.env.VITE_API_BASE_URL;
+
 export default {
   props: {
     modelValue: { type: Array, default: () => [] },
     dataType: { type: String, default: 'number' },
-    levelLabels: { type: Array, default: () => [] }
+    levelLabels: { type: Array, default: () => [] },
+    numberConfig: { type: Object, default: null },
+    levels: { type: Array, default: () => [] }
   },
   emits: ['update:modelValue'],
   data() {
@@ -131,6 +135,74 @@ export default {
     }
   },
   methods: {
+    async saveAlarms(savedAddrId) {
+      if (!this.modelValue || this.modelValue.length === 0) return;
+      
+      for (const alarm of this.modelValue) {
+        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...alarm,
+            data_type: this.dataType,
+            is_active: true
+          })
+        });
+      }
+    },
+    
+    // Validate and throw error if invalid (for use by parent)
+    validateWithError() {
+      const isValid = this.validateAlarms();
+      if (!isValid) {
+        throw new Error("การตั้งค่า Alarm ไม่ถูกต้อง (มีชื่อซ้ำ, ค่าว่าง หรือช่วงทับซ้อนกัน)");
+      }
+    },
+    
+    // Save all sub-configs for an address (number, level, alarms)
+    async saveAllConfigs(savedAddrId) {
+      // 1. Save Number Config
+      if (["number", "number_gauge"].includes(this.dataType) && this.numberConfig) {
+        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/number-config`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.numberConfig)
+        });
+      }
+
+      // 2. Save Level Config
+      if (this.dataType === "level" && this.levels) {
+        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.levels)
+        });
+
+        // Fetch saved levels to get the new level_index for alarms
+        const levelsResponse = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`);
+        const savedLevels = await levelsResponse.json();
+        console.log('Saved levels for alarm mapping:', savedLevels);
+
+        // Update alarms with correct level_index based on level_label
+        if (this.modelValue && this.modelValue.length > 0) {
+          const updatedAlarms = this.modelValue.map(alarm => {
+            if (alarm.level_label) {
+              const matchedLevel = savedLevels.find(l => l.label === alarm.level_label);
+              if (matchedLevel) {
+                console.log(`Mapping alarm "${alarm.name}" to level_index: ${matchedLevel.level_index}`);
+                return { ...alarm, level_index: matchedLevel.level_index };
+              }
+            }
+            return alarm;
+          });
+          // Update modelValue with corrected level_index
+          this.$emit('update:modelValue', updatedAlarms);
+        }
+      }
+
+      // 3. Save Alarms
+      await this.saveAlarms(savedAddrId);
+    },
     hasError(index, field) {
       return this.errors.some(e => e.index === index && e.field === field);
     },
@@ -223,7 +295,14 @@ export default {
       const selectedLvl = this.levelLabels.find(l => l.label === label);
       if (!selectedLvl) return;
       const newList = JSON.parse(JSON.stringify(this.modelValue));
-      newList[index] = { ...newList[index], level_label: selectedLvl.label, condition_type: selectedLvl.condition_type, min_value: selectedLvl.min_value, max_value: selectedLvl.max_value };
+      newList[index] = { 
+        ...newList[index], 
+        level_label: selectedLvl.label, 
+        level_index: selectedLvl.level_index,
+        condition_type: selectedLvl.condition_type, 
+        min_value: selectedLvl.min_value, 
+        max_value: selectedLvl.max_value 
+      };
       this.$emit('update:modelValue', newList);
     },
     removeAlarm(index) {

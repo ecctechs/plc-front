@@ -1,10 +1,10 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5)">
+  <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" style="background: rgba(0,0,0,.5)">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow">
         <!-- Header -->
         <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title">{{ editingCard ? 'Edit Card' : 'Add Dashboard Card' }}</h5>
+          <h5 class="modal-title">{{ editingCard ? locale.t('Edit Card') : locale.t('Add Card') }}</h5>
           <button class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
 
@@ -13,9 +13,9 @@
 
           <!-- Device -->
           <div class="mb-3">
-            <label class="form-label fw-bold">Device</label>
+            <label class="form-label fw-bold">{{ locale.t('Device') }}</label>
             <select class="form-select" v-model="selectedDeviceId">
-              <option disabled value="">Select Device</option>
+              <option disabled value="">Select {{ locale.t('Device') }}</option>
               <option
                 v-for="d in devices"
                 :key="d.id"
@@ -28,13 +28,13 @@
 
           <!-- Address -->
           <div class="mb-3">
-            <label class="form-label fw-bold">Address</label>
+            <label class="form-label fw-bold">{{ locale.t('Address') }}</label>
             <select
               class="form-select"
               v-model="selectedAddressId"
               :disabled="!selectedDeviceId"
             >
-              <option disabled value="">Select Address</option>
+              <option disabled value="">Select {{ locale.t('Address') }}</option>
               <option
                 v-for="a in filteredAddresses"
                 :key="a.id"
@@ -48,12 +48,12 @@
 
           <!-- Display Type -->
           <div class="mb-3" v-if="selectedAddress">
-            <label class="form-label fw-bold">Display Type</label>
+            <label class="form-label fw-bold">Display {{ locale.t('Type') }}</label>
             <select
               class="form-select"
               v-model="selectedDisplayType"
             >
-              <option disabled value="">Select Display Type</option>
+              <option disabled value="">Select Display {{ locale.t('Type') }}</option>
               <option value="onoff">ON/OFF</option>
               <option value="number">Number</option>
               <option value="number_gauge">Gauge</option>
@@ -63,7 +63,7 @@
 
           <!-- Position -->
           <div class="mb-3" v-if="selectedAddress">
-            <label class="form-label fw-bold">Insert Position</label>
+            <label class="form-label fw-bold">{{ locale.t('Insert Position') }}</label>
             <select class="form-select" v-model.number="selectedPosition">
               <option
                 v-for="n in parseInt(currentCardCount) + 1"
@@ -80,14 +80,14 @@
         <!-- Footer -->
         <div class="modal-footer">
           <button class="btn btn-outline-secondary" @click="$emit('close')">
-            Cancel
+            {{ locale.t('Cancel') }}
           </button>
           <button
             class="btn btn-primary"
             :disabled="!canSubmit"
             @click="submit"
           >
-            {{ editingCard ? 'Save Changes' : 'Add Card' }}
+            {{ editingCard ? locale.t('Save Changes') : locale.t('Add Card') }}
           </button>
         </div>
 
@@ -101,6 +101,8 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "AddDashboardCardModal",
+
+  inject: ['locale'],
 
   props: {
     currentCardCount: {

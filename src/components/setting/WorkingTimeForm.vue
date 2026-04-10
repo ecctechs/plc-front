@@ -1,95 +1,91 @@
 <template>
-  <div class="card shadow-sm setting-card mx-auto mt-4">
-    <div class="card-body">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h5 class="fw-bold mb-4">
+        <i class="bi bi-clock text-primary me-2"></i>{{ locale.t('Working Time') }}
+      </h5>
+      <p class="text-muted small mb-4">{{ locale.t('Define work and break schedules') }}</p>
 
-      <h4 class="mb-4">Working Time Setting (Global)</h4>
-
-      <!-- ===== Working Day ===== -->
-      <div class="mb-4">
-        <label class="form-label">Working Day</label>
-
-        <div class="d-flex flex-wrap gap-3">
-          <div
-            v-for="d in days"
-            :key="d.value"
-            class="form-check"
-          >
-            <input
-              class="form-check-input"
-              type="checkbox"
-              :value="d.value"
-              v-model="form.working_days"
-            />
-            <label class="form-check-label">
-              {{ d.label }}
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== Working Hour ===== -->
-      <div class="mb-4">
-        <label class="form-label">Working Hour</label>
-
-        <div class="row g-2">
-          <div class="col-6">
-            <input
-              type="time"
-              v-model="form.start_time"
-              class="form-control"
-            />
-          </div>
-          <div class="col-6">
-            <input
-              type="time"
-              v-model="form.end_time"
-              class="form-control"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== Break Time ===== -->
-      <div class="mb-4">
-        <label class="form-label">Break Time (Optional)</label>
-
-        <div class="row g-2">
-          <div class="col-6">
-            <input
-              type="time"
-              v-model="form.break_start"
-              class="form-control"
-            />
-          </div>
-          <div class="col-6">
-            <input
-              type="time"
-              v-model="form.break_end"
-              class="form-control"
-            />
+      <div v-for="day in dayList" :key="day.id" 
+           class="day-row mb-4 p-3 border rounded shadow-sm"
+           :class="{'bg-light opacity-75': !day.active, 'border-primary-subtle': day.active}">
+       
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="text-primary mb-0 fw-bold text-capitalize">
+            <i class="fas fa-calendar-day me-2"></i>{{ day.id }}
+          </h5>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="day.active" :id="'switch-' + day.id">
+            <label class="form-check-label" :for="'switch-' + day.id">{{ locale.t('Work today') }}</label>
           </div>
         </div>
 
-        <small class="text-muted">
-          เว้นว่างไว้ถ้าไม่มีช่วงพัก
-        </small>
+        <div v-if="day.active">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
+                <i class="fas fa-briefcase me-1"></i> {{ locale.t('Working Hours') }}
+              </label>
+              <button @click="addSlot(day.id, 'working_hours')" class="btn btn-xs btn-primary">
+                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Shift') }}
+              </button>
+            </div>
+            
+            <div v-for="(slot, index) in schedule[day.id].working_hours" :key="'w-'+index" class="row g-2 mb-2 align-items-center">
+              <div class="col-5">
+                <input type="time" v-model="slot.start" class="form-control form-control-sm">
+              </div>
+              <div class="col-5">
+                <input type="time" v-model="slot.end" class="form-control form-control-sm">
+              </div>
+              <div class="col-2 text-center">
+                <button @click="removeSlot(day.id, 'working_hours', index)" class="btn btn-sm btn-outline-danger">
+                  <i class="fa-solid fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div v-if="schedule[day.id].working_hours.length === 0" class="alert alert-warning py-1 small">
+              <i class="fas fa-exclamation-circle me-1"></i> {{ locale.t('At least 1 time period required') }}
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
+                <i class="fas fa-coffee me-1"></i> {{ locale.t('Break Times') }}
+              </label>
+              <button @click="addSlot(day.id, 'break_times')" class="btn btn-xs btn-outline-secondary">
+                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Break') }}
+              </button>
+            </div>
+
+            <div v-for="(slot, index) in schedule[day.id].break_times" :key="'b-'+index" class="row g-2 mb-2 align-items-center">
+              <div class="col-5">
+                <input type="time" v-model="slot.start" class="form-control form-control-sm border-dashed">
+              </div>
+              <div class="col-5">
+                <input type="time" v-model="slot.end" class="form-control form-control-sm border-dashed">
+              </div>
+              <div class="col-2 text-center">
+                <button @click="removeSlot(day.id, 'break_times', index)" class="btn btn-sm btn-outline-danger">
+                  <i class="fa-solid fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-center py-2 text-muted small italic">
+          <i class="fas fa-bed me-2"></i> {{ locale.t('Weekly day off') }}
+        </div>
       </div>
 
-      <!-- ===== Error ===== -->
-      <div v-if="error" class="alert alert-danger py-2">
-        {{ error }}
+      <div class="sticky-bottom bg-white py-3 border-top mt-4">
+        <button class="btn btn-success w-100 py-2 shadow fw-bold" :disabled="loading" @click="save">
+          <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i v-else class="fas fa-save me-2"></i>
+          {{ loading ? locale.t('Saving...') : locale.t('Save Working Time') }}
+        </button>
       </div>
-
-      <!-- ===== Action ===== -->
-      <button
-        class="btn btn-success w-100"
-        :disabled="loading"
-        @click="save"
-      >
-        <span v-if="loading">Saving...</span>
-        <span v-else>Save Working Time</span>
-      </button>
-
     </div>
   </div>
 </template>
@@ -100,136 +96,141 @@ import Swal from "sweetalert2";
 const API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
-  name: "WorkingTimeForm",
-
+  name: "WorkingTimeConfig",
+  
+  inject: ['locale'],
+  
   data() {
     return {
-      form: {
-        working_days: [],
-        start_time: "",
-        end_time: "",
-        break_start: null,
-        break_end: null,
-      },
-
-      error: "",
       loading: false,
-
-      days: [
-        { label: "Mon", value: "mon" },
-        { label: "Tue", value: "tue" },
-        { label: "Wed", value: "wed" },
-        { label: "Thu", value: "thu" },
-        { label: "Fri", value: "fri" },
-        { label: "Sat", value: "sat" },
-        { label: "Sun", value: "sun" },
+      dayList: [
+        { id: "monday", active: true },
+        { id: "tuesday", active: true },
+        { id: "wednesday", active: true },
+        { id: "thursday", active: true },
+        { id: "friday", active: true },
+        { id: "saturday", active: false },
+        { id: "sunday", active: false }
       ],
+      schedule: {
+        monday: { working_hours: [], break_times: [] },
+        tuesday: { working_hours: [], break_times: [] },
+        wednesday: { working_hours: [], break_times: [] },
+        thursday: { working_hours: [], break_times: [] },
+        friday: { working_hours: [], break_times: [] },
+        saturday: { working_hours: [], break_times: [] },
+        sunday: { working_hours: [], break_times: [] }
+      }
     };
   },
-
   mounted() {
     this.load();
   },
-
   methods: {
-    /* ================= Load ================= */
     async load() {
       try {
         const res = await fetch(`${API}/api/working-time`);
-
-        if (!res.ok) {
-          throw new Error("Load failed");
-        }
-
+        if (!res.ok) throw new Error("Load failed");
         const data = await res.json();
-
-        if (data) {
-          this.form = {
-            working_days: data.working_days || [],
-            start_time: data.start_time,
-            end_time: data.end_time,
-            break_start: data.break_start,
-            break_end: data.break_end,
-          };
+        
+        if (data?.schedule) {
+          this.schedule = data.schedule;
+          // ตรวจสอบว่าวันไหนมีข้อมูลการทำงานให้เปิด Switch อัตโนมัติ
+          this.dayList.forEach(d => {
+            d.active = (this.schedule[d.id].working_hours && this.schedule[d.id].working_hours.length > 0);
+          });
         }
       } catch (err) {
-        await showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลด Working Time ได้", "error");
+        console.error("Load error", err);
       }
     },
 
-    /* ================= Utils ================= */
-    timeToMin(t) {
-      if (!t) return null;
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
+    addSlot(dayId, type) {
+      const defaultVal = type === 'working_hours' ? { start: "08:00", end: "17:00" } : { start: "12:00", end: "13:00" };
+      this.schedule[dayId][type].push({ ...defaultVal });
     },
 
-    /* ================= Validate ================= */
+    removeSlot(dayId, type, index) {
+      this.schedule[dayId][type].splice(index, 1);
+    },
+
     validate() {
-      const start = this.timeToMin(this.form.start_time);
-      const end   = this.timeToMin(this.form.end_time);
-      const bs    = this.timeToMin(this.form.break_start);
-      const be    = this.timeToMin(this.form.break_end);
+      for (const day of this.dayList) {
+        if (!day.active) continue;
+        const { working_hours, break_times } = this.schedule[day.id];
 
-      if (start === null || end === null) {
-        return "กรุณากรอกเวลาเริ่ม และ เวลาสิ้นสุด";
-      }
+        // 1. ต้องมีเวลาทำงาน
+        if (working_hours.length === 0) return `วัน ${day.id} ต้องระบุเวลาทำงานอย่างน้อย 1 ช่วง`;
 
-      if (start >= end) {
-        return "Start time ต้องน้อยกว่า End time";
-      }
+        // 2. ตรวจสอบความถูกต้องของแต่ละช่วง
+        for (let i = 0; i < working_hours.length; i++) {
+          const w = working_hours[i];
+          if (!w.start || !w.end) return `กรุณากรอกเวลาทำงานให้ครบ (วัน ${day.id})`;
+          if (w.start >= w.end) return `เวลาเลิกงานต้องมากกว่าเวลาเริ่มงาน (วัน ${day.id})`;
 
-      if ((bs !== null && be === null) || (bs === null && be !== null)) {
-        return "ถ้ามี Break ต้องใส่ทั้ง Start และ End";
-      }
-
-      if (bs !== null && be !== null) {
-        if (bs >= be) {
-          return "Break start ต้องน้อยกว่า Break end";
+          // ตรวจสอบการทับซ้อนกันเองของเวลาทำงาน
+          for (let j = i + 1; j < working_hours.length; j++) {
+            const nextW = working_hours[j];
+            if (w.start < nextW.end && nextW.start < w.end) return `เวลาทำงานในวัน ${day.id} มีช่วงที่ทับซ้อนกัน`;
+          }
         }
 
-        if (bs < start || be > end) {
-          return "Break ต้องอยู่ในช่วงเวลาทำงาน";
+        // 3. ตรวจสอบเวลาพัก
+        for (const b of break_times) {
+          if (!b.start || !b.end) return `กรุณากรอกเวลาพักให้ครบ (วัน ${day.id})`;
+          if (b.start >= b.end) return `เวลาเริ่มพักต้องก่อนเวลาเลิกพัก (วัน ${day.id})`;
+          
+          // เวลาพักต้องอยู่ "ใน" ช่วงเวลาทำงานช่วงใดช่วงหนึ่ง
+          const isValidBreak = working_hours.some(w => b.start >= w.start && b.end <= w.end);
+          if (!isValidBreak) return `เวลาพัก ${b.start}-${b.end} ของวัน ${day.id} ต้องอยู่ภายในช่วงเวลาทำงานเท่านั้น`;
         }
       }
-
       return "";
     },
 
-    /* ================= Save ================= */
     async save() {
-      this.error = this.validate();
-      if (this.error) return;
+      const errorMsg = this.validate();
+      if (errorMsg) return Swal.fire("ข้อมูลไม่ถูกต้อง", errorMsg, "warning");
 
       try {
         this.loading = true;
+        const payload = { schedule: {} };
+
+        this.dayList.forEach(d => {
+          // ถ้าไม่ได้เปิดใช้งานวันนั้น ให้ส่ง Array ว่างไปเพื่อ Clear ข้อมูล
+          payload.schedule[d.id] = d.active ? this.schedule[d.id] : { working_hours: [], break_times: [] };
+        });
 
         const res = await fetch(`${API}/api/working-time`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(this.form),
+          body: JSON.stringify(payload)
         });
 
-        // ✅ เช็ค HTTP status
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || "Save failed");
-        }
-
-        await showAlert("บันทึกสำเร็จ", "ข้อมูลถูกอัปเดตเรียบร้อยแล้ว", "success");
-
+        if (!res.ok) throw new Error("Save failed");
+        
+        Swal.fire("สำเร็จ", "บันทึกการตั้งค่าตารางเวลาเรียบร้อยแล้ว", "success");
       } catch (err) {
-        await showAlert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
+        Swal.fire("Error", "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "error");
       } finally {
         this.loading = false;
       }
-    },
-  },
+    }
+  }
 };
 </script>
 
 <style scoped>
-.setting-card {
-  max-width: 600px;
-}
+.setting-card { max-width: 650px; }
+.day-row { transition: all 0.2s ease-in-out; }
+.btn-xs { padding: 0.2rem 0.6rem; font-size: 0.7rem; border-radius: 4px; }
+.border-dashed { border-style: dashed !important; border-color: #dee2e6 !important; }
+.italic { font-style: italic; }
+.sticky-bottom { z-index: 1020; margin-bottom: -1rem; }
+.btn-link { text-decoration: none; }
+.btn-link:hover { opacity: 0.7; }
+
+/* ปรับแต่งสไตล์สวิตช์ */
+.form-check-input { cursor: pointer; }
+input[type="time"] { cursor: pointer; }
 </style>
