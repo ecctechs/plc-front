@@ -136,6 +136,7 @@ export default {
   },
   data() {
     return {
+      deletedAlarmIds: [],
       showModal: false,
       isEdit: false,
       editingId: null,
@@ -323,20 +324,20 @@ export default {
         this.validateBeforeSave();
 
         // Validate Alarm Forms
-        if (this.$refs.alertForms) {
-          const forms = Array.isArray(this.$refs.alertForms) 
-                        ? this.$refs.alertForms 
-                        : [this.$refs.alertForms];
+        // if (this.$refs.alertForms) {
+        //   const forms = Array.isArray(this.$refs.alertForms) 
+        //                 ? this.$refs.alertForms 
+        //                 : [this.$refs.alertForms];
           
-          let isAllValid = true;
-          forms.forEach(form => {
-            if (!form.validateAlarms()) isAllValid = false;
-          });
+        //   let isAllValid = true;
+        //   forms.forEach(form => {
+        //     if (!form.validateAlarms()) isAllValid = false;
+        //   });
 
-          if (!isAllValid) {
-            throw new Error("การตั้งค่า Alarm ไม่ถูกต้อง (มีชื่อซ้ำ, ค่าว่าง หรือช่วงทับซ้อนกัน)");
-          }
-        }
+        //   if (!isAllValid) {
+        //     throw new Error("การตั้งค่า Alarm ไม่ถูกต้อง (มีชื่อซ้ำ, ค่าว่าง หรือช่วงทับซ้อนกัน)");
+        //   }
+        // }
 
         this.loading = true;
 
@@ -421,104 +422,113 @@ export default {
         this.loading = false;
       }
     },
+    removeAlarm(addrIndex, alarmIndex) {
+      const alarm = this.form.addresses[addrIndex].alarms[alarmIndex];
+      if (alarm && alarm.id) {
+        this.deletedAlarmIds.push(alarm.id); // เก็บ ID ไว้ไปลบตอนกด Save
+      }
+      this.form.addresses[addrIndex].alarms.splice(alarmIndex, 1);
+    },
 
     // --- Sub-Config API Calls ---
-    async saveChildConfigs(originalId, savedAddrId, formAddr, isNewAddress = false) {
-      
-      // Use the correct address ID: original ID for existing addresses, saved ID for new addresses
-      const addressId = isNewAddress ? savedAddrId : originalId;
-      
-      // Determine the correct HTTP method
-      const httpMethod = isNewAddress ? "POST" : "PUT";
-      
-      // 1. Save Number Config
-      if (["number", "number_gauge"].includes(formAddr.data_type)) {
-        console.log(`Saving number-config: originalId=${originalId}, savedAddrId=${savedAddrId}, addressId=${addressId}, method=${httpMethod}`);
-        await fetch(`${BASE_API}/api/addresses/${addressId}/number-config`, {
-          method: httpMethod,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formAddr.numberConfig)
-        });
-      }
+  async saveChildConfigs(originalId, savedAddrId, formAddr, isNewAddress = false) {
+  const addressId = isNewAddress ? savedAddrId : originalId;
+    const jsonHeaders = { "Content-Type": "application/json" };
+    const safeFetch = async (url, options = {}) => {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(await res.text());
+      return res;
+    };
 
-      // 2. Save Level Config (always POST - creates/updates levels array)
-      if (formAddr.data_type === "level") {
-        await fetch(`${BASE_API}/api/addresses/${addressId}/levels`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formAddr.levels)
-        });
+  // =========================
+  // 1. NUMBER CONFIG
+  // =========================
+  if (["number", "number_gauge"].includes(formAddr.data_type)) {
+    await safeFetch(`${BASE_API}/api/addresses/${addressId}/number-config`, {
+      method: isNewAddress ? "POST" : "PUT",
+      headers: jsonHeaders,
+      body: JSON.stringify(formAddr.numberConfig || {})
+    });
+  }
 
-        // Fetch saved levels to get the new level_index for alarms
-        const levelsResponse = await fetch(`${BASE_API}/api/addresses/${addressId}/levels`);
-        const savedLevels = await levelsResponse.json();
-        console.log('Saved levels for alarm mapping:', savedLevels);
+  // =========================
+  // 2. LEVEL CONFIG
+  // =========================
+  let savedLevels = [];
 
-        // Update alarms with correct level_index based on level_label
-        if (formAddr.alarms && formAddr.alarms.length > 0) {
-          formAddr.alarms.forEach(alarm => {
-            if (alarm.level_label) {
-              const matchedLevel = savedLevels.find(l => l.label === alarm.level_label);
-              if (matchedLevel) {
-                alarm.level_index = matchedLevel.level_index;
-                console.log(`Mapped alarm "${alarm.name}" to level_index: ${matchedLevel.level_index}`);
-              }
-            }
-          });
-        }
-      }
+  if (formAddr.data_type === "level") {
+    await safeFetch(`${BASE_API}/api/addresses/${addressId}/levels`, {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify(formAddr.levels || [])
+    });
 
-      // 3. Save Alarms
-      if (formAddr.alarms && formAddr.alarms.length > 0) {
-        for (const alarm of formAddr.alarms) {
-          const alarmPayload = {
-            ...alarm,
-            address_id: addressId,
-            data_type: formAddr.data_type,
-            is_active: true
-          };
-          
-          // If alarm has ID, use PUT to update; otherwise use POST to create
-          if (alarm.id) {
-            await fetch(`${BASE_API}/api/alarms/${alarm.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(alarmPayload)
-            });
-          } else {
-            await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(alarmPayload)
-            });
+    // fetch levels back
+    const res = await safeFetch(`${BASE_API}/api/addresses/${addressId}/levels`);
+    savedLevels = await res.json();
+
+    // map level_index ให้ alarms
+    if (formAddr.alarms?.length) {
+      formAddr.alarms.forEach(alarm => {
+        if (alarm.level_label) {
+          const match = savedLevels.find(l => l.label === alarm.level_label);
+          if (match) {
+            alarm.level_index = match.level_index;
           }
         }
-      }
+      });
+    }
+  }
+// =========================
+  // 3. SAVE / UPDATE ALARMS
+  // =========================
+  const formAlarms = formAddr.alarms || [];
+  for (const alarm of formAlarms) {
+    const payload = {
+      name: alarm.name,
+      address_id: addressId,
+      data_type: formAddr.data_type,
+      condition_type: alarm.condition_type,
+      min_value: alarm.min_value,
+      max_value: alarm.max_value,
+      level_index: alarm.level_index,
+      duration_sec: alarm.duration_sec || 0,
+      repeat_interval_sec: alarm.repeat_interval_sec || 900,
+      severity: alarm.severity || "Warning",
+      notify_email: alarm.notify_email || false,    
+      is_active: true
+    };
 
-      // 4. Delete alarms that were removed from the form
-      // Fetch existing alarms from database
-      const alarmsResponse = await fetch(`${BASE_API}/api/addresses/${addressId}/alarms`);
-      const existingAlarms = await alarmsResponse.json();
-      
-      // Get alarm IDs from form (only those with ID, meaning they exist in DB)
-      const formAlarmIds = (formAddr.alarms || [])
-        .filter(a => a.id)
-        .map(a => a.id);
-      
-      // Find alarms to delete (exist in DB but not in form)
-      const alarmsToDelete = existingAlarms
-        .filter(a => !formAlarmIds.includes(a.id))
-        .map(a => a.id);
-      
-      // Delete removed alarms
-      for (const alarmId of alarmsToDelete) {
-        console.log(`Deleting alarm ID: ${alarmId}`);
-        await fetch(`${BASE_API}/api/alarms/${alarmId}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" }
-        });
+    if (alarm.id) {
+      await safeFetch(`${BASE_API}/api/alarms/${alarm.id}`, {
+        method: "PUT",
+        headers: jsonHeaders,
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await safeFetch(`${BASE_API}/api/addresses/${addressId}/alarms`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify(payload)
+      });
+    }
+  }
+
+  // =========================
+  // 4. DELETE REMOVED ALARMS (ปรับปรุงใหม่)
+  // =========================
+  // แทนที่จะดึงจาก Server มาเทียบ ให้ลบเฉพาะ ID ที่เราสั่ง Remove ใน UI
+  if (this.deletedAlarmIds.length > 0) {
+    for (const id of this.deletedAlarmIds) {
+      try {
+        await fetch(`${BASE_API}/api/alarms/${id}`, { method: "DELETE" });
+      } catch (e) {
+        console.warn(`Could not delete alarm ${id}`, e);
       }
     }
+    this.deletedAlarmIds = []; // ล้างค่าทิ้งเมื่อลบเสร็จ
+  }
+}
   }
 };
 </script>
