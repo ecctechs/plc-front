@@ -80,6 +80,7 @@ const translations = {
     'Showing': 'แสดง',
     'of': 'จาก',
     'entries': 'รายการ',
+    'Show': 'แสดง',
     'Device Type': 'ประเภทอุปกรณ์',
     'Type': 'ประเภท',
     'Work today': 'ทำงานวันนี้',
@@ -109,13 +110,14 @@ const translations = {
     'Add Card': 'เพิ่มการ์ด',
     'Edit Card': 'แก้ไขการ์ด',
     'Save Changes': 'บันทึกการเปลี่ยนแปลง',
-    'Insert Position': 'ตำแหน่งที่插入',
+    'Insert Position': 'ตำแหน่งที่แทรก',
     'Add Element': 'เพิ่มองค์ประกอบ',
     'Select Layout': 'เลือกเลย์เอาต์',
     'Select a layout': 'เลือกเลย์เอาต์',
   },
   en: {
     'entries': 'entries',
+    'Show': 'Show',
     'ประเภทอุปกรณ์': 'Device Type',
     'ประเภท': 'Type',
     'โหมดจำลอง': 'Demo / Simulate Mode',
@@ -212,7 +214,7 @@ const translations = {
     'เพิ่มการ์ด': 'Add Card',
     'แก้ไขการ์ด': 'Edit Card',
     'บันทึกการเปลี่ยนแปลง': 'Save Changes',
-    'ตำแหน่งที่插入': 'Insert Position',
+    'ตำแหน่งที่แทรก': 'Insert Position',
   }
 };
 
