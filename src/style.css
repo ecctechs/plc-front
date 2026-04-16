@@ -1,6 +1,30 @@
 /* ===== Import Shared Styles ===== */
 @import './assets/shared-styles.css';
 
+/* ===== Table Styles for Language Toggle ===== */
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table thead th {
+  white-space: nowrap;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
 /* ===== Font Prompt (Global) ===== */
 body {
   font-family: 'Prompt', sans-serif;
