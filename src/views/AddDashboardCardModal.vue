@@ -199,16 +199,22 @@ export default {
   methods: {
     async submit() {
       if (this.isEditMode) {
-        // Emit update event
         this.$emit('update', {
           selectedDeviceId: this.selectedDeviceId,
           selectedAddressId: this.selectedAddressId,
           selectedDisplayType: this.selectedDisplayType,
-          selectedPosition: this.selectedPosition
+          selectedPosition: this.selectedPosition,
         });
+
+        if (this.selectedDeviceId) {
+          await fetch(`${BASE_API}/api/devices/${this.selectedDeviceId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_id: this.form.room_id ? parseInt(this.form.room_id) : null })
+          });
+        }
       } else {
         try {
-          // POST to API
           await fetch(`${BASE_API}/api/dashboard/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -219,7 +225,6 @@ export default {
             })
           });
           
-          // Emit success event
           this.$emit("add", {
             address_id: this.selectedAddress.id,
             display_type: this.selectedDisplayType
