@@ -86,6 +86,11 @@
             </select>
           </div>
 
+          <!-- Validation Error -->
+          <div v-if="validationError" class="alert alert-warning py-2">
+            {{ validationError }}
+          </div>
+
         </div>
 
         <!-- Footer -->
@@ -95,7 +100,6 @@
           </button>
           <button
             class="btn btn-primary"
-            :disabled="!canSubmit"
             @click="submit"
           >
             {{ editingCard ? locale.t('Save Changes') : locale.t('Add Card') }}
@@ -136,7 +140,8 @@ export default {
       selectedDisplayType: "",
       selectedPosition: 1,
       devices: [],
-      rooms: []
+      rooms: [],
+      validationError: ""
     };
   },
 
@@ -189,15 +194,31 @@ export default {
       return this.filteredAddresses.find(
         a => a.id === this.selectedAddressId
       );
-    },
-
-    canSubmit() {
-      return !!this.selectedAddress && !!this.selectedDisplayType;
     }
   },
 
   methods: {
+    getValidationError() {
+      if (!this.selectedDeviceId) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Device' : 'Please select a Device';
+      }
+      if (!this.selectedAddressId) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Address' : 'Please select an Address';
+      }
+      if (!this.selectedDisplayType) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Display Type' : 'Please select a Display Type';
+      }
+      return "";
+    },
+
     async submit() {
+      const error = this.getValidationError();
+      if (error) {
+        this.validationError = error;
+        return;
+      }
+      this.validationError = "";
+
       if (this.isEditMode) {
         this.$emit('update', {
           selectedDeviceId: this.selectedDeviceId,
