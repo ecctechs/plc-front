@@ -26,7 +26,7 @@
             <div class="col-md-4">
               <label class="form-label fw-bold small">{{ locale.t('Room') }}</label>
               <select v-model="form.room_id" class="form-select">
-                <option value="">Select {{ locale.t('Room') }}</option>
+                <option value="">{{ locale.current === 'th' ? 'ไม่มีห้อง' : 'Unassigned' }}</option>
                 <option v-for="room in rooms" :key="room.id" :value="room.id">
                   {{ room.name }}
                 </option>
