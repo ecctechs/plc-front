@@ -11,6 +11,17 @@
         <!-- Body -->
         <div class="modal-body">
 
+          <!-- Room -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">{{ locale.t('Room') }}</label>
+            <select v-model="form.room_id" class="form-select">
+              <option value="">{{ locale.current === 'th' ? 'ไม่มีห้อง' : 'Unassigned' }}</option>
+              <option v-for="room in rooms" :key="room.id" :value="room.id">
+                {{ room.name }}
+              </option>
+            </select>
+          </div>
+
           <!-- Device -->
           <div class="mb-3">
             <label class="form-label fw-bold">{{ locale.t('Device') }}</label>
@@ -117,23 +128,31 @@ export default {
 
   data() {
     return {
+      form: {
+        room_id: ""
+      },
       selectedDeviceId: "",
       selectedAddressId: "",
       selectedDisplayType: "",
       selectedPosition: 1,
-      devices: []
+      devices: [],
+      rooms: []
     };
   },
 
   async mounted() {
     try {
-      const res = await fetch(`${BASE_API}/api/devices`);
-      const data = await res.json();
-      this.devices = data;
+      const [devicesRes, roomsRes] = await Promise.all([
+        fetch(`${BASE_API}/api/devices`),
+        fetch(`${BASE_API}/api/rooms`)
+      ]);
+      const devicesData = await devicesRes.json();
+      const roomsData = await roomsRes.json();
+      this.devices = devicesData;
+      this.rooms = roomsData.data || roomsData || [];
       
-      // If editing, pre-fill form with existing card data
       if (this.editingCard) {
-        // Find the device that contains this address
+        this.form.room_id = this.editingCard.device.room_id || "";
         for (const device of this.devices) {
           const address = device.addresses?.find(a => a.id === this.editingCard.address_id);
           if (address) {
