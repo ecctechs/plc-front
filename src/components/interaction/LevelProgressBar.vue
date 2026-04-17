@@ -27,27 +27,13 @@
           :style="getSegmentFillStyle(level, index)"
         ></div>
       </div>
-      
-      <!-- Level Labels -->
-      <div 
-        v-for="(level, index) in sortedLevels" 
-        :key="'label-' + index"
-        class="level-label-container"
-        :style="getLabelStyle(index)"
-      >
-        <span class="level-label" :style="labelStyle">{{ level.label }}</span>
-      </div>
     </div>
 
     <!-- Current Value Display -->
-    <div v-if="showValue && !editing" class="value-display" :style="textStyle">
-      <span class="current-value">{{ displayValue }}</span>
-      <span v-if="unit" class="unit">{{ unit }}</span>
-    </div>
-
-    <!-- Edit Mode -->
-    <div v-else-if="editing" class="edit-container">
+    <div v-if="showValue" class="value-display" :style="textStyle">
+      <span v-if="!editing" class="current-value">{{ displayValue }}</span>
       <input
+        v-else
         ref="inputField"
         type="number"
         class="edit-input"
@@ -62,7 +48,7 @@
         :max="overallMax"
         :step="step"
       />
-      <span v-if="unit" class="unit-label" :style="textStyle">{{ unit }}</span>
+      <span v-if="unit" class="unit">{{ unit }}</span>
     </div>
 
     <!-- Current Level Indicator -->
@@ -291,14 +277,13 @@ export default {
       }
     },
     getSegmentFillStyle(level, index) {
-      // Different colors for each level segment
-      const colors = ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545', '#6f42c1']
+      const colors = ['#00ff00', '#00ffff', '#ffff00', '#ff8800', '#ff0000', '#ff00ff']
       const color = colors[index % colors.length]
       
       if (this.currentLevelIndex >= index) {
         return {
           backgroundColor: color,
-          opacity: 0.7
+          boxShadow: `0 0 8px ${color}`
         }
       }
       return {}
@@ -382,7 +367,6 @@ export default {
   box-shadow: 
     0 0 20px rgba(255, 255, 0, 0.4),
     inset 0 0 20px rgba(0, 0, 0, 0.3);
-  transform: translate(-50%, -50%) scale(1.02);
 }
 
 .progress-track {
@@ -452,6 +436,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.3em;
+  min-height: 1.5em;
 }
 
 .current-value {
