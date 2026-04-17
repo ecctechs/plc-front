@@ -24,10 +24,10 @@
 
     <!-- Section 3: Working Time + PLC Debug (50% + 50%) -->
     <div class="row g-4">
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-12">
         <WorkingTimeForm />
       </div>
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-12">
         <PlcDebugForm />
       </div>
     </div>

@@ -6,77 +6,73 @@
       </h5>
       <p class="text-muted small mb-4">{{ locale.t('Define work and break schedules') }}</p>
 
-      <div v-for="day in dayList" :key="day.id" 
-           class="day-row mb-4 p-3 border rounded shadow-sm"
-           :class="{'bg-light opacity-75': !day.active, 'border-primary-subtle': day.active}">
-       
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="text-primary mb-0 fw-bold text-capitalize">
-            <i class="fas fa-calendar-day me-2"></i>{{ day.id }}
-          </h5>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" v-model="day.active" :id="'switch-' + day.id">
-            <label class="form-check-label" :for="'switch-' + day.id">{{ locale.t('Work today') }}</label>
-          </div>
-        </div>
+<div class="row g-3">
+        <template v-for="(day, index) in dayList" :key="day.id">
+          <div v-if="index % 2 === 0" class="w-100"></div>
+          <div class="col-6">
+            <div class="day-row p-3 border rounded shadow-sm"
+                 :class="{'bg-light opacity-75': !day.active, 'border-primary-subtle': day.active}">
+              
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-primary mb-0 fw-bold text-capitalize">
+                  {{ day.id }}
+                </h5>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" v-model="day.active" :id="'switch-' + day.id">
+                </div>
+              </div>
 
-        <div v-if="day.active">
-          <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
-                <i class="fas fa-briefcase me-1"></i> {{ locale.t('Working Hours') }}
-              </label>
-              <button @click="addSlot(day.id, 'working_hours')" class="btn btn-xs btn-primary">
-                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Shift') }}
-              </button>
-            </div>
-            
-            <div v-for="(slot, index) in schedule[day.id].working_hours" :key="'w-'+index" class="row g-2 mb-2 align-items-center">
-              <div class="col-5">
-                <input type="time" v-model="slot.start" class="form-control form-control-sm">
-              </div>
-              <div class="col-5">
-                <input type="time" v-model="slot.end" class="form-control form-control-sm">
-              </div>
-              <div class="col-2 text-center">
-                <button @click="removeSlot(day.id, 'working_hours', index)" class="btn btn-sm btn-outline-danger">
-                  <i class="fa-solid fa-trash-alt"></i>
-                </button>
-              </div>
-            </div>
-            <div v-if="schedule[day.id].working_hours.length === 0" class="alert alert-warning py-1 small">
-              <i class="fas fa-exclamation-circle me-1"></i> {{ locale.t('At least 1 time period required') }}
-            </div>
-          </div>
+              <div v-if="day.active">
+                <div class="mb-2">
+                  <label class="form-label mb-1 fw-semibold text-secondary small text-uppercase">
+                    {{ locale.t('Working Hours') }}
+                  </label>
+                  <div v-for="(slot, idx) in schedule[day.id].working_hours" :key="'w-'+idx" class="row g-1 mb-1 align-items-center">
+                    <div class="col-5">
+                      <input type="time" v-model="slot.start" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-5">
+                      <input type="time" v-model="slot.end" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-2 text-center">
+                      <button @click="removeSlot(day.id, 'working_hours', idx)" class="btn btn-sm btn-outline-danger p-1">
+                        <i class="fa-solid fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <button @click="addSlot(day.id, 'working_hours')" class="btn btn-xs btn-primary mt-1">
+                    <i class="fas fa-plus me-1"></i> {{ locale.t('Add Shift') }}
+                  </button>
+                </div>
 
-          <div class="mb-1">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <label class="form-label mb-0 fw-semibold text-secondary small text-uppercase">
-                <i class="fas fa-coffee me-1"></i> {{ locale.t('Break Times') }}
-              </label>
-              <button @click="addSlot(day.id, 'break_times')" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-plus me-1"></i> {{ locale.t('Add Break') }}
-              </button>
-            </div>
-
-            <div v-for="(slot, index) in schedule[day.id].break_times" :key="'b-'+index" class="row g-2 mb-2 align-items-center">
-              <div class="col-5">
-                <input type="time" v-model="slot.start" class="form-control form-control-sm border-dashed">
+                <div class="mb-1">
+                  <label class="form-label mb-1 fw-semibold text-secondary small text-uppercase">
+                    {{ locale.t('Break Times') }}
+                  </label>
+                  <div v-for="(slot, idx) in schedule[day.id].break_times" :key="'b-'+idx" class="row g-1 mb-1 align-items-center">
+                    <div class="col-5">
+                      <input type="time" v-model="slot.start" class="form-control form-control-sm border-dashed">
+                    </div>
+                    <div class="col-5">
+                      <input type="time" v-model="slot.end" class="form-control form-control-sm border-dashed">
+                    </div>
+                    <div class="col-2 text-center">
+                      <button @click="removeSlot(day.id, 'break_times', idx)" class="btn btn-sm btn-outline-danger p-1">
+                        <i class="fa-solid fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <button @click="addSlot(day.id, 'break_times')" class="btn btn-xs btn-outline-secondary mt-1">
+                    <i class="fas fa-plus me-1"></i> {{ locale.t('Add Break') }}
+                  </button>
+                </div>
               </div>
-              <div class="col-5">
-                <input type="time" v-model="slot.end" class="form-control form-control-sm border-dashed">
-              </div>
-              <div class="col-2 text-center">
-                <button @click="removeSlot(day.id, 'break_times', index)" class="btn btn-sm btn-outline-danger">
-                  <i class="fa-solid fa-trash-alt"></i>
-                </button>
+              <div v-else class="text-center py-2 text-muted small italic">
+                <i class="fas fa-bed me-2"></i> {{ locale.t('Weekly day off') }}
               </div>
             </div>
           </div>
-        </div>
-        <div v-else class="text-center py-2 text-muted small italic">
-          <i class="fas fa-bed me-2"></i> {{ locale.t('Weekly day off') }}
-        </div>
+        </template>
       </div>
 
       <div class="sticky-bottom bg-white py-3 border-top mt-4">
