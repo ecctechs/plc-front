@@ -64,7 +64,7 @@
               class="form-select"
               v-model="selectedDisplayType"
             >
-              <option disabled value="">Select Display {{ locale.t('Type') }}</option>
+              <option disabled value="">{{ locale.current === 'th' ? '– Select ประเภท Display --' : '-- Select Display Type --' }}</option>
               <option value="onoff">ON/OFF</option>
               <option value="number">Number</option>
               <option value="number_gauge">Gauge</option>
