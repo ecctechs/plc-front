@@ -79,11 +79,14 @@ export default {
       loading: false,
       isEmpty: false,
       charts: {},
-      levels: [], 
+      levels: [],
+      allSeries: [],
+      lastData: [],
       stats: { connected: 0, disconnected: 0 },
       refreshTimer: null,
       isFetching: false,
-      isInitialLoad: true
+      isInitialLoad: true,
+      lastFetchTime: null
     }
   },
 
@@ -108,8 +111,13 @@ export default {
     Object.values(this.charts).forEach(c => c?.destroy());
   },
 
-  methods: {
-    calculateEstimatedDataCount() {
+   methods: {
+     resetAccumulatedData() {
+       this.allSeries = []
+       this.lastFetchTime = null
+     },
+
+     calculateEstimatedDataCount() {
       if (!this.startDate || !this.endDate) return 0
       
       const start = new Date(this.startDate).getTime()
@@ -120,24 +128,6 @@ export default {
       const estimatedCount = Math.ceil(timeRangeMs / refreshRate)
       
       return estimatedCount
-    },
-
-    downsampleData(data, maxPoints = 200) {
-      if (data.length <= maxPoints) return data
-      
-      const step = Math.ceil(data.length / maxPoints)
-      const result = []
-      
-      for (let i = 0; i < data.length; i += step) {
-        result.push(data[i])
-        if (result.length >= maxPoints) break
-      }
-      
-      if (result[result.length - 1] !== data[data.length - 1]) {
-        result.push(data[data.length - 1])
-      }
-      
-      return result
     },
 
     formatTimeLabel(date) {
@@ -156,32 +146,28 @@ export default {
       if (this.refreshTimer) clearInterval(this.refreshTimer);
     },
 
-    restartAutoRefresh() {
-      this.fetchData();
-      this.startAutoRefresh();
-    },
+     restartAutoRefresh() {
+       this.resetAccumulatedData()
+       this.fetchData()
+       this.startAutoRefresh()
+     },
 
     async fetchData(isSilent = false) {
-      // ตรวจสอบจำนวนข้อมูลที่จะดึงก่อน (ยกเว้นการโหลดครั้งแรก)
+      const isInitialLoad = this.isInitialLoad
+      this.isInitialLoad = false
+
       const dataCount = this.calculateEstimatedDataCount()
-      if (dataCount > 500 && !isSilent && !this.isInitialLoad) {
+      if (dataCount > 500 && !isSilent && !isInitialLoad) {
         const confirmed = await showConfirm(
           'ยืนยันดึงข้อมูลจำนวนมาก',
           `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`,
           'ดึงข้อมูล'
         )
-        if (!confirmed) {
-          // ยกเลิก - ไม่ดึงข้อมูล แต่ยังคงอนุญาตให้ auto-refresh ทำงานได้
-          return
-        }
+        if (!confirmed) return
       }
 
-      // หลังจากครั้งแรก ให้ข้ามไปเช็คการแจ้งเตือนในครั้งต่อไป
-      this.isInitialLoad = false
-
-      if (!isSilent) this.loading = true;
+      if (!isSilent) this.loading = true
       try {
-        // Format date as YYYY-MM-DD HH:mm:ss (without T and Z)
         const formatDate = (date) => {
           const d = new Date(date);
           const year = d.getFullYear();
@@ -195,13 +181,11 @@ export default {
 
         let url;
         if (this.alarmTime) {
-          // ใช้ chart-by-alarm เมื่อมี alarmTime (expand ±20%)
           url = `${baseUrl}/api/devices/chart-by-alarm` +
                 `?address_id=${this.device.address_id}` +
                 `&alarm_time=${encodeURIComponent(this.alarmTime)}` +
                 `&expand=20`;
         } else {
-          // Format date as YYYY-MM-DD HH:mm:ss
           const startStr = formatDate(this.startDate);
           const endStr = formatDate(this.endDate);
           url = `${baseUrl}/api/devices/chart/` +
@@ -212,15 +196,11 @@ export default {
 
         const res = await fetch(url);
         const data = await res.json();
-        console.log("Fetch URL:", url);
-        console.log("Fetched Chart Data:", data);
 
-        // เก็บข้อมูล Level แบบล้าง Proxy
         this.levels = JSON.parse(JSON.stringify(data.levels || []));
         
         const alarmTs = this.alarmTime ? new Date(this.alarmTime).getTime() : null;
 
-        // หาจุดที่ใกล้ alarmTime มากที่สุด
         let closestIdx = -1;
         let closestDiff = Infinity;
         
@@ -243,18 +223,41 @@ export default {
           };
         });
 
-        // มาร์คเฉพาะจุดที่ใกล้ alarmTime มากที่สุดจุดเดียว
         if (closestIdx >= 0) {
           series[closestIdx].is_alarm = true;
         }
 
         this.isEmpty = series.length === 0;
+        if (this.isEmpty) return
 
-        if (!this.isEmpty) {
-          this.processStats(series);
-          const sampledData = this.downsampleData(series);
-          this.renderCharts(sampledData);
+        // Determine last fetch time from this batch (max timestamp)
+        const latestFetchTime = series.length > 0 
+          ? Math.max(...series.map(s => new Date(s.x).getTime()))
+          : this.lastFetchTime
+
+        if (isInitialLoad) {
+          this.allSeries = [...series]
+        } else {
+          // Only fetch new points after lastFetchTime
+          const newPoints = series.filter(s => new Date(s.x).getTime() > this.lastFetchTime)
+          if (newPoints.length > 0) {
+            this.allSeries = [...this.allSeries, ...newPoints]
+          }
         }
+        this.lastFetchTime = latestFetchTime
+
+         this.lastData = this.allSeries
+         this.processStats(this.allSeries)
+
+         // Always display last 500 points (sliding window)
+         let displayData = this.allSeries
+         if (this.allSeries.length > 500) {
+           displayData = this.allSeries.slice(-500)
+         }
+
+         this.renderCharts(displayData);
+
+        if (this.alarmTime) this.stopAutoRefresh()
       } catch (err) {
         console.error("Fetch Level Error:", err);
       } finally {
@@ -305,7 +308,12 @@ export default {
         levelMap[String(l.level_index)] = l.label;
       });
 
-      const alarmDate = this.alarmTime ? new Date(this.alarmTime) : null;
+      // หาจุดที่ Backend ส่งมาว่าเป็น Alarm (ของ Level ข้อมูลมักจะอยู่ใน data.series)
+      const alarmPoint = series.find(d => d.is_alarm === true);
+
+      // ถ้าหาเจอ ให้ใช้เวลาจากจุดนั้น (x) แต่ถ้าไม่เจอให้ Fallback ไปใช้ props
+      const alarmDate = alarmPoint ? new Date(alarmPoint.x) : (this.alarmTime ? new Date(this.alarmTime) : null);
+
       const levelKeys = Object.keys(levelMap).map(Number);
       const maxIdx = levelKeys.length > 0 ? Math.max(...levelKeys) : 2;
 
@@ -320,8 +328,9 @@ export default {
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
             stepped: true,
-            pointRadius: ctx => (ctx.raw?.isAlarm ? 7 : 2),
+            pointRadius: ctx => (ctx.raw?.isAlarm ? 6 : 3),
             pointBackgroundColor: ctx => (ctx.raw?.isAlarm ? '#ef4444' : '#3b82f6'),
+            pointHoverRadius: ctx => (ctx.raw?.isAlarm ? 8 : 5),
             pointBorderColor: ctx => (ctx.raw?.isAlarm ? '#fff' : '#3b82f6'),
             pointBorderWidth: ctx => (ctx.raw?.isAlarm ? 3 : 1),
             spanGaps: true 

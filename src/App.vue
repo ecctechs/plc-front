@@ -17,7 +17,7 @@
         class="btn btn-outline-secondary btn-sm"
         @click="locale.toggle()"
       >
-        <i class="bi bi-globe"></i> {{ locale.current === 'th' ? 'EN' : 'TH' }}
+        <i class="bi bi-globe"></i> {{ locale.current === 'th' ? 'TH' : 'EN' }}
       </button>
     </div>
 

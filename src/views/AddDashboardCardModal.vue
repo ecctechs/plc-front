@@ -11,6 +11,17 @@
         <!-- Body -->
         <div class="modal-body">
 
+          <!-- Room -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">{{ locale.t('Room') }}</label>
+            <select v-model="form.room_id" class="form-select">
+              <option value="">{{ locale.current === 'th' ? 'ไม่มีห้อง' : 'Unassigned' }}</option>
+              <option v-for="room in rooms" :key="room.id" :value="room.id">
+                {{ room.name }}
+              </option>
+            </select>
+          </div>
+
           <!-- Device -->
           <div class="mb-3">
             <label class="form-label fw-bold">{{ locale.t('Device') }}</label>
@@ -53,7 +64,7 @@
               class="form-select"
               v-model="selectedDisplayType"
             >
-              <option disabled value="">Select Display {{ locale.t('Type') }}</option>
+              <option disabled value="">{{ locale.current === 'th' ? '– Select ประเภท Display --' : '-- Select Display Type --' }}</option>
               <option value="onoff">ON/OFF</option>
               <option value="number">Number</option>
               <option value="number_gauge">Gauge</option>
@@ -75,6 +86,11 @@
             </select>
           </div>
 
+          <!-- Validation Error -->
+          <div v-if="validationError" class="alert alert-warning py-2">
+            {{ validationError }}
+          </div>
+
         </div>
 
         <!-- Footer -->
@@ -84,7 +100,6 @@
           </button>
           <button
             class="btn btn-primary"
-            :disabled="!canSubmit"
             @click="submit"
           >
             {{ editingCard ? locale.t('Save Changes') : locale.t('Add Card') }}
@@ -117,23 +132,32 @@ export default {
 
   data() {
     return {
+      form: {
+        room_id: ""
+      },
       selectedDeviceId: "",
       selectedAddressId: "",
       selectedDisplayType: "",
       selectedPosition: 1,
-      devices: []
+      devices: [],
+      rooms: [],
+      validationError: ""
     };
   },
 
   async mounted() {
     try {
-      const res = await fetch(`${BASE_API}/api/devices`);
-      const data = await res.json();
-      this.devices = data;
+      const [devicesRes, roomsRes] = await Promise.all([
+        fetch(`${BASE_API}/api/devices`),
+        fetch(`${BASE_API}/api/rooms`)
+      ]);
+      const devicesData = await devicesRes.json();
+      const roomsData = await roomsRes.json();
+      this.devices = devicesData;
+      this.rooms = roomsData.data || roomsData || [];
       
-      // If editing, pre-fill form with existing card data
       if (this.editingCard) {
-        // Find the device that contains this address
+        this.form.room_id = this.editingCard.device.room_id || "";
         for (const device of this.devices) {
           const address = device.addresses?.find(a => a.id === this.editingCard.address_id);
           if (address) {
@@ -170,26 +194,48 @@ export default {
       return this.filteredAddresses.find(
         a => a.id === this.selectedAddressId
       );
-    },
-
-    canSubmit() {
-      return !!this.selectedAddress && !!this.selectedDisplayType;
     }
   },
 
   methods: {
+    getValidationError() {
+      if (!this.selectedDeviceId) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Device' : 'Please select a Device';
+      }
+      if (!this.selectedAddressId) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Address' : 'Please select an Address';
+      }
+      if (!this.selectedDisplayType) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Display Type' : 'Please select a Display Type';
+      }
+      return "";
+    },
+
     async submit() {
+      const error = this.getValidationError();
+      if (error) {
+        this.validationError = error;
+        return;
+      }
+      this.validationError = "";
+
       if (this.isEditMode) {
-        // Emit update event
         this.$emit('update', {
           selectedDeviceId: this.selectedDeviceId,
           selectedAddressId: this.selectedAddressId,
           selectedDisplayType: this.selectedDisplayType,
-          selectedPosition: this.selectedPosition
+          selectedPosition: this.selectedPosition,
         });
+
+        if (this.selectedDeviceId) {
+          await fetch(`${BASE_API}/api/devices/${this.selectedDeviceId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_id: this.form.room_id ? parseInt(this.form.room_id) : null })
+          });
+        }
       } else {
         try {
-          // POST to API
           await fetch(`${BASE_API}/api/dashboard/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -200,7 +246,6 @@ export default {
             })
           });
           
-          // Emit success event
           this.$emit("add", {
             address_id: this.selectedAddress.id,
             display_type: this.selectedDisplayType

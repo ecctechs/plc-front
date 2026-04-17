@@ -80,23 +80,32 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted small">
-          {{ locale.t('Showing') }} {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredDevices.length) }} {{ locale.t('of') }} {{ filteredDevices.length }} {{ locale.t('entries') }}
-        </span>
-        <nav>
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" href="#" @click.prevent="currentPage--">&laquo;</a>
-            </li>
-            <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
-              <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link" href="#" @click.prevent="currentPage++">&raquo;</a>
-            </li>
-          </ul>
-        </nav>
+      <div class="d-flex align-items-center mt-3">
+        <div class="d-flex align-items-center">
+          <span class="text-muted small me-2">{{ locale.t('Show') }}</span>
+          <select v-model="itemsPerPage" class="form-select form-select-sm" style="width: auto;" @change="applyFilters">
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+          <span class="text-muted small ms-2">{{ locale.t('entries') }}</span>
+        </div>
+        <div class="flex-grow-1 d-flex justify-content-center">
+          <nav v-if="totalPages > 1">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <a class="page-link" href="#" @click.prevent="currentPage--">&laquo;</a>
+              </li>
+              <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
+                <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <a class="page-link" href="#" @click.prevent="currentPage++">&raquo;</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
     </div>
   </div>

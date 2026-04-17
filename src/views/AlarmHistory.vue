@@ -55,7 +55,7 @@
         </thead>
         <tbody>
             <tr v-if="loading">
-              <td colspan="8" class="text-center py-5">
+              <td colspan="7" class="text-center py-5">
               <div class="spinner-border text-primary" role="status"></div>
               <p class="text-muted mt-2 mb-0">{{ locale.t('Loading...') }}</p>
             </td>
@@ -116,8 +116,8 @@
             </td>
           </tr>
 
-          <tr v-else>
-            <td colspan="8" class="text-center py-5">
+<tr v-else>
+              <td colspan="7" class="text-center py-5">
               <div class="py-4">
                 <i class="bi bi-database-exclamation fs-1 text-muted opacity-50"></i>
                 <p class="text-muted mt-2">{{ locale.t('No alarm history found in selected date range') }}</p>

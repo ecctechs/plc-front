@@ -4,7 +4,7 @@
       <div class="modal-content border-0 shadow-lg">
         <!-- Header -->
         <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title fw-bold">{{ isEdit ? 'Edit Element' : 'Add New Element' }}</h5>
+          <h5 class="modal-title fw-bold">{{ isEdit ? locale.t('Edit Element') : locale.t('Add New Element') }}</h5>
           <button class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
 
@@ -13,27 +13,27 @@
           <div class="row g-3">
             <!-- Element Type -->
             <div class="col-md-6">
-              <label class="form-label fw-bold">Element Type</label>
+              <label class="form-label fw-bold">{{ locale.t('Element Type') }}</label>
               <select class="form-select" v-model="form.element_type">
-                <option value="gauge_display">Gauge Display</option>
-                <option value="number_display">Number Display</option>
-                <option value="status_lamp">Status Lamp</option>
-                <option value="control_button">Control Button</option>
-                <option value="level_progress_bar">Level Progress Bar</option>
+                <option value="gauge_display">{{ locale.t('Gauge Display') }}</option>
+                <option value="number_display">{{ locale.t('Number Display') }}</option>
+                <option value="status_lamp">{{ locale.t('Status Lamp') }}</option>
+                <option value="control_button">{{ locale.t('Control Button') }}</option>
+                <option value="level_progress_bar">{{ locale.t('Level Progress Bar') }}</option>
               </select>
             </div>
 
             <!-- Name -->
             <div class="col-md-6">
-              <label class="form-label fw-bold">Name</label>
-              <input type="text" class="form-control" v-model="form.name" placeholder="เช่น Production Gauge" />
+              <label class="form-label fw-bold">{{ locale.t('Name') }}</label>
+              <input type="text" class="form-control" v-model="form.name" :placeholder="locale.current === 'th' ? 'เช่น Production Gauge' : 'e.g. Production Gauge'" />
             </div>
 
             <!-- Device Selection -->
             <div class="col-md-6">
-              <label class="form-label fw-bold">Device</label>
+              <label class="form-label fw-bold">{{ locale.t('Device') }}</label>
               <select class="form-select" v-model="form.device_id" @change="onDeviceChange">
-                <option disabled value="">Select Device</option>
+                <option disabled value="">{{ locale.current === 'th' ? 'เลือก Device' : 'Select Device' }}</option>
                 <option v-for="d in devices" :key="d.id" :value="d.id">
                   {{ d.name }}
                 </option>
@@ -42,9 +42,9 @@
 
             <!-- Address Selection -->
             <div class="col-md-6">
-              <label class="form-label fw-bold">Address</label>
+              <label class="form-label fw-bold">{{ locale.t('Address') }}</label>
               <select class="form-select" v-model="form.address_id" :disabled="!form.device_id">
-                <option disabled value="">Select Address</option>
+                <option disabled value="">{{ locale.current === 'th' ? 'เลือก Address' : 'Select Address' }}</option>
                 <option v-for="a in filteredAddresses" :key="a.id" :value="a.id">
                   {{ a.label }} ({{ a.plc_address }})
                 </option>
@@ -53,37 +53,37 @@
 
             <!-- Position X -->
             <div class="col-md-3">
-              <label class="form-label fw-bold">Position X (%)</label>
+              <label class="form-label fw-bold">{{ locale.t('Position X') }} (%)</label>
               <input type="number" class="form-control" v-model.number="form.x_percent" min="0" max="100" step="0.5" />
             </div>
 
             <!-- Position Y -->
             <div class="col-md-3">
-              <label class="form-label fw-bold">Position Y (%)</label>
+              <label class="form-label fw-bold">{{ locale.t('Position Y') }} (%)</label>
               <input type="number" class="form-control" v-model.number="form.y_percent" min="0" max="100" step="0.5" />
             </div>
 
             <!-- Size Width -->
             <div class="col-md-3">
-              <label class="form-label fw-bold">Size Width</label>
+              <label class="form-label fw-bold">{{ locale.t('Size Width') }}</label>
               <input type="number" class="form-control" v-model.number="form.size_width" min="1" max="100" />
             </div>
 
             <!-- Size Height -->
             <div class="col-md-3">
-              <label class="form-label fw-bold">Size Height</label>
+              <label class="form-label fw-bold">{{ locale.t('Size Height') }}</label>
               <input type="number" class="form-control" v-model.number="form.size_height" min="1" max="100" />
             </div>
 
             <!-- Display Options - Only for gauge/number display -->
             <template v-if="['gauge_display', 'number_display'].includes(form.element_type)">
               <div class="col-md-3">
-                <label class="form-label fw-bold">Unit</label>
-                <input type="text" class="form-control" v-model="form.unit" placeholder="เช่น pcs, %, °C" />
+                <label class="form-label fw-bold">{{ locale.t('Unit') }}</label>
+                <input type="text" class="form-control" v-model="form.unit" :placeholder="locale.current === 'th' ? 'เช่น pcs, %, °C' : 'e.g. pcs, %, °C'" />
               </div>
 
               <div class="col-md-3">
-                <label class="form-label fw-bold">Precision (Decimals)</label>
+                <label class="form-label fw-bold">{{ locale.t('Precision') }} ({{ locale.t('Decimals') }})</label>
                 <input type="number" class="form-control" v-model.number="form.precision" min="0" max="10" />
               </div>
             </template>
@@ -91,58 +91,65 @@
             <!-- Button Options - Only for control_button -->
             <template v-if="form.element_type === 'control_button'">
               <div class="col-md-4">
-                <label class="form-label fw-bold">Button Label</label>
-                <input type="text" class="form-control" v-model="form.button_label" placeholder="เช่น START, STOP" />
+                <label class="form-label fw-bold">{{ locale.t('Button Label') }}</label>
+                <input type="text" class="form-control" v-model="form.button_label" :placeholder="locale.current === 'th' ? 'เช่น START, STOP' : 'e.g. START, STOP'" />
               </div>
 
               <div class="col-md-4">
-                <label class="form-label fw-bold">Active Color</label>
+                <label class="form-label fw-bold">{{ locale.t('Active Color') }}</label>
                 <input type="color" class="form-control form-control-color" v-model="form.active_color" />
               </div>
 
               <div class="col-md-4">
-                <label class="form-label fw-bold">Inactive Color</label>
+                <label class="form-label fw-bold">{{ locale.t('Inactive Color') }}</label>
                 <input type="color" class="form-control form-control-color" v-model="form.inactive_color" />
               </div>
             </template>
 
             <!-- Styling Options -->
             <div class="col-md-4">
-              <label class="form-label fw-bold">Background Color</label>
+              <label class="form-label fw-bold">{{ locale.t('Background Color') }}</label>
               <div class="input-group">
                 <input type="color" class="form-control form-control-color" v-model="form.bg_color" />
-                <button class="btn btn-outline-secondary" @click="form.bg_color = null" v-if="form.bg_color">Clear</button>
+                <button class="btn btn-outline-secondary" @click="form.bg_color = null" v-if="form.bg_color">{{ locale.t('Clear') }}</button>
               </div>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-bold">Text Color</label>
+              <label class="form-label fw-bold">{{ locale.t('Text Color') }}</label>
               <input type="color" class="form-control form-control-color" v-model="form.text_color" />
             </div>
 
             <!-- Bar Color - Only for level_progress_bar -->
             <div class="col-md-4" v-if="form.element_type === 'level_progress_bar'">
-              <label class="form-label fw-bold">Bar Color</label>
+              <label class="form-label fw-bold">{{ locale.t('Bar Color') }}</label>
               <input type="color" class="form-control form-control-color" v-model="form.bar_color" />
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-bold">Font Size</label>
+              <label class="form-label fw-bold">{{ locale.t('Font Size') }}</label>
               <input type="number" class="form-control" v-model.number="form.font_size" min="8" max="72" />
             </div>
 
             <!-- Display Order -->
             <div class="col-md-4">
-              <label class="form-label fw-bold">Display Order</label>
+              <label class="form-label fw-bold">{{ locale.t('Display Order') }}</label>
               <input type="number" class="form-control" v-model.number="form.display_order" min="0" />
             </div>
 
             <!-- Visibility -->
             <div class="col-md-4">
-              <label class="form-label fw-bold">Visibility</label>
+              <label class="form-label fw-bold">{{ locale.t('Visibility') }}</label>
               <div class="form-check form-switch mt-2">
                 <input class="form-check-input" type="checkbox" v-model="form.is_visible" />
-                <label class="form-check-label">Visible</label>
+                <label class="form-check-label">{{ locale.t('Visible') }}</label>
+              </div>
+            </div>
+
+            <!-- Validation Error -->
+            <div class="col-12" v-if="validationError">
+              <div class="alert alert-warning py-2 mb-0">
+                {{ validationError }}
               </div>
             </div>
           </div>
@@ -151,10 +158,10 @@
         <!-- Footer -->
         <div class="modal-footer bg-light border-0">
           <button class="btn btn-outline-secondary px-4" @click="$emit('close')">
-            Cancel
+            {{ locale.t('Cancel') }}
           </button>
-          <button class="btn btn-primary px-4" :disabled="!canSubmit" @click="submit">
-            {{ isEdit ? 'Update' : 'Add Element' }}
+          <button class="btn btn-primary px-4" @click="submit">
+            {{ isEdit ? locale.t('Update') : locale.t('Add Element') }}
           </button>
         </div>
       </div>
@@ -167,6 +174,8 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export default {
   name: "AddElementModal",
+
+  inject: ['locale'],
 
   props: {
     layoutId: {
@@ -184,6 +193,7 @@ export default {
   data() {
     return {
       devices: [],
+      validationError: "",
       form: {
         layout_id: this.layoutId,
         element_type: 'gauge_display',
@@ -238,6 +248,19 @@ export default {
   },
 
   methods: {
+    getValidationError() {
+      if (!this.form.device_id) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Device' : 'Please select a Device';
+      }
+      if (!this.form.address_id) {
+        return this.locale.current === 'th' ? 'กรุณาเลือก Address' : 'Please select an Address';
+      }
+      if (!this.form.name) {
+        return this.locale.current === 'th' ? 'กรุณากรอก Name' : 'Please enter a Name';
+      }
+      return "";
+    },
+
     async fetchDevices() {
       try {
         const res = await fetch(`${BASE_API}/api/devices`);
@@ -266,7 +289,12 @@ export default {
     },
 
     async submit() {
-      if (!this.canSubmit) return;
+      const error = this.getValidationError();
+      if (error) {
+        this.validationError = error;
+        return;
+      }
+      this.validationError = "";
 
       try {
         const url = this.isEdit 

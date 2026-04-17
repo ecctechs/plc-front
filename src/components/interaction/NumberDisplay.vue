@@ -1,17 +1,15 @@
 <template>
   <div 
     class="number-display"
-    :class="{ 'is-editable': editable }"
+    :class="{ 'is-editable': editable, 'is-editing': editing }"
     :style="displayStyle"
     @click="startEditing"
   >
-    <div v-if="!editing" class="display-content">
+    <div class="display-content">
       <span v-if="name" class="display-name">{{ name }}</span>
-      <span class="display-value" :style="textStyle">{{ displayValue }}</span>
-      <span v-if="unit" class="display-unit" :style="textStyle">{{ unit }}</span>
-    </div>
-    <div v-else class="edit-content">
+      <span v-if="!editing" class="display-value" :style="textStyle">{{ displayValue }}</span>
       <input
+        v-else
         ref="inputField"
         type="number"
         class="edit-input"
@@ -21,6 +19,7 @@
         @blur="finishEditing"
         @keyup.enter="finishEditing"
         @keyup.escape="cancelEditing"
+        @click.stop
         :min="minValue"
         :max="maxValue"
         :step="step"
@@ -186,7 +185,6 @@ export default {
   padding: 0.4em 0.6em;
   min-width: 3em;
   text-align: center;
-  transition: all 0.3s ease;
   background: rgba(0, 0, 0, 0.85);
   box-shadow: 
     0 0 15px rgba(0, 255, 0, 0.15),
@@ -202,7 +200,10 @@ export default {
   box-shadow: 
     0 0 20px rgba(255, 255, 0, 0.4),
     inset 0 0 20px rgba(0, 0, 0, 0.3);
-  transform: translate(-50%, -50%) scale(1.02);
+}
+
+.number-display.is-editing {
+  cursor: default;
 }
 
 .display-content {
@@ -214,6 +215,9 @@ export default {
   font-family: 'Courier New', monospace;
   font-weight: bold;
   white-space: nowrap;
+  text-align: center;
+  width: 100%;
+  position: relative;
 }
 
 .display-name {
@@ -245,15 +249,17 @@ export default {
 
 .edit-input {
   background: transparent;
-  border: none;
+  border: 1px solid #00ff00;
+  border-radius: 4px;
   outline: none;
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  font-size: 1em;
+  font-size: inherit;
   width: 4em;
   text-align: center;
   color: inherit;
   text-shadow: inherit;
+  padding: 0.1em 0.2em;
 }
 
 .edit-input:focus {

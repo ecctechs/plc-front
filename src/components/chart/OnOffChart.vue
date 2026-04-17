@@ -119,6 +119,8 @@ export default {
       isEmpty: false,
       charts: {},
       loading: false,
+      allData: [],
+      lastData: [],
       stats: {
         on: 0,
         off: 0,
@@ -128,7 +130,8 @@ export default {
       totalRuntime: "0h 0m 0s",
       refreshTimer: null,
       isFetching: false,
-      isInitialLoad: true
+      isInitialLoad: true,
+      lastFetchTime: null
     }
   },
 
@@ -152,57 +155,44 @@ export default {
     Object.values(this.charts).forEach(c => c?.destroy())
   },
 
-  methods: {
-    calculateEstimatedDataCount() {
-      if (!this.startDate || !this.endDate) return 0
-      
-      const start = new Date(this.startDate).getTime()
-      const end = new Date(this.endDate).getTime()
-      const refreshRate = this.device.refresh_rate_ms || 5000
-      
-      const timeRangeMs = end - start
-      const estimatedCount = Math.ceil(timeRangeMs / refreshRate)
-      
-      return estimatedCount
-    },
+   methods: {
+     resetAccumulatedData() {
+       this.allData = []
+       this.lastFetchTime = null
+     },
 
-    downsampleData(data, maxPoints = 200) {
-      if (data.length <= maxPoints) return data
-      
-      const step = Math.ceil(data.length / maxPoints)
-      const result = []
-      
-      for (let i = 0; i < data.length; i += step) {
-        result.push(data[i])
-        if (result.length >= maxPoints) break
-      }
-      
-      if (result[result.length - 1] !== data[data.length - 1]) {
-        result.push(data[data.length - 1])
-      }
-      
-      return result
-    },
+     calculateEstimatedDataCount() {
+       if (!this.startDate || !this.endDate) return 0
+       
+       const start = new Date(this.startDate).getTime()
+       const end = new Date(this.endDate).getTime()
+       const refreshRate = this.device.refresh_rate_ms || 5000
+       
+       const timeRangeMs = end - start
+       const estimatedCount = Math.ceil(timeRangeMs / refreshRate)
+       
+       return estimatedCount
+     },
 
-    formatDateTime(date) {
-      const d = new Date(date)
-      return d.toLocaleString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
-    },
+     formatDateTime(date) {
+       const d = new Date(date)
+       return d.toLocaleString('th-TH', {
+         day: '2-digit',
+         month: '2-digit',
+         year: 'numeric',
+         hour: '2-digit',
+         minute: '2-digit',
+         second: '2-digit'
+       })
+     },
 
-    formatHourMinute(date) {
-      const d = new Date(date)
-      return d.toLocaleTimeString('th-TH', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    },
+     formatHourMinute(date) {
+       const d = new Date(date)
+       return d.toLocaleTimeString('th-TH', {
+         hour: '2-digit',
+         minute: '2-digit'
+       })
+     },
 
     startAutoRefresh() {
       this.stopAutoRefresh()
@@ -217,28 +207,25 @@ export default {
       if (this.refreshTimer) clearInterval(this.refreshTimer)
     },
 
-    restartAutoRefresh() {
-      this.fetchData()
-      this.startAutoRefresh()
-    },
+     restartAutoRefresh() {
+       this.resetAccumulatedData()
+       this.fetchData()
+       this.startAutoRefresh()
+     },
 
     async fetchData(isSilent = false) {
-      // ตรวจสอบจำนวนข้อมูลที่จะดึงก่อน (ยกเว้นการโหลดครั้งแรก)
+      const isInitialLoad = this.isInitialLoad
+      this.isInitialLoad = false
+
       const dataCount = this.calculateEstimatedDataCount()
-      if (dataCount > 500 && !isSilent && !this.isInitialLoad) {
+      if (dataCount > 500 && !isSilent && !isInitialLoad) {
         const confirmed = await showConfirm(
           'ยืนยันดึงข้อมูลจำนวนมาก',
           `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`,
           'ดึงข้อมูล'
         )
-        if (!confirmed) {
-          // ยกเลิก - ไม่ดึงข้อมูล แต่ยังคงอนุญาตให้ auto-refresh ทำงานได้
-          return
-        }
+        if (!confirmed) return
       }
-
-      // หลังจากครั้งแรก ให้ข้ามไปเช็คการแจ้งเตือนในครั้งต่อไป
-      this.isInitialLoad = false
 
       if (!isSilent) this.loading = true
       try {
@@ -261,7 +248,6 @@ export default {
         this.isEmpty = !raw || raw.length === 0
         if (this.isEmpty) return
 
-        // ปั้น Data ให้พร้อมสำหรับ Chart และเก็บสถานะ is_alarm
         const processedData = raw.map(r => ({
           x: r.value,
           y: r.created_at,
@@ -269,9 +255,32 @@ export default {
           connected: r.status === null ? null : r.status === 1
         }))
 
-        this.processStats(processedData)
-        const sampledData = this.downsampleData(processedData)
-        this.renderAllCharts(sampledData)
+        const latestFetchTime = processedData.length > 0
+          ? Math.max(...processedData.map(p => new Date(p.y).getTime()))
+          : this.lastFetchTime
+
+        if (isInitialLoad) {
+          this.allData = [...processedData]
+        } else {
+          const newPoints = processedData.filter(p => new Date(p.y).getTime() > this.lastFetchTime)
+          if (newPoints.length > 0) {
+            this.allData = [...this.allData, ...newPoints]
+          }
+        }
+        this.lastFetchTime = latestFetchTime
+
+         this.lastData = this.allData
+         this.processStats(this.allData)
+
+         // Always display last 500 points (sliding window)
+         let displayData = this.allData
+         if (this.allData.length > 500) {
+           displayData = this.allData.slice(-500)
+         }
+
+         this.renderAllCharts(displayData)
+
+        if (this.alarmTime) this.stopAutoRefresh()
 
       } catch (err) {
         console.error("Fetch error:", err)
