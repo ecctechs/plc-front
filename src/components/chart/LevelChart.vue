@@ -305,7 +305,12 @@ export default {
         levelMap[String(l.level_index)] = l.label;
       });
 
-      const alarmDate = this.alarmTime ? new Date(this.alarmTime) : null;
+      // หาจุดที่ Backend ส่งมาว่าเป็น Alarm (ของ Level ข้อมูลมักจะอยู่ใน data.series)
+      const alarmPoint = series.find(d => d.is_alarm === true);
+
+      // ถ้าหาเจอ ให้ใช้เวลาจากจุดนั้น (x) แต่ถ้าไม่เจอให้ Fallback ไปใช้ props
+      const alarmDate = alarmPoint ? new Date(alarmPoint.x) : (this.alarmTime ? new Date(this.alarmTime) : null);
+
       const levelKeys = Object.keys(levelMap).map(Number);
       const maxIdx = levelKeys.length > 0 ? Math.max(...levelKeys) : 2;
 
@@ -320,8 +325,9 @@ export default {
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
             stepped: true,
-            pointRadius: ctx => (ctx.raw?.isAlarm ? 7 : 2),
+            pointRadius: ctx => (ctx.raw?.isAlarm ? 6 : 3),
             pointBackgroundColor: ctx => (ctx.raw?.isAlarm ? '#ef4444' : '#3b82f6'),
+            pointHoverRadius: ctx => (ctx.raw?.isAlarm ? 8 : 5),
             pointBorderColor: ctx => (ctx.raw?.isAlarm ? '#fff' : '#3b82f6'),
             pointBorderWidth: ctx => (ctx.raw?.isAlarm ? 3 : 1),
             spanGaps: true 
