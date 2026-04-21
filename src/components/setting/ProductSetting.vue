@@ -32,8 +32,8 @@
               <td class="text-center">
                 <div class="product-image-wrapper">
                   <img 
-                    v-if="product.image_url || product.image" 
-                    :src="product.image_url || product.image" 
+                    v-if="product.image_path || product.image_path" 
+                    :src="product.image_path || product.image_path" 
                     :alt="product.name"
                     class="product-image"
                   />
