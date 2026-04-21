@@ -139,6 +139,14 @@ const translations = {
     'Visibility': 'การมองเห็น',
     'Visible': 'มองเห็นได้',
     'Clear': 'ล้าง',
+    'Product Setting': 'ตั้งค่าผลิตภัณฑ์',
+    'Add Product': 'เพิ่มผลิตภัณฑ์',
+    'Edit Product': 'แก้ไขผลิตภัณฑ์',
+    'Model Name': 'ชื่อรุ่น',
+    'Image': 'รูปภาพ',
+    'Enter Model Name': 'กรอกชื่อรุ่น',
+    'No products found.': 'ไม่พบผลิตภัณฑ์',
+    'Running': 'กำลังรัน',
   },
   en: {
     'entries': 'entries',
@@ -265,6 +273,14 @@ const translations = {
     'Visibility': 'Visibility',
     'Visible': 'Visible',
     'Clear': 'Clear',
+    'Product Setting': 'Product Setting',
+    'Add Product': 'Add Product',
+    'Edit Product': 'Edit Product',
+    'Model Name': 'Model Name',
+    'Image': 'Image',
+    'Enter Model Name': 'Enter Model Name',
+    'No products found.': 'No products found.',
+    'Running': 'Running',
   }
 };
 
