@@ -147,6 +147,14 @@ const translations = {
     'Enter Model Name': 'กรอกชื่อรุ่น',
     'No products found.': 'ไม่พบผลิตภัณฑ์',
     'Running': 'กำลังรัน',
+    'PLC Address Configuration': 'การตั้งค่าที่อยู่ PLC',
+    'PLC Address (ON/OFF)': 'ที่อยู่ PLC (เปิด/ปิด)',
+    'e.g. D100, DB100.DBD0': 'ตัวอย่าง D100, DB100.DBD0',
+    'Address for product ON/OFF signal': 'ที่อยู่สำหรับสัญญาณ เปิด/ปิด ของผลิตภัณฑ์',
+    'PLC Address (Running)': 'ที่อยู่ PLC (กำลังทำงาน)',
+    'e.g. M10, DB100.DBX0.0': 'ตัวอย่าง M10, DB100.DBX0.0',
+    'Address for product running status': 'ที่อยู่สำหรับสถานะการทำงานของผลิตภัณฑ์',
+    'Save PLC Addresses': 'บันทึกที่อยู่ PLC',
   },
   en: {
     'entries': 'entries',
@@ -281,6 +289,12 @@ const translations = {
     'Enter Model Name': 'Enter Model Name',
     'No products found.': 'No products found.',
     'Running': 'Running',
+    'การตั้งค่าที่อยู่ PLC': 'PLC Address Configuration',
+    'ที่อยู่ PLC (เปิด/ปิด)': 'PLC Address (ON/OFF)',
+    'ที่อยู่สำหรับสัญญาณ เปิด/ปิด ของผลิตภัณฑ์': 'Address for product ON/OFF signal',
+    'ที่อยู่ PLC (กำลังทำงาน)': 'PLC Address (Running)',
+    'ที่อยู่สำหรับสถานะการทำงานของผลิตภัณฑ์': 'Address for product running status',
+    'บันทึกที่อยู่ PLC': 'Save PLC Addresses',
   }
 };
 

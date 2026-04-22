@@ -8,35 +8,25 @@
             <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
           </div>
           <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label fw-bold">{{ locale.t('Model Name') }}</label>
-                  <input v-model="form.name" type="text" class="form-control" :placeholder="locale.t('Enter Model Name')" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-bold">{{ locale.t('Image') }}</label>
-                  <input type="file" class="form-control" accept="image/*" @change="handleImageUpload" />
-                  <div v-if="imagePreview" class="mt-2">
-                    <img :src="imagePreview" alt="Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;" />
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Cycle Time (s)</label>
-                  <input v-model="form.cycle_time" type="number" class="form-control" placeholder="e.g., 10" min="0" step="0.1" />
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label fw-bold">PLC Address (ON/OFF)</label>
-                  <input v-model="form.plc_address_output" type="text" class="form-control" placeholder="e.g., DB100.DBD0" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-bold">PLC Address ({{ locale.t('Running') }})</label>
-                  <input v-model="form.plc_address_active" type="text" class="form-control" placeholder="e.g., DB100.DBX0.0" />
-                </div>
-              </div>
-            </div>
+             <div class="row">
+               <div class="col-md-12">
+                 <div class="mb-3">
+                   <label class="form-label fw-bold">{{ locale.t('Model Name') }}</label>
+                   <input v-model="form.name" type="text" class="form-control" :placeholder="locale.t('Enter Model Name')" />
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label fw-bold">{{ locale.t('Image') }}</label>
+                   <input type="file" class="form-control" accept="image/*" @change="handleImageUpload" />
+                   <div v-if="imagePreview" class="mt-2">
+                     <img :src="imagePreview" alt="Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;" />
+                   </div>
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label fw-bold">Cycle Time (s)</label>
+                   <input v-model="form.cycle_time" type="number" class="form-control" placeholder="e.g., 10" min="0" step="0.1" />
+                 </div>
+               </div>
+             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeModal()">{{ locale.t('Cancel') }}</button>
@@ -79,9 +69,7 @@ export default {
       selectedFile: null,
       form: {
         name: "",
-        cycle_time: "",
-        plc_address_output: "",
-        plc_address_active: ""
+        cycle_time: ""
       }
     };
   },
@@ -92,9 +80,7 @@ export default {
         this.editingId = product.id;
         this.form = {
           name: product.name || "",
-          cycle_time: product.cycle_time || "",
-          plc_address_output: product.plc_address_output || "",
-          plc_address_active: product.plc_address_active || ""
+          cycle_time: product.cycle_time || ""
         };
         this.imagePreview = product.image_url || product.image || null;
         this.selectedFile = null;
@@ -103,9 +89,7 @@ export default {
         this.editingId = null;
         this.form = {
           name: "",
-          cycle_time: "",
-          plc_address_output: "",
-          plc_address_active: ""
+          cycle_time: ""
         };
         this.imagePreview = null;
         this.selectedFile = null;
@@ -143,12 +127,6 @@ export default {
         formData.append("name", this.form.name);
         if (this.form.cycle_time) {
           formData.append("cycle_time", this.form.cycle_time);
-        }
-        if (this.form.plc_address_output) {
-          formData.append("plc_address_output", this.form.plc_address_output);
-        }
-        if (this.form.plc_address_active) {
-          formData.append("plc_address_active", this.form.plc_address_active);
         }
         if (this.selectedFile) {
           formData.append("image", this.selectedFile);

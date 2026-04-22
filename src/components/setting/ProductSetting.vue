@@ -1,75 +1,113 @@
 <template>
-  <div class="card shadow-sm">
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="fw-bold m-0">
-          <i class="bi bi-box-seam text-primary me-2"></i>{{ locale.t('Product Setting') }}
-        </h5>
-        <button class="btn btn-primary" @click="$emit('add')">
-          <i class="fa-solid fa-plus me-1"></i> {{ locale.t('Add Product') }}
-        </button>
-      </div>
+   <div class="card shadow-sm">
+     <div class="card-body p-4">
+       <div class="d-flex justify-content-between align-items-center mb-4">
+         <h5 class="fw-bold m-0">
+           <i class="bi bi-box-seam text-primary me-2"></i>{{ locale.t('Product Setting') }}
+         </h5>
+         <button class="btn btn-primary" @click="$emit('add')">
+           <i class="fa-solid fa-plus me-1"></i> {{ locale.t('Add Product') }}
+         </button>
+       </div>
 
-      <!-- Table -->
+       <!-- PLC Address Card -->
+       <div class="card mb-4 border-primary">
+         <div class="card-header bg-primary text-white">
+           <h6 class="mb-0 fw-bold">
+             <i class="bi bi-cpu me-2"></i>{{ locale.t('PLC Address Configuration') }}
+           </h6>
+         </div>
+         <div class="card-body">
+           <div class="row g-3">
+             <div class="col-md-6">
+               <div class="mb-3 mb-md-0">
+                 <label class="form-label fw-bold text-primary">
+                   {{ locale.t('PLC Address (ON/OFF)') }}
+                 </label>
+                 <input 
+                   type="text" 
+                   class="form-control form-control-lg" 
+                   v-model="plcAddresses.plc_address_output"
+                   :placeholder="locale.t('e.g. D100, DB100.DBD0')"
+                 >
+                 <small class="text-muted">{{ locale.t('Address for product ON/OFF signal') }}</small>
+               </div>
+             </div>
+             <div class="col-md-6">
+               <div class="mb-3 mb-md-0">
+                 <label class="form-label fw-bold text-success">
+                   {{ locale.t('PLC Address (Running)') }}
+                 </label>
+                 <input 
+                   type="text" 
+                   class="form-control form-control-lg" 
+                   v-model="plcAddresses.plc_address_active"
+                   :placeholder="locale.t('e.g. M10, DB100.DBX0.0')"
+                 >
+                 <small class="text-muted">{{ locale.t('Address for product running status') }}</small>
+               </div>
+             </div>
+           </div>
+           <div class="mt-3 text-end">
+             <button 
+               class="btn btn-success" 
+               :disabled="savingPlc" 
+               @click="savePlcAddresses"
+             >
+               <span v-if="savingPlc" class="spinner-border spinner-border-sm me-2"></span>
+               <i v-else class="bi bi-check-circle me-2"></i>
+               {{ savingPlc ? locale.t('Saving...') : locale.t('Save PLC Addresses') }}
+             </button>
+           </div>
+         </div>
+       </div>
+
+       <!-- Table -->
       <div class="table-responsive rounded-3 border shadow-sm">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-dark">
             <tr>
-              <th class="py-3">{{ locale.t('Model Name') }}</th>
+              <th class="ps-3 py-3">{{ locale.t('Model Name') }}</th>
               <th class="py-3 text-center">{{ locale.t('Image') }}</th>
               <th class="py-3 text-center">Cycle Time (s)</th>
-              <th class="py-3 text-center">PLC Address (ON/OFF)</th>
-              <th class="py-3 text-center">PLC Address ({{ locale.t('Running') }})</th>
               <th class="py-3 text-center">{{ locale.t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in products" :key="product.id">
-              <td class="fw-bold">
-                {{ product.name }}
-              </td>
-    
-              <td class="text-center">
-                <div class="product-image-wrapper">
-                  <img 
-                    v-if="product.image_path || product.image_path" 
-                    :src="product.image_path || product.image_path" 
-                    :alt="product.name"
-                    class="product-image"
-                  />
-                  <span v-else class="text-muted">-</span>
-                </div>
-              </td>
-              <td class="text-center">
-                {{ product.cycle_time }}
-              </td>
-              <td class="text-center">
-                <span v-if="product.plc_address_output" class="badge bg-primary">
-                  {{ product.plc_address_output }}
-                </span>
-                <span v-else class="text-muted">-</span>
-              </td>
-              <td class="text-center">
-                <span v-if="product.plc_address_active" class="badge bg-success">
-                  {{ product.plc_address_active }}
-                </span>
-                <span v-else class="text-muted">-</span>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary me-1" @click="openEditModal(product)">
-                  <i class="fa-solid fa-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(product)">
-                  <i class="fa-solid fa-trash-alt"></i>
-                </button>
-              </td>
-            </tr>
-            <tr v-if="products.length === 0">
-              <td colspan="6" class="text-center text-muted py-4">
-                <i class="fa-solid fa-box-open d-block mb-2" style="font-size: 2rem;"></i>
-                {{ locale.t('No products found.') }}
-              </td>
-            </tr>
+             <tr v-for="product in products" :key="product.id">
+               <td class="fw-bold">
+                 {{ product.name }}
+               </td>
+     
+               <td class="text-center">
+                 <div class="product-image-wrapper">
+                   <img 
+                     v-if="product.image_path || product.image_path" 
+                     :src="product.image_path || product.image_path" 
+                     :alt="product.name"
+                     class="product-image"
+                   />
+                   <span v-else class="text-muted">-</span>
+                 </div>
+               </td>
+               <td class="text-center">
+                 {{ product.cycle_time }}
+               </td>
+               <td class="text-center">
+                 <button class="btn btn-sm btn-outline-primary me-1" @click="openEditModal(product)">
+                   <i class="fa-solid fa-pencil"></i>
+                 </button>
+                 <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(product)">
+                   <i class="fa-solid fa-trash-alt"></i>
+                 </button>
+               </td>
+             </tr>
+             <tr v-if="products.length === 0">
+               <td colspan="4" class="text-center text-muted py-4">
+                 <i class="fa-solid fa-box-open d-block mb-2" style="font-size: 2rem;"></i>
+                 {{ locale.t('No products found.') }}
+               </td>
+             </tr>
           </tbody>
         </table>
       </div>
@@ -89,11 +127,17 @@ export default {
   
   data() {
     return {
-      products: []
+      products: [],
+      plcAddresses: {
+        plc_address_output: "",
+        plc_address_active: ""
+      },
+      savingPlc: false
     };
   },
   mounted() {
     this.loadProducts();
+    this.loadPlcAddresses();
   },
   methods: {
     async loadProducts() {
@@ -104,6 +148,46 @@ export default {
         this.products = json.data || json;
       } catch (err) {
         console.error(err);
+      }
+    },
+
+    async loadPlcAddresses() {
+      try {
+        const res = await fetch(`${BASE_API}/api/products/plc-addresses`);
+        if (!res.ok) throw new Error("Failed to load PLC addresses");
+        const json = await res.json();
+        if (json.success) {
+          this.plcAddresses = {
+            plc_address_output: json.plc_address_output || "",
+            plc_address_active: json.plc_address_active || ""
+          };
+        }
+      } catch (err) {
+        console.error("Load PLC addresses error:", err);
+      }
+    },
+
+    async savePlcAddresses() {
+      try {
+        this.savingPlc = true;
+        const res = await fetch(`${BASE_API}/api/products/plc-addresses`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.plcAddresses)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || "Save failed");
+        }
+
+        const json = await res.json();
+        await showAlert("Success", json.message || "PLC addresses saved successfully", "success");
+      } catch (err) {
+        console.error(err);
+        await showAlert("Error", err.message, "error");
+      } finally {
+        this.savingPlc = false;
       }
     },
     
