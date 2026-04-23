@@ -19,7 +19,7 @@
          </div>
          <div class="card-body">
            <div class="row g-3">
-             <div class="col-md-6">
+             <div class="col-md-4">
                <div class="mb-3 mb-md-0">
                  <label class="form-label fw-bold text-primary">
                    {{ locale.t('PLC Address (ON/OFF)') }}
@@ -33,7 +33,7 @@
                  <small class="text-muted">{{ locale.t('Address for product ON/OFF signal') }}</small>
                </div>
              </div>
-             <div class="col-md-6">
+             <div class="col-md-4">
                <div class="mb-3 mb-md-0">
                  <label class="form-label fw-bold text-success">
                    {{ locale.t('PLC Address (Running)') }}
@@ -45,6 +45,20 @@
                    :placeholder="locale.t('e.g. M10, DB100.DBX0.0')"
                  >
                  <small class="text-muted">{{ locale.t('Address for product running status') }}</small>
+               </div>
+             </div>
+              <div class="col-md-4">
+               <div class="mb-3 mb-md-0">
+                 <label class="form-label fw-bold text-warning">
+                   {{ locale.t('PLC Address (Complete)') }}
+                 </label>
+                 <input 
+                   type="text" 
+                   class="form-control form-control-lg" 
+                   v-model="plcAddresses.plc_address_complete"
+                   :placeholder="locale.t('e.g. M10, DB100.DBX0.0')"
+                 >
+                 <small class="text-muted">{{ locale.t('Address for product complete status') }}</small>
                </div>
              </div>
            </div>
@@ -75,7 +89,7 @@
           </thead>
           <tbody>
              <tr v-for="product in products" :key="product.id">
-               <td class="fw-bold">
+               <td class="fw-bold ps-3">
                  {{ product.name }}
                </td>
      
@@ -128,10 +142,11 @@ export default {
   data() {
     return {
       products: [],
-      plcAddresses: {
-        plc_address_output: "",
-        plc_address_active: ""
-      },
+plcAddresses: {
+         plc_address_output: "",
+         plc_address_active: "",
+         plc_address_complete: ""
+       },
       savingPlc: false
     };
   },
@@ -159,7 +174,9 @@ export default {
         if (json.success) {
           this.plcAddresses = {
             plc_address_output: json.plc_address_output || "",
-            plc_address_active: json.plc_address_active || ""
+            plc_address_active: json.plc_address_active || "",
+            plc_address_complete: json.plc_address_complete || ""
+            
           };
         }
       } catch (err) {

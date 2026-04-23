@@ -152,8 +152,10 @@ const translations = {
     'e.g. D100, DB100.DBD0': 'ตัวอย่าง D100, DB100.DBD0',
     'Address for product ON/OFF signal': 'ที่อยู่สำหรับสัญญาณ เปิด/ปิด ของผลิตภัณฑ์',
     'PLC Address (Running)': 'ที่อยู่ PLC (กำลังทำงาน)',
+    'PLC Address (Complete)': 'ที่อยู่ PLC (ผลิตเสร็จสมบูรณ์)',
     'e.g. M10, DB100.DBX0.0': 'ตัวอย่าง M10, DB100.DBX0.0',
     'Address for product running status': 'ที่อยู่สำหรับสถานะการทำงานของผลิตภัณฑ์',
+    'Address for product complete status': 'ที่อยู่สำหรับสถานะการผลิตของผลิตภัณฑ์',
     'Save PLC Addresses': 'บันทึกที่อยู่ PLC',
   },
   en: {
