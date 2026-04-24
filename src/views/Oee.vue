@@ -33,22 +33,40 @@
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Output (ON/OFF)</h6>
-              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_output || '-' }}</p>
-              <small class="text-muted">{{ locale.t('e.g. D100, DB100.DBD0') }}</small>
+              <div class="d-flex align-items-center gap-2">
+                <div class="fw-bold text-monospace" style="font-size: 1.5rem;">
+                  <span v-if="latestPLCLog.plc_onoff_value === 1" class="badge bg-success">ON</span>
+                  <span v-else class="badge bg-danger">OFF</span>
+                </div>
+              </div>
+              <small class="text-muted d-block mt-2">{{ plcAddresses.plc_address_output || 'N/A' }}</small>
+              <small class="text-muted d-block">Value: {{ latestPLCLog.plc_onoff_value }}</small>
             </div>
           </div>
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Active (Running)</h6>
-              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_active || '-' }}</p>
-              <small class="text-muted">{{ locale.t('e.g. M10, DB100.DBX0.0') }}</small>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="fw-bold text-monospace" style="font-size: 1.5rem;">
+                  <span class="badge bg-info">{{ latestPLCLog.plc_active_value }}</span>
+                </div>
+              </div>
+              <p class="mb-2 fw-bold text-primary">Model: {{ getProductNameById(latestPLCLog.plc_active_value) }}</p>
+              <small class="text-muted d-block mt-2">{{ plcAddresses.plc_address_active || 'N/A' }}</small>
+              <small class="text-muted d-block">Value: {{ latestPLCLog.plc_active_value }}</small>
             </div>
           </div>
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Complete (ON/OFF)</h6>
-              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_complete || '-' }}</p>
-              <small class="text-muted">{{ locale.t('e.g. M20, DB100.DBX0.1') }}</small>
+              <div class="d-flex align-items-center gap-2">
+                <div class="fw-bold text-monospace" style="font-size: 1.5rem;">
+                  <span v-if="latestPLCLog.plc_complete_value === 1" class="badge bg-success">ON</span>
+                  <span v-else class="badge bg-danger">OFF</span>
+                </div>
+              </div>
+              <small class="text-muted d-block mt-2">{{ plcAddresses.plc_address_complete || 'N/A' }}</small>
+              <small class="text-muted d-block">Value: {{ latestPLCLog.plc_complete_value }}</small>
             </div>
           </div>
         </div>
@@ -157,19 +175,30 @@ export default {
         plc_address_active: null,
         plc_address_complete: null
       },
-      downtimeProducts: []
+      downtimeProducts: [],
+      latestPLCLog: {
+        plc_onoff_value: null,
+        plc_active_value: null,
+        plc_complete_value: null,
+        created_at: null
+      }
     };
   },
     async mounted() {
       await this.loadProducts();
       await this.loadOperatingTime();
       await this.loadProductData();
+      await this.loadLatestLog();
       // Refresh all data every 1 second
       setInterval(async () => {
         await this.loadProductData();
         await this.loadOperatingTime();
         await this.loadDowntimeProducts();
       }, 1000);
+      // Refresh latest PLC log every 2 seconds
+      setInterval(async () => {
+        await this.loadLatestLog();
+      }, 2000);
     },
   methods: {
     async loadProducts() {
@@ -243,6 +272,24 @@ export default {
         console.error("Load downtime products error:", err);
       }
     },
+    async loadLatestLog() {
+      try {
+        const res = await fetch(`${BASE_API}/api/products/latest-log`);
+        if (!res.ok) throw new Error("Failed to load latest PLC log");
+        const data = await res.json();
+        if (data.success && data.data) {
+          this.latestPLCLog = {
+            plc_onoff_value: data.data.plc_onoff_value,
+            plc_active_value: data.data.plc_active_value,
+            plc_complete_value: data.data.plc_complete_value,
+            created_at: data.data.created_at
+          };
+          console.log("Latest PLC log:", this.latestPLCLog);
+        }
+      } catch (err) {
+        console.error("Load latest PLC log error:", err);
+      }
+    },
     calculateOEE() {
       // Basic OEE calculation placeholder
       // OEE = Availability × Performance × Quality
@@ -250,6 +297,11 @@ export default {
       this.performance = 89.8;
       this.quality = 97.3;
       this.oee = (this.availability * this.performance * this.quality / 10000).toFixed(1);
+    },
+    getProductNameById(id) {
+      if (!id) return '-';
+      const product = this.products.find(p => p.id === id);
+      return product ? product.name : '-';
     },
   }
 };
