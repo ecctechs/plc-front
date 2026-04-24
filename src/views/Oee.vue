@@ -23,7 +23,39 @@
 
     </div>
 
-    <!-- Performance Details Card -->
+    <!-- PLC Address Status Card -->
+    <div class="card shadow-sm mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">PLC Address Status</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2">Output (ON/OFF)</h6>
+              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_output || '-' }}</p>
+              <small class="text-muted">{{ locale.t('e.g. D100, DB100.DBD0') }}</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2">Active (Running)</h6>
+              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_active || '-' }}</p>
+              <small class="text-muted">{{ locale.t('e.g. M10, DB100.DBX0.0') }}</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2">Complete (ON/OFF)</h6>
+              <p class="mb-0 text-monospace fw-bold">{{ plcAddresses.plc_address_complete || '-' }}</p>
+              <small class="text-muted">{{ locale.t('e.g. M20, DB100.DBX0.1') }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
     <div class="card shadow-sm mt-4">
       <div class="card-header">
         <h5 class="mb-0">Performance Details</h5>
@@ -34,7 +66,7 @@
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Ideal Cycle Time</h6>
               <h5 class="mb-0">{{ idealCycleTime }}</h5>
-              <p class="text-muted mb-0">seconds/unit</p>
+              <p class="text-muted mb-0">minutes</p>
             </div>
           </div>
           <div class="col-md-4">
@@ -42,6 +74,13 @@
               <h6 class="text-muted mb-2">Total Output</h6>
               <h5 class="mb-0">{{ totalOutput }}</h5>
               <p class="text-muted mb-0">units</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2 text-primary fw-bold">Performance</h6>
+              <h5 class="mb-0 text-primary">{{ ((idealCycleTime * totalOutput) / (elapsed_minutes - downtimeProducts.downtime_minutes)).toFixed(2) }}</h5>
+              <p class="text-muted mb-0">%</p>
             </div>
           </div>
         </div>
@@ -65,7 +104,24 @@
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Downtime</h6>
-              <h5 class="mb-0">{{ downtime }}</h5>
+              <div v-if="downtimeProducts.length > 0" style="max-height: 150px; overflow-y: auto;">
+                <div v-for="item in downtimeProducts" :key="item.id" class="mb-2 pb-2 border-bottom">
+                  <p class="mb-1 fw-bold text-primary">{{ item.product_name || item.name || '-' }}</p>
+                  <small class="text-muted d-block">{{ item.start_time || '-' }}</small>
+                  <small class="text-muted d-block">{{ item.end_time || '-' }}</small>
+                  <span class="badge bg-warning">{{ item.duration || '-' }} min</span>
+                </div>
+              </div>
+              <div v-else>
+                <h5 class="mb-0">{{ downtimeProducts.downtime_minutes }}</h5>
+                <p class="text-muted mb-0">minutes</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2">Operating Time</h6>
+              <h5 class="mb-0">{{ elapsed_minutes - downtimeProducts.downtime_minutes }}</h5>
               <p class="text-muted mb-0">minutes</p>
             </div>
           </div>
@@ -73,7 +129,7 @@
       </div>
     </div>
 
-
+  
   </div>
 </template>
 
@@ -95,15 +151,24 @@ export default {
       totalOutput: 0,
       operatingTime: 0,
       elapsed_minutes: 0,
-      downtime: 0
+      downtime: 0,
+      plcAddresses: {
+        plc_address_output: null,
+        plc_address_active: null,
+        plc_address_complete: null
+      },
+      downtimeProducts: []
     };
   },
     async mounted() {
       await this.loadProducts();
       await this.loadOperatingTime();
-      // Refresh operating time every second
+      await this.loadProductData();
+      // Refresh all data every 1 second
       setInterval(async () => {
+        await this.loadProductData();
         await this.loadOperatingTime();
+        await this.loadDowntimeProducts();
       }, 1000);
     },
   methods: {
@@ -131,6 +196,14 @@ export default {
         this.idealCycleTime = product.cycle_time || 0;
         this.totalOutput = product.total_output || 0;
         this.operatingTime = 0; // Will be added later
+        
+        // Fetch PLC addresses for this product
+        this.plcAddresses = {
+          plc_address_output: product.plc_address_output || null,
+          plc_address_active: product.plc_address_active || null,
+          plc_address_complete: product.plc_address_complete || null
+        };
+        
         this.calculateOEE();
       } catch (err) {
         console.error(err);
@@ -149,6 +222,25 @@ export default {
         this.downtime = data.downtime_minutes || 0;
       } catch (err) {
         console.error(err);
+      }
+    },
+    async loadDowntimeProducts() {
+      if (!this.selectedProductId) return;
+      try {
+        const now = new Date();
+        const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const startTime = `${date}T00:00:00.000Z`;
+        const endTime = `${date}T23:59:59.999Z`;
+        
+        const res = await fetch(
+          `${BASE_API}/api/downtime-products/${this.selectedProductId}?start=${startTime}&end=${endTime}`
+        );
+        if (!res.ok) throw new Error("Failed to load downtime products");
+        const data = await res.json();
+        this.downtimeProducts = data.data || data;
+        console.log("Downtime products:", this.downtimeProducts);
+      } catch (err) {
+        console.error("Load downtime products error:", err);
       }
     },
     calculateOEE() {
