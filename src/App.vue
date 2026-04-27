@@ -2,7 +2,7 @@
   <div class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
       <ul class="nav nav-tabs mb-0">
-        <li class="nav-item" v-for="t in ['dashboard', 'setting', 'demo', 'alarmhistory' , 'interaction']" :key="t">
+        <li class="nav-item" v-for="t in ['dashboard', 'setting', 'oee', 'demo', 'alarmhistory' , 'interaction']" :key="t">
           <button
             class="nav-link text-capitalize"
             :class="{ active: tab === t }"
@@ -31,13 +31,17 @@
         @delete-card="onDeleteCard"
       />
 
-      <Setting
-        v-if="tab === 'setting'"
-        :devices="dashboard"
-        @add-device="reloadDevices"
-      />
+       <Setting
+         v-if="tab === 'setting'"
+         :devices="dashboard"
+         @add-device="reloadDevices"
+       />
 
-      <Demo
+       <Oee
+         v-if="tab === 'oee'"
+       />
+
+       <Demo
         v-if="tab === 'demo'"
         :devices="dashboard"
         :is-simulate="isSimulate"
@@ -66,6 +70,7 @@
 <script>
 import DashboardLayout from "./views/DashboardLayout.vue";
 import Setting from "./views/Setting.vue";
+import Oee from "./views/Oee.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
 import Interaction from "./views/Interaction.vue";
@@ -74,7 +79,7 @@ const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardLayout, Setting, Demo, AlarmHistory, Interaction },
+  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction },
 
   inject: ['locale'],
 
@@ -84,6 +89,7 @@ export default {
       tabLabels: {
         dashboard: 'Dashboard',
         setting: 'Setting',
+        oee: 'OEE',
         demo: 'Demo',
         alarmhistory: 'Alarm History',
         interaction: 'Interaction'

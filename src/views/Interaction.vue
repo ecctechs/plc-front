@@ -1,9 +1,12 @@
 <template>
   <div class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-      <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Interaction') }}
-      </h3>
+      <div>
+        <h3 class="page-title">
+            <i class="bi bi-diagram-3 page-title-icon me-2"></i>{{ locale.t('Interaction') }}
+        </h3>
+        <p class="page-title-subtitle mb-0">Interactive visualization and control of PLC devices</p>
+      </div>
       <button class="btn btn-primary" @click="showAddElementModal = true">
         <i class="bi bi-plus-circle me-1"></i> {{ locale.t('Add Element') }}
       </button>

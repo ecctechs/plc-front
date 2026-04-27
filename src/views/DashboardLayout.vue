@@ -1,15 +1,18 @@
 <template>
-  <div class="container-fluid mt-4">
+  <div class="dashboard-layout container-fluid mt-4">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-      <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Dashboard') }}
-      </h3>
       <div>
-        <button class="btn btn-outline-secondary me-2" @click="editMode = !editMode">
+        <h3 class="page-title">
+            <i class="bi bi-clock-history page-title-icon me-2"></i>{{ locale.t('Dashboard') }}
+        </h3>
+        <p class="page-title-subtitle mb-0">{{ locale.t('Real-time device monitoring and control') }}</p>
+      </div>
+      <div>
+        <button class="btn btn-edit-mode me-2" @click="editMode = !editMode">
           {{ editMode ? locale.t('Exit Edit') : locale.t('Edit Mode') }}
         </button>
-        <button v-if="editMode" class="btn btn-primary" @click="showAdd = true">
+        <button v-if="editMode" class="btn btn-add-card" @click="showAdd = true">
           + {{ locale.t('Add Card') }}
         </button>
       </div>
@@ -18,7 +21,7 @@
     <!-- Filters -->
     <div class="row g-3 mb-4">
       <div class="col-md-3">
-        <select v-model="filters.room" class="form-select" @change="applyFilters">
+        <select v-model="filters.room" class="form-select filter-select" @change="applyFilters">
           <option value="">{{ locale.t('All Rooms') }}</option>
           <option v-for="room in rooms" :key="room.id" :value="room.name">
             {{ room.name }}
@@ -26,7 +29,7 @@
         </select>
       </div>
       <div class="col-md-3">
-        <select v-model="filters.deviceType" class="form-select" @change="applyFilters">
+        <select v-model="filters.deviceType" class="form-select filter-select" @change="applyFilters">
           <option value="">{{ locale.t('All Device Types') }}</option>
           <option v-for="type in deviceTypes" :key="type.id" :value="type.name">
             {{ type.name }}
@@ -62,7 +65,7 @@ export default {
   inject: ['locale'],
 
   props: {
-    devices:Array,
+    devices: Array,
   },
 
   data() {
@@ -169,3 +172,64 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/* ============================================================
+   LAYOUT WRAPPER
+   ============================================================ */
+.dashboard-layout {
+  background-color: #eaf3fb;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+/* ============================================================
+   BUTTONS (header)
+   ============================================================ */
+.btn-edit-mode {
+  background-color: #ffffff;
+  border: 0.5px solid #b8d0e8;
+  color: #4a6a8a;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+}
+.btn-edit-mode:hover {
+  background-color: #e8f2fb;
+  border-color: #8bbfe0;
+  color: #1a3a5c;
+}
+
+.btn-add-card {
+  background-color: #2a7ad4;
+  border: none;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.btn-add-card:hover {
+  background-color: #1a60b0;
+  color: #ffffff;
+}
+
+/* ============================================================
+   FILTER SELECTS
+   ============================================================ */
+.filter-select {
+  background-color: #ffffff !important;
+  border: 0.5px solid #d0e4f7 !important;
+  border-radius: 8px !important;
+  color: #1a3a5c !important;
+  font-size: 0.875rem;
+}
+.filter-select:focus {
+  border-color: #8bbfe0 !important;
+  box-shadow: 0 0 0 3px rgba(42, 122, 212, 0.12) !important;
+}
+</style>

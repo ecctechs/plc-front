@@ -3,9 +3,9 @@
   <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title">{{ isEdit ? locale.t('Edit Device') : locale.t('Add Device') }}</h5>
-          <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title modal-title-custom fw-bold">{{ isEdit ? locale.t('Edit Device') : locale.t('Add Device') }}</h5>
+          <button type="button" class="btn-close" @click="closeModal()"></button>
         </div>
         
         <div class="modal-body p-4">
