@@ -1,10 +1,10 @@
 <template>
   <div class="container-fluid mt-4">
-    <div class="oee-header mb-4">
-      <h3 class="fw-bold text-primary">
-        <i class="bi bi-bar-chart-line me-2"></i>OEE Dashboard
+    <div>
+      <h3 class="page-title">
+        <i class="bi bi-bar-chart-line page-title-icon me-2"></i>OEE Dashboard
       </h3>
-      <p class="text-muted mb-0">Overall Equipment Effectiveness Monitoring</p>
+      <p class="page-title-subtitle mb-4">Overall Equipment Effectiveness Monitoring</p>
     </div>
 
     <div class="row g-4">
@@ -308,12 +308,4 @@ export default {
 </script>
 
 <style scoped>
-.oee-header {
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.oee-header h3 {
-  margin-bottom: 4px;
-}
 </style>

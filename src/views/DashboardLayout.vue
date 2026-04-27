@@ -2,9 +2,12 @@
   <div class="dashboard-layout container-fluid mt-4">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-      <h3 class="mb-1 fw-bold d-flex align-items-center dashboard-title">
-          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Dashboard') }}
-      </h3>
+      <div>
+        <h3 class="page-title">
+            <i class="bi bi-clock-history page-title-icon me-2"></i>{{ locale.t('Dashboard') }}
+        </h3>
+        <p class="page-title-subtitle mb-0">{{ locale.t('Real-time device monitoring and control') }}</p>
+      </div>
       <div>
         <button class="btn btn-edit-mode me-2" @click="editMode = !editMode">
           {{ editMode ? locale.t('Exit Edit') : locale.t('Edit Mode') }}
@@ -183,9 +186,6 @@ export default {
 /* ============================================================
    HEADER
    ============================================================ */
-.dashboard-title {
-  color: #1a3a5c;
-}
 
 /* ============================================================
    BUTTONS (header)

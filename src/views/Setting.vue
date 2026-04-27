@@ -1,10 +1,10 @@
 <template>
   <div class="container-fluid mt-4">
-    <div class="setting-header mb-4">
-      <h3 class="fw-bold text-primary">
-        <i class="bi bi-gear-wide-connected me-2"></i>{{ locale.t('System Settings') }}
+    <div>
+      <h3 class="page-title">
+        <i class="bi bi-gear-wide-connected page-title-icon me-2"></i>{{ locale.t('System Settings') }}
       </h3>
-      <p class="text-muted mb-0">{{ locale.t('Manage PLC system settings') }}</p>
+      <p class="page-title-subtitle mb-4">{{ locale.t('Manage PLC system settings') }}</p>
     </div>
 
     <!-- Section 1: Type + Room (70% + 30%) -->
@@ -101,15 +101,6 @@ export default {
 </script>
 
 <style scoped>
-.setting-header {
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.setting-header h3 {
-  margin-bottom: 4px;
-}
-
 .setting-section {
   margin-bottom: 24px;
 }

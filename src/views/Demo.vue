@@ -1,9 +1,12 @@
 <template>
   <div class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-      <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Demo / Simulate Mode') }}
-      </h3>
+      <div>
+        <h3 class="page-title">
+            <i class="bi bi-play-circle page-title-icon me-2"></i>{{ locale.t('Demo / Simulate Mode') }}
+        </h3>
+        <p class="page-title-subtitle mb-0">Test and simulate device values without PLC connection</p>
+      </div>
 
       <div class="d-flex align-items-center gap-3">
         <div class="form-check form-switch">

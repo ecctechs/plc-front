@@ -143,7 +143,7 @@
     </div>
   </div>
 
-  <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+  <div v-if="showChart" class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
         <div class="modal-header modal-header-custom">

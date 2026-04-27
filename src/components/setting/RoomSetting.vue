@@ -45,9 +45,9 @@
     <div class="modal fade" :class="{ show: showModal }" :style="{ display: showModal ? 'block' : 'none' }" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content border-0 shadow-lg">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title">{{ isEdit ? locale.t('Edit Room') : locale.t('Add Room') }}</h5>
-            <button type="button" class="btn-close btn-close-white" @click="closeModal()"></button>
+          <div class="modal-header modal-header-custom">
+            <h5 class="modal-title modal-title-custom fw-bold">{{ isEdit ? locale.t('Edit Room') : locale.t('Add Room') }}</h5>
+            <button type="button" class="btn-close" @click="closeModal()"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
@@ -55,7 +55,7 @@
               <input v-model="form.name" type="text" class="form-control" placeholder="e.g., Room 1" />
             </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer modal-footer-custom">
             <button type="button" class="btn btn-secondary" @click="closeModal()">{{ locale.t('Cancel') }}</button>
             <button type="button" class="btn btn-primary" @click="save()" :disabled="loading">
               <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>

@@ -1,11 +1,11 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+  <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg">
         <!-- Header -->
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title fw-bold">{{ isEdit ? locale.t('Edit Element') : locale.t('Add New Element') }}</h5>
-          <button class="btn-close btn-close-white" @click="$emit('close')"></button>
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title modal-title-custom fw-bold">{{ isEdit ? locale.t('Edit Element') : locale.t('Add New Element') }}</h5>
+          <button class="btn-close" @click="$emit('close')"></button>
         </div>
 
         <!-- Body -->

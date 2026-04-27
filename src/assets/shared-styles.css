@@ -93,6 +93,41 @@
   backdrop-filter: blur(4px);
 }
 
+/* ===== Modal Header Unified Style ===== */
+.modal-header-custom {
+  background-color: #eaf3fb !important;
+  border-bottom: 0.5px solid #d0e4f7 !important;
+}
+
+.modal-header-custom .modal-title-custom {
+  color: #1a3a5c !important;
+  font-weight: 600;
+}
+
+.modal-header-custom .modal-icon-custom {
+  color: #2a7ad4 !important;
+}
+
+.modal-header-custom .btn-close {
+  filter: invert(0.3) !important;
+}
+
+/* ===== Modal Footer Unified Style ===== */
+.modal-footer-custom {
+  background-color: #eaf3fb !important;
+  border-top: 0.5px solid #d0e4f7 !important;
+}
+
+/* ===== Modal Title Class ===== */
+.modal-title-custom {
+  color: #1a3a5c !important;
+}
+
+/* ===== Modal Icon Class ===== */
+.modal-icon-custom {
+  color: #2a7ad4 !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -227,6 +262,25 @@
 
 .status-dot-wrapper:hover .status-tooltip {
   opacity: 1;
+}
+
+/* ===== Page/Tab Title Unified Style ===== */
+.page-title {
+  color: #1a3a5c !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.page-title-icon {
+  color: #2a7ad4 !important;
+}
+
+.page-title-subtitle {
+  color: #7a9ab8 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
 }
 
 /* ===== On/Off Circle (Dashboard) ===== */

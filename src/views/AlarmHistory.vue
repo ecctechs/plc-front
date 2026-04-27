@@ -3,10 +3,10 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
-        <h3 class="mb-1 text-primary fw-bold d-flex align-items-center">
-          <i class="bi bi-clock-history me-2"></i>{{ locale.t('Alarm History') }}
+        <h3 class="page-title">
+          <i class="bi bi-clock-history page-title-icon me-2"></i>{{ locale.t('Alarm History') }}
         </h3>
-        <p class="text-muted small mb-0">
+        <p class="page-title-subtitle mb-0">
           {{ locale.t('Show TRIGGER and RECOVERY events from PLC system') }}
         </p>
       </div>
@@ -166,12 +166,12 @@
       </nav>
     </div>
 
-    <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div v-if="showChart" class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-          <div class="modal-header bg-light">
-            <h5 class="modal-title fw-bold text-dark">
-              <i class="bi bi-graph-up text-primary me-2"></i>กราฟประวัติเหตุการณ์: {{ selectedDevice?.label }}
+          <div class="modal-header modal-header-custom">
+            <h5 class="modal-title modal-title-custom fw-bold">
+              <i class="bi bi-graph-up modal-icon-custom me-2"></i>กราฟประวัติเหตุการณ์: {{ selectedDevice?.label }}
             </h5>
             <button type="button" class="btn-close" @click="closeChart"></button>
           </div>
