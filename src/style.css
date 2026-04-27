@@ -29,21 +29,23 @@
 body {
   font-family: 'Prompt', sans-serif;
   font-weight: 400;
-  /* background-color: rgb(79, 78, 78); */
+  background-color: #eaf3fb; /* โทนฟ้าอ่อน — ปรับจาก default */
 }
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Prompt', sans-serif;
   font-weight: 600;
+  color: #1a3a5c; /* สีกรม */
 }
 
 /* Small / muted text */
 .text-muted {
   font-weight: 300;
+  color: #7a9ab8 !important; /* ฟ้าเทาอ่อน */
 }
 
-/* Button */
+/* Button (global base) */
 .btn {
   font-family: 'Prompt', sans-serif;
   font-weight: 500;
@@ -53,6 +55,66 @@ h1, h2, h3, h4, h5, h6 {
 .form-control,
 .form-select {
   font-family: 'Prompt', sans-serif;
+}
+
+/* ===== Dashboard Color Tokens ===== */
+/*
+  ใช้ CSS custom properties เพื่อให้ปรับสีทั้งระบบจากที่เดียว
+  นำไปใช้ใน component ได้ด้วย var(--dash-*)
+*/
+:root {
+  --dash-page-bg:          #eaf3fb;
+  --dash-card-bg:          #f0f6ff;
+  --dash-card-border:      #d0e4f7;
+  --dash-card-shadow:      0 2px 8px rgba(100, 160, 220, 0.10);
+
+  --dash-text-primary:     #1a3a5c;
+  --dash-text-secondary:   #5a7a99;
+  --dash-text-muted:       #7a9ab8;
+
+  --dash-btn-chart-bg:     #c5e0f5;
+  --dash-btn-chart-border: #8bbfe0;
+  --dash-btn-chart-text:   #1a4a72;
+
+  --dash-btn-more-bg:      #ffffff;
+  --dash-btn-more-border:  #b8d0e8;
+  --dash-btn-more-text:    #4a6a8a;
+
+  --dash-accent:           #2a7ad4;   /* ฟ้ากรม — ปุ่มหลัก, เข็ม gauge, badge */
+
+  --dash-dot-online:       #38c9a0;
+  --dash-dot-offline:      #e05a5a;
+
+  --dash-on-glow:          rgba(56, 201, 160, 0.50);
+  --dash-off-glow:         rgba(220, 80, 80, 0.35);
+
+  --dash-info-bg:          #eaf3fb;
+  --dash-info-border:      #d0e4f7;
+}
+
+/* ===== Bootstrap Override — primary color ===== */
+/*
+  ถ้าใช้ Bootstrap 5 และต้องการให้ btn-primary / text-primary
+  ใช้สีฟ้ากรมของ theme นี้แทน Bootstrap default
+*/
+.text-primary  { color: var(--dash-accent) !important; }
+.bg-primary    { background-color: var(--dash-accent) !important; }
+.btn-primary   { background-color: var(--dash-accent) !important; border-color: var(--dash-accent) !important; }
+.btn-primary:hover { background-color: #1a60b0 !important; border-color: #1a60b0 !important; }
+
+/* ===== Form Select / Control (global override) ===== */
+.form-select,
+.form-control {
+  background-color: #ffffff;
+  border: 0.5px solid var(--dash-card-border);
+  border-radius: 8px;
+  color: var(--dash-text-primary);
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #8bbfe0;
+  box-shadow: 0 0 0 3px rgba(42, 122, 212, 0.12);
 }
 
 /* ===== Responsive Utilities ===== */

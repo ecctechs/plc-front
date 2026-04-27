@@ -31,26 +31,25 @@
 
           <div class="mb-2">
             <h4 
-              class="fw-bold text-dark mb-0 text-uppercase"
+              class="fw-bold mb-0 text-uppercase card-device-name"
               :style="{ paddingTop: editMode ? '20px' : '0', transition: 'padding-top 0.3s ease' }"
             >{{ addr.device.name }}</h4>
-            <div class="text-muted small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
+            <div class="card-label small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
           </div>
 
           <div class="flex-grow-1 d-flex flex-column justify-content-center my-4">
             
             <div v-if="addr.display_type === 'onoff'" class="w-100">
-              <div class="onoff-circle mx-auto mb-2" :class="addr.last_value !== 0 ? 'on' : 'off'"></div>
-              <h2 class="onoff-text fw-bold mb-0" :class="addr.last_value !== 0 ? 'text-success' : 'text-danger'">
-                {{ addr.last_value !== 0 ? "ON" : "OFF" }}
-              </h2>
+              <div class="onoff-circle mx-auto mb-2" :class="addr.last_value !== 0 ? 'on' : 'off'">
+                <span class="onoff-inner-text">{{ addr.last_value !== 0 ? "ON" : "OFF" }}</span>
+              </div>
             </div>
 
             <div v-else-if="addr.display_type === 'number' || addr.display_type === 'level'" class="w-100 py-3">
               <div class="display-value fw-bold" :class="getValueColor(addr)">
                 {{ getDisplayValue(addr) }}
               </div>
-              <div v-if="addr.numberConfig?.unit" class="text-muted fw-bold">{{ addr.numberConfig.unit }}</div>
+              <div v-if="addr.numberConfig?.unit" class="card-unit fw-bold">{{ addr.numberConfig.unit }}</div>
             </div>
 
             <div v-else-if="addr.display_type === 'number_gauge'" class="w-100">
@@ -64,19 +63,19 @@
           </div>
 
           <div class="mt-auto">
-            <div class="pt-3 border-top-light">
+            <div class="pt-3 card-border-top">
               <div class="row g-2">
                 <div class="col-6">
                   <button
                     class="btn btn-custom w-100"
-                    :class="expandedCards[addr.card_id] ? 'btn-secondary' : 'btn-outline-secondary'"
+                    :class="expandedCards[addr.card_id] ? 'btn-more-active' : 'btn-more'"
                     @click="expandedCards[addr.card_id] = !expandedCards[addr.card_id]"
                   >
                     {{ expandedCards[addr.card_id] ? 'Hide Info' : 'More Info' }}
                   </button>
                 </div>
                 <div class="col-6">
-                  <button class="btn btn-sm btn-outline-primary btn-custom w-100" @click="openChart(addr)">
+                  <button class="btn btn-chart btn-custom w-100" @click="openChart(addr)">
                     Chart
                   </button>
                 </div>
@@ -84,7 +83,7 @@
             </div>
 
             <transition name="fade">
-              <div v-if="expandedCards[addr.card_id]" class="info-panel mt-3 p-3 bg-light rounded text-start small">
+              <div v-if="expandedCards[addr.card_id]" class="info-panel mt-3 p-3 rounded text-start small">
                 <div class="d-flex justify-content-between mb-1">
                   <span><strong>Address:</strong> {{ addr.plc_address }}</span>
                   <span class="text-muted">Refresh: {{ addr.refresh_rate_ms }} ms</span>
@@ -147,9 +146,9 @@
   <div v-if="showChart" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-light">
-          <h5 class="modal-title fw-bold text-dark">
-            <i class="bi bi-graph-up text-primary me-2"></i>Chart : {{ selectedAddress?.label }}
+        <div class="modal-header modal-header-custom">
+          <h5 class="modal-title fw-bold modal-title-custom">
+            <i class="bi bi-graph-up me-2 modal-icon-custom"></i>Chart : {{ selectedAddress?.label }}
           </h5>
           <button class="btn-close" @click="closeChart"></button>
         </div>
@@ -158,7 +157,7 @@
             <Chart v-if="selectedAddress" :device="selectedAddress" />
           </div>
         </div>
-        <div class="modal-footer bg-light border-0">
+        <div class="modal-footer modal-footer-custom border-0">
           <button type="button" class="btn btn-secondary px-4" @click="closeChart">ปิดหน้าต่าง</button>
         </div>
       </div>
@@ -312,7 +311,7 @@ export default {
                 value: parseFloat(this.getDisplayValue(addr)),
                 units: unitLabel,
                 majorTicks: this.generateTicks(min, max),
-                colorNumbers: "#444",
+                colorNumbers: "#4a6a8a",       /* สีตัวเลขบน gauge → ฟ้าเทา */
                 fontNumbersSize: 22,
                 fontNumbersWeight: "bold",
                 colorPlate: "transparent", 
@@ -325,9 +324,13 @@ export default {
                 needleCircleSize: 7,
                 needleCircleOuter: true,
                 needleCircleInner: false,
-                colorNeedle: "#28a745",
-                colorNeedleEnd: "#28a745",
-                colorNeedleCircleOuter: "#28a745",
+                colorNeedle: "#2a7ad4",         /* เข็ม → ฟ้ากรม */
+                colorNeedleEnd: "#2a7ad4",
+                colorNeedleCircleOuter: "#2a7ad4",
+                colorMajorTicks: "#7aaad4",     /* ขีดหลัก → ฟ้าอ่อน */
+                colorMinorTicks: "#b0cce8",     /* ขีดรอง → ฟ้าจาง */
+                colorTitle: "#1a3a5c",
+                colorUnits: "#5a7a99",
                 valueBox: false, 
                 ticksAngle: 240,
                 startAngle: 60,
@@ -352,9 +355,9 @@ export default {
           const displayVal = parseFloat(this.getDisplayValue(addr));
           const colorClass = this.getValueColor(addr);
           
-          let colorHex = '#28a745'; // Green
-          if (colorClass === 'text-warning') colorHex = '#ffc107'; // Yellow
-          if (colorClass === 'text-danger') colorHex = '#dc3545';  // Red
+          let colorHex = '#2a7ad4'; /* default → ฟ้ากรม */
+          if (colorClass === 'text-warning') colorHex = '#ffc107';
+          if (colorClass === 'text-danger')  colorHex = '#dc3545';
 
           gauge.value = displayVal;
           gauge.update({
@@ -410,47 +413,199 @@ export default {
 </script>
 
 <style scoped>
-/* 1. กำหนดฐานความสูงขั้นต่ำให้ทุก Card เท่ากัน */
+/* ============================================================
+   CARD
+   ============================================================ */
 .custom-card-height {
-  min-height: 380px; /* ปรับลดจากเดิม 10% */
-  height: 100%; 
+  min-height: 380px;
+  height: 100%;
   padding: 1rem !important;
   display: flex;
   flex-direction: column;
-  overflow: visible; /* กันเนื้อหาแลบออกนอกขอบโค้งของ Card */
+  overflow: visible;
+  background-color: #ffffff !important;
+  border: 0.5px solid #d0e4f7 !important;
+  box-shadow: 0 2px 8px rgba(100, 160, 220, 0.10) !important;
+  border-radius: 14px !important;
 }
 
-/* 2. จัดการส่วน More Info ให้เป็นแบบ Overlay หรือขยายภายใน */
-.info-panel {
-  margin-top: auto; /* ดันไปล่างสุดของพื้นที่ว่าง */
-  padding: 0.5rem !important;
-  font-size: 0.7rem !important;
-  background-color: #f8f9fa;
-  border-top: 1px solid #eee;
-  /* หากเนื้อหายาวเกินไป ให้ scroll ภายในเฉพาะจุด ไม่ให้ card เสียรูป */
-  max-height: 200px; 
-  overflow-y: auto; 
+/* ชื่ออุปกรณ์ */
+.card-device-name {
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+  color: #1a3a5c;
 }
 
-/* 3. ปรับขนาด Gauge ให้สมดุล */
+/* label ใต้ชื่อ */
+.card-label {
+  color: #7a9ab8;
+}
+
+/* unit ใต้ตัวเลข */
+.card-unit {
+  color: #5a7a99;
+}
+
+/* ============================================================
+   STATUS DOT
+   ============================================================ */
+/* .status-dot-wrapper {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.status-dot.online  { background-color: #38c9a0; }
+.status-dot.offline { background-color: #e05a5a; }
+
+.status-tooltip {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 14px;
+  background: #fff;
+  background: #fff;
+  border: 0.5px solid #d0e4f7;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  white-space: nowrap;
+  color: #1a3a5c;
+  z-index: 20;
+}
+
+.status-dot-wrapper:hover .status-tooltip {
+  display: block;
+} */
+
+/* ============================================================
+   ON / OFF CIRCLE  — teal glow (ON) / red glow (OFF)
+   ============================================================ */
+.onoff-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onoff-circle.on {
+  background: radial-gradient(circle, #b6f0e0 0%, #5dd8b8 55%, #2cb89a 100%);
+  box-shadow: 0 0 24px rgba(56, 201, 160, 0.50);
+}
+
+.onoff-circle.off {
+  background: radial-gradient(circle, #ffd6d6 0%, #f09090 55%, #d05a5a 100%);
+  box-shadow: 0 0 24px rgba(220, 80, 80, 0.35);
+}
+
+.onoff-inner-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+/* ============================================================
+   NUMBER / LEVEL VALUE
+   ============================================================ */
+.display-value {
+  font-size: 2.2rem !important;
+  line-height: 1.1;
+  color: #1a3a5c;
+}
+
+/* ============================================================
+   GAUGE
+   ============================================================ */
 .gauge-container {
   transform: scale(0.8);
   transform-origin: center;
   margin: -15px 0;
 }
 
-/* 4. ปรับขนาดปุ่มและตัวเลขให้เล็กลงตามสัดส่วน */
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 .btn-custom {
   padding: 0.25rem 0.5rem !important;
   font-size: 0.75rem !important;
+  border-radius: 8px !important;
 }
 
-.display-value {
-  font-size: 2.2rem !important; /* ลดลงเล็กน้อยเพื่อให้พอดีกับ card ที่สั้นลง */
-  line-height: 1.1;
+/* More Info — ขาว ขอบฟ้าอ่อน */
+.btn-more {
+  background-color: #ffffff !important;
+  border: 0.5px solid #b8d0e8 !important;
+  color: #4a6a8a !important;
+}
+.btn-more:hover {
+  background-color: #e8f2fb !important;
+  border-color: #8bbfe0 !important;
 }
 
-/* Position number badge in edit mode */
+/* Hide Info — ฟ้าอ่อนกว่า (active state) */
+.btn-more-active {
+  background-color: #d0e4f7 !important;
+  border: 0.5px solid #90bce0 !important;
+  color: #1a3a5c !important;
+}
+.btn-more-active:hover {
+  background-color: #bdd8f2 !important;
+}
+
+/* Chart — ฟ้า */
+.btn-chart {
+  background-color: #c5e0f5 !important;
+  border: 0.5px solid #8bbfe0 !important;
+  color: #1a4a72 !important;
+  font-weight: 500 !important;
+}
+.btn-chart:hover {
+  background-color: #a8d0ee !important;
+}
+
+/* ============================================================
+   CARD BORDER TOP (แทน border-top-light เดิม)
+   ============================================================ */
+.card-border-top {
+  border-top: 0.5px solid #d0e4f7 !important;
+}
+
+/* ============================================================
+   INFO PANEL
+   ============================================================ */
+.info-panel {
+  margin-top: auto;
+  padding: 0.5rem !important;
+  font-size: 0.7rem !important;
+  background-color: #eaf3fb !important;
+  border: 0.5px solid #d0e4f7;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-header-custom  { background-color: #eaf3fb !important; }
+.modal-title-custom   { color: #1a3a5c !important; }
+.modal-icon-custom    { color: #2a7ad4 !important; }
+.modal-footer-custom  { background-color: #eaf3fb !important; }
+
+/* ============================================================
+   EDIT MODE
+   ============================================================ */
 .number {
   position: absolute;
   top: 10px;
@@ -458,6 +613,7 @@ export default {
   z-index: 10;
   font-size: 0.75rem;
   padding: 0.35em 0.65em;
+  background-color: #2a7ad4 !important;
 }
 
 .delete-btn {
@@ -466,8 +622,11 @@ export default {
   z-index: 10;
 }
 
-h4.fw-bold {
-  font-size: 0.95rem; 
-  margin-bottom: 0.2rem;
-}
+/* ============================================================
+   FADE TRANSITION
+   ============================================================ */
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from,
+.fade-leave-to     { opacity: 0; }
 </style>
