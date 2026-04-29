@@ -7,8 +7,42 @@
       <p class="page-title-subtitle mb-4">Overall Equipment Effectiveness Monitoring</p>
     </div>
 
+    <div class="row g-4 mb-4">
+      <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm h-100">
+          <div class="card-body text-center">
+            <h6 class="card-title text-white-50">OEE</h6>
+            <h2 class="mb-0">{{ oee }}%</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-info text-white shadow-sm h-100">
+          <div class="card-body text-center">
+            <h6 class="card-title text-white-50">Availability</h6>
+            <h2 class="mb-0">{{ availability }}%</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-warning text-dark shadow-sm h-100">
+          <div class="card-body text-center">
+            <h6 class="card-title text-dark-50">Performance</h6>
+            <h2 class="mb-0">{{ performance }}%</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm h-100">
+          <div class="card-body text-center">
+            <h6 class="card-title text-white-50">Quality</h6>
+            <h2 class="mb-0">{{ quality }}%</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
-      <!-- Product Selection -->
       <div class="col-md-4">
         <div class="card shadow-sm">
           <div class="card-body">
@@ -19,11 +53,8 @@
           </div>
         </div>
       </div>
-
-
     </div>
 
-    <!-- PLC Address Status Card -->
     <div class="card shadow-sm mt-4">
       <div class="card-header">
         <h5 class="mb-0">PLC Address Status</h5>
@@ -73,7 +104,6 @@
       </div>
     </div>
 
-    
     <div class="card shadow-sm mt-4">
       <div class="card-header">
         <h5 class="mb-0">Performance Details</h5>
@@ -97,7 +127,7 @@
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2 text-primary fw-bold">Performance</h6>
-              <h5 class="mb-0 text-primary">{{ ((idealCycleTime * totalOutput) / (elapsed_minutes - downtimeProducts.downtime_minutes)).toFixed(2) }}</h5>
+              <h5 class="mb-0 text-primary">{{ performance }}</h5>
               <p class="text-muted mb-0">%</p>
             </div>
           </div>
@@ -105,7 +135,6 @@
       </div>
     </div>
 
-    <!-- Operating Time Card -->
     <div class="card shadow-sm mt-4">
       <div class="card-header">
         <h5 class="mb-0">Operating Time</h5>
@@ -131,7 +160,7 @@
                 </div>
               </div>
               <div v-else>
-                <h5 class="mb-0">{{ downtimeProducts.downtime_minutes }}</h5>
+                <h5 class="mb-0">{{ downtime }}</h5>
                 <p class="text-muted mb-0">minutes</p>
               </div>
             </div>
@@ -139,7 +168,7 @@
           <div class="col-md-4">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Operating Time</h6>
-              <h5 class="mb-0">{{ elapsed_minutes - downtimeProducts.downtime_minutes }}</h5>
+              <h5 class="mb-0">{{ Math.max(0, elapsed_minutes - downtime).toFixed(2) }}</h5>
               <p class="text-muted mb-0">minutes</p>
             </div>
           </div>
@@ -147,7 +176,6 @@
       </div>
     </div>
 
-  
   </div>
 </template>
 
@@ -184,22 +212,24 @@ export default {
       }
     };
   },
-    async mounted() {
-      await this.loadProducts();
-      await this.loadOperatingTime();
+  async mounted() {
+    await this.loadProducts();
+    await this.loadOperatingTime();
+    await this.loadProductData();
+    await this.loadLatestLog();
+    
+    // Refresh all data every 1 second
+    setInterval(async () => {
       await this.loadProductData();
+      await this.loadOperatingTime();
+      await this.loadDowntimeProducts();
+    }, 1000);
+    
+    // Refresh latest PLC log every 2 seconds
+    setInterval(async () => {
       await this.loadLatestLog();
-      // Refresh all data every 1 second
-      setInterval(async () => {
-        await this.loadProductData();
-        await this.loadOperatingTime();
-        await this.loadDowntimeProducts();
-      }, 1000);
-      // Refresh latest PLC log every 2 seconds
-      setInterval(async () => {
-        await this.loadLatestLog();
-      }, 2000);
-    },
+    }, 2000);
+  },
   methods: {
     async loadProducts() {
       try {
@@ -224,7 +254,6 @@ export default {
         const product = json.data || json;
         this.idealCycleTime = product.cycle_time || 0;
         this.totalOutput = product.total_output || 0;
-        this.operatingTime = 0; // Will be added later
         
         // Fetch PLC addresses for this product
         this.plcAddresses = {
@@ -246,9 +275,12 @@ export default {
         const res = await fetch(`${BASE_API}/api/working-time/planned-production?date=${date}&current_time=${currentTime}`);
         if (!res.ok) throw new Error("Failed to load operating time");
         const data = await res.json();
-        console.log("Operating time data:", data);
+        
         this.elapsed_minutes = data.breakdown.elapsed_minutes || 0;
         this.downtime = data.downtime_minutes || 0;
+        
+        // อัปเดตการคำนวณ OEE ทุกครั้งที่ดึงเวลาใหม่
+        this.calculateOEE();
       } catch (err) {
         console.error(err);
       }
@@ -267,7 +299,6 @@ export default {
         if (!res.ok) throw new Error("Failed to load downtime products");
         const data = await res.json();
         this.downtimeProducts = data.data || data;
-        console.log("Downtime products:", this.downtimeProducts);
       } catch (err) {
         console.error("Load downtime products error:", err);
       }
@@ -284,19 +315,35 @@ export default {
             plc_complete_value: data.data.plc_complete_value,
             created_at: data.data.created_at
           };
-          console.log("Latest PLC log:", this.latestPLCLog);
         }
       } catch (err) {
         console.error("Load latest PLC log error:", err);
       }
     },
     calculateOEE() {
-      // Basic OEE calculation placeholder
-      // OEE = Availability × Performance × Quality
-      this.availability = 92.1;
-      this.performance = 89.8;
-      this.quality = 97.3;
-      this.oee = (this.availability * this.performance * this.quality / 10000).toFixed(1);
+      // 1. Availability Calculation
+      let currentOperatingTime = 0;
+      if (this.elapsed_minutes <= 0) {
+        this.availability = 0;
+      } else {
+        currentOperatingTime = Math.max(0, this.elapsed_minutes - this.downtime);
+        this.availability = ((currentOperatingTime / this.elapsed_minutes) * 100).toFixed(2);
+      }
+
+      // 2. Performance Calculation (ย้ายสูตรจาก Template มาที่นี่)
+      if (currentOperatingTime <= 0 || this.idealCycleTime <= 0) {
+        this.performance = 0;
+      } else {
+        // Performance = (Ideal Cycle Time * Total Output) / Operating Time
+        // ถ้าค่าเกิน 100% (เช่นทำเร็วกว่ามาตรฐาน) สามารถครอบด้วย Math.min(100, ค่าที่ได้) ได้ แต่ในแง่โรงงานส่วนใหญ่จะปล่อยให้เกินเพื่อดูความจริง
+        this.performance = (((this.idealCycleTime * this.totalOutput) / currentOperatingTime) * 100).toFixed(2);
+      }
+
+      // 3. Quality Calculation (ตั้งค่าเริ่มต้นเป็น 100% ไปก่อนจนกว่าคุณจะมีข้อมูลของเสีย Defect)
+      this.quality = 100.00;
+
+      // 4. Total OEE Calculation
+      this.oee = ((this.availability * this.performance * this.quality) / 10000).toFixed(2);
     },
     getProductNameById(id) {
       if (!id) return '-';
@@ -308,4 +355,5 @@ export default {
 </script>
 
 <style scoped>
+/* ถ้าต้องการใส่สีสันหรือปรับแต่งเพิ่มเติมสามารถเขียน CSS ตรงนี้ได้ครับ */
 </style>
