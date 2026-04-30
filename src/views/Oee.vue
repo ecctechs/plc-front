@@ -110,21 +110,29 @@
       </div>
       <div class="card-body">
         <div class="row g-3">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Ideal Cycle Time</h6>
               <h5 class="mb-0">{{ idealCycleTime }}</h5>
               <p class="text-muted mb-0">minutes</p>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2">Total Output</h6>
               <h5 class="mb-0">{{ totalOutput }}</h5>
               <p class="text-muted mb-0">units</p>
+              <small class="text-muted d-block mt-1">Reject: {{ totalReject }}</small>
             </div>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <div class="p-3 bg-light rounded">
+              <h6 class="text-muted mb-2">Good Count</h6>
+              <h5 class="mb-0">{{ goodCount }}</h5>
+              <p class="text-muted mb-0">units</p>
+            </div>
+          </div>
+          <div class="col-md-3">
             <div class="p-3 bg-light rounded">
               <h6 class="text-muted mb-2 text-primary fw-bold">Performance</h6>
               <h5 class="mb-0 text-primary">{{ performance }}</h5>
@@ -137,7 +145,7 @@
 
     <div class="card shadow-sm mt-4">
       <div class="card-header">
-        <h5 class="mb-0">Operating Time</h5>
+        <h5 class="mb-0">Operating Time </h5>
       </div>
       <div class="card-body">
         <div class="row g-3">
@@ -195,6 +203,8 @@ export default {
       quality: 0,
       idealCycleTime: 0,
       totalOutput: 0,
+      totalReject: 0,
+      goodCount: 0,
       operatingTime: 0,
       elapsed_minutes: 0,
       downtime: 0,
@@ -254,6 +264,8 @@ export default {
         const product = json.data || json;
         this.idealCycleTime = product.cycle_time || 0;
         this.totalOutput = product.total_output || 0;
+        this.totalReject = product.reject_output || 0;
+        this.goodCount = Math.max(0, this.totalOutput - this.totalReject);
         
         // Fetch PLC addresses for this product
         this.plcAddresses = {
@@ -277,7 +289,7 @@ export default {
         const data = await res.json();
         
         this.elapsed_minutes = data.breakdown.elapsed_minutes || 0;
-        this.downtime = data.downtime_minutes || 0;
+        // this.downtime = data.downtime_minutes || 0;
         
         // อัปเดตการคำนวณ OEE ทุกครั้งที่ดึงเวลาใหม่
         this.calculateOEE();
@@ -299,6 +311,8 @@ export default {
         if (!res.ok) throw new Error("Failed to load downtime products");
         const data = await res.json();
         this.downtimeProducts = data.data || data;
+        this.downtime = data.downtime_minutes
+        // console.log("Downtime products loaded:", this.downtimeProducts);  
       } catch (err) {
         console.error("Load downtime products error:", err);
       }
@@ -327,6 +341,7 @@ export default {
         this.availability = 0;
       } else {
         currentOperatingTime = Math.max(0, this.elapsed_minutes - this.downtime);
+        // alert(`Current Operating Time: ${currentOperatingTime} minutes (Elapsed: ${this.elapsed_minutes} - Downtime: ${this.downtime})`);
         this.availability = ((currentOperatingTime / this.elapsed_minutes) * 100).toFixed(2);
       }
 
@@ -339,8 +354,15 @@ export default {
         this.performance = (((this.idealCycleTime * this.totalOutput) / currentOperatingTime) * 100).toFixed(2);
       }
 
-      // 3. Quality Calculation (ตั้งค่าเริ่มต้นเป็น 100% ไปก่อนจนกว่าคุณจะมีข้อมูลของเสีย Defect)
-      this.quality = 100.00;
+      // 3. Quality Calculation
+      // Good Count = Total Output - Reject
+      // Quality = (Good Count / Total Output) * 100
+      this.goodCount = Math.max(0, this.totalOutput - this.totalReject);
+      if (this.totalOutput <= 0) {
+        this.quality = 0;
+      } else {
+        this.quality = ((this.goodCount / this.totalOutput) * 100).toFixed(2);
+      }
 
       // 4. Total OEE Calculation
       this.oee = ((this.availability * this.performance * this.quality) / 10000).toFixed(2);
