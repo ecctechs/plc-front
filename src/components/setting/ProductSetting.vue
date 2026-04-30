@@ -19,7 +19,7 @@
          </div>
          <div class="card-body">
            <div class="row g-3">
-             <div class="col-md-4">
+             <div class="col-md-3">
                <div class="mb-3 mb-md-0">
                  <label class="form-label fw-bold text-primary">
                    {{ locale.t('PLC Address (ON/OFF)') }}
@@ -33,7 +33,7 @@
                  <small class="text-muted">{{ locale.t('Address for product ON/OFF signal') }}</small>
                </div>
              </div>
-             <div class="col-md-4">
+             <div class="col-md-3">
                <div class="mb-3 mb-md-0">
                  <label class="form-label fw-bold text-success">
                    {{ locale.t('PLC Address (Running)') }}
@@ -47,7 +47,7 @@
                  <small class="text-muted">{{ locale.t('Address for product running status') }}</small>
                </div>
              </div>
-              <div class="col-md-4">
+              <div class="col-md-3">
                <div class="mb-3 mb-md-0">
                  <label class="form-label fw-bold text-warning">
                    {{ locale.t('PLC Address (Complete)') }}
@@ -59,6 +59,21 @@
                    :placeholder="locale.t('e.g. M10, DB100.DBX0.0')"
                  >
                  <small class="text-muted">{{ locale.t('Address for product complete status') }}</small>
+               </div>
+             </div>
+              <div class="col-md-3">
+               <div class="mb-3 mb-md-0">
+                 <label class="form-label fw-bold text-danger">
+                   {{ locale.t('PLC Address (Reject)') }}
+                 </label>
+                 <input 
+                   type="text" 
+                   class="form-control form-control-lg" 
+                   v-model="plcAddresses.plc_address_reject"
+                   :placeholder="locale.t('e.g. M10, DB100.DBX0.0')"
+                 >
+                 <small class="text-muted">{{ locale.t('Address for product reject signal') }}</small>
+                 
                </div>
              </div>
            </div>
@@ -142,10 +157,11 @@ export default {
   data() {
     return {
       products: [],
-plcAddresses: {
+      plcAddresses: {
          plc_address_output: "",
          plc_address_active: "",
-         plc_address_complete: ""
+         plc_address_complete: "",
+         plc_address_reject: ""
        },
       savingPlc: false
     };
@@ -175,8 +191,8 @@ plcAddresses: {
           this.plcAddresses = {
             plc_address_output: json.plc_address_output || "",
             plc_address_active: json.plc_address_active || "",
-            plc_address_complete: json.plc_address_complete || ""
-            
+            plc_address_complete: json.plc_address_complete || "",
+            plc_address_reject: json.plc_address_reject || ""
           };
         }
       } catch (err) {
