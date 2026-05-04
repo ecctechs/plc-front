@@ -4,14 +4,14 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
         <h2 class="page-title fw-bold text-primary mb-1">
-          <i class="bi bi-bar-chart-line-fill me-2"></i>OEE Dashboard
+          <i class="bi bi-bar-chart-line-fill me-2"></i>{{ locale.t('OEE Dashboard') }}
         </h2>
-        <p class="text-muted mb-0">Overall Equipment Effectiveness Monitoring</p>
+        <p class="text-muted mb-0">{{ locale.t('Overall Equipment Effectiveness Monitoring') }}</p>
       </div>
       
       <div class="card shadow-sm border-0 bg-white" style="min-width: 300px;">
         <div class="card-body p-3">
-          <label class="form-label text-muted small fw-bold mb-1">SELECT PRODUCT</label>
+          <label class="form-label text-muted small fw-bold mb-1">{{ locale.t('SELECT PRODUCT') }}</label>
           <select class="form-select form-select-lg" v-model="selectedProductId" @change="loadProductData">
             <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
@@ -24,11 +24,11 @@
       <div class="col-12">
         <div class="card shadow border-0 bg-primary text-white">
           <div class="card-body text-center py-4">
-            <h5 class="text-white-50 text-uppercase fw-bold tracking-wide">Overall Equipment Effectiveness</h5>
+            <h5 class="text-white-50 text-uppercase fw-bold tracking-wide">{{ locale.t('Overall Equipment Effectiveness') }}</h5>
             <h1 class="display-1 fw-bold mb-3">{{ oee }}<span class="fs-3">%</span></h1>
             
             <div class="d-inline-flex align-items-center bg-white bg-opacity-10 rounded-pill px-4 py-2">
-              <span class="fs-5">OEE = </span>
+              <span class="fs-5">{{ locale.t('OEE = ') }}</span>
               <span class="fs-5 ms-2 text-info fw-bold">A</span> 
               <span class="mx-2 text-white-50">×</span> 
               <span class="fs-5 text-warning fw-bold">P</span> 
@@ -50,19 +50,19 @@
         <div class="card shadow-sm border-0 h-100 border-top border-info border-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <h5 class="card-title text-muted fw-bold">Availability</h5>
+              <h5 class="card-title text-muted fw-bold">{{ locale.t('Availability') }}</h5>
               <h2 class="text-info fw-bold mb-0">{{ availability }}%</h2>
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> สูตรคำนวณ:</p>
-              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">Operating Time / Planned Time</code>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('Operating Time / Planned Time') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> แทนค่าจริง:</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border">
-                <span class="text-info fw-bold">{{ operatingTime.toFixed(2) }} min</span>
-                <span class="text-muted mx-2">÷</span>
-                <span class="text-secondary fw-bold">{{ elapsed_minutes }} min</span>
+                <span class="text-info fw-bold">{{ operatingTime.toFixed(2) }} {{ locale.t('min') }}</span>
+                <span class="text-muted mx-2">{{ locale.t('÷') }}</span>
+                <span class="text-secondary fw-bold">{{ elapsed_minutes }} {{ locale.t('min') }}</span>
               </div>
             </div>
           </div>
@@ -74,22 +74,22 @@
         <div class="card shadow-sm border-0 h-100 border-top border-warning border-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <h5 class="card-title text-muted fw-bold">Performance</h5>
+              <h5 class="card-title text-muted fw-bold">{{ locale.t('Performance') }}</h5>
               <h2 class="text-warning fw-bold mb-0">{{ performance }}%</h2>
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> สูตรคำนวณ:</p>
-              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">(Ideal Cycle Time × Total Output) / Operating Time</code>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('(Ideal Cycle Time × Total Output) / Operating Time') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> แทนค่าจริง:</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border text-center">
                 <span>
                   <span class="text-warning fw-bold">({{ idealCycleTime }}</span>
-                  <span class="text-muted mx-1">×</span>
+                  <span class="text-muted mx-1">{{ locale.t('×') }}</span>
                   <span class="text-warning fw-bold">{{ totalOutput }})</span>
                 </span>
-                <span class="text-muted mx-2">÷</span>
+                <span class="text-muted mx-2">{{ locale.t('÷') }}</span>
                 <span class="text-secondary fw-bold">{{ operatingTime.toFixed(2) }}</span>
               </div>
             </div>
@@ -102,19 +102,19 @@
         <div class="card shadow-sm border-0 h-100 border-top border-success border-4">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <h5 class="card-title text-muted fw-bold">Quality</h5>
+              <h5 class="card-title text-muted fw-bold">{{ locale.t('Quality') }}</h5>
               <h2 class="text-success fw-bold mb-0">{{ quality }}%</h2>
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> สูตรคำนวณ:</p>
-              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">Good Count / Total Output</code>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('Good Count / Total Output') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> แทนค่าจริง:</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border">
-                <span class="text-success fw-bold">{{ goodCount }} pcs</span>
-                <span class="text-muted mx-2">÷</span>
-                <span class="text-secondary fw-bold">{{ totalOutput }} pcs</span>
+                <span class="text-success fw-bold">{{ goodCount }} {{ locale.t('pcs') }}</span>
+                <span class="text-muted mx-2">{{ locale.t('÷') }}</span>
+                <span class="text-secondary fw-bold">{{ totalOutput }} {{ locale.t('pcs') }}</span>
               </div>
             </div>
           </div>
@@ -128,43 +128,43 @@
       <div class="col-md-6">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Time Breakdown</h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>{{ locale.t('Time Breakdown') }}</h5>
           </div>
           <div class="card-body">
             <div class="row text-center g-3">
               <div class="col-4">
                 <div class="p-3 bg-light rounded h-100 border">
-                  <h6 class="text-muted small">Planned Time</h6>
+                  <h6 class="text-muted small">{{ locale.t('Planned Time') }}</h6>
                   <h4 class="mb-0">{{ elapsed_minutes }}</h4>
-                  <small class="text-muted">mins</small>
+                  <small class="text-muted">{{ locale.t('mins') }}</small>
                 </div>
               </div>
               <div class="col-4">
                 <div class="p-3 bg-danger bg-opacity-10 rounded h-100 border border-danger border-opacity-25">
-                  <h6 class="text-danger small">Downtime</h6>
+                  <h6 class="text-danger small">{{ locale.t('Downtime') }}</h6>
                   <h4 class="text-danger mb-0">{{ downtime }}</h4>
-                  <small class="text-danger">mins</small>
+                  <small class="text-danger">{{ locale.t('mins') }}</small>
                 </div>
               </div>
               <div class="col-4">
                 <div class="p-3 bg-info bg-opacity-10 rounded h-100 border border-info border-opacity-25">
-                  <h6 class="text-info small">Operating Time</h6>
+                  <h6 class="text-info small">{{ locale.t('Operating Time') }}</h6>
                   <h4 class="text-info mb-0">{{ operatingTime.toFixed(2) }}</h4>
-                  <small class="text-info">mins</small>
+                  <small class="text-info">{{ locale.t('mins') }}</small>
                 </div>
               </div>
             </div>
 
             <!-- Downtime Details List -->
             <div v-if="downtimeProducts.length > 0" class="mt-3 p-3 bg-light rounded border" style="max-height: 150px; overflow-y: auto;">
-              <h6 class="text-muted small fw-bold mb-2">Downtime Details:</h6>
+              <h6 class="text-muted small fw-bold mb-2">{{ locale.t('Downtime Details:') }}</h6>
               <div v-for="item in downtimeProducts" :key="item.id" class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
                 <div>
                   <span class="fw-bold text-dark">{{ item.product_name || item.name || '-' }}</span>
                   <br>
                   <small class="text-muted">{{ item.start_time || '-' }} - {{ item.end_time || '-' }}</small>
                 </div>
-                <span class="badge bg-danger rounded-pill">{{ item.duration || '-' }} min</span>
+                <span class="badge bg-danger rounded-pill">{{ item.duration || '-' }} {{ locale.t('min') }}</span>
               </div>
             </div>
           </div>
@@ -175,22 +175,22 @@
       <div class="col-md-6">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam me-2 text-primary"></i>Production Output</h5>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam me-2 text-primary"></i>{{ locale.t('Production Output') }}</h5>
           </div>
           <div class="card-body">
             <div class="row text-center g-3 mb-3">
               <div class="col-4">
                 <div class="p-3 bg-light rounded h-100 border">
-                  <h6 class="text-muted small">Total Output</h6>
+                  <h6 class="text-muted small">{{ locale.t('Total Output') }}</h6>
                   <h4 class="mb-0">{{ totalOutput }}</h4>
-                  <small class="text-muted">pcs</small>
+                  <small class="text-muted">{{ locale.t('pcs') }}</small>
                 </div>
               </div>
               <div class="col-4">
                 <div class="p-3 bg-danger bg-opacity-10 rounded h-100 border border-danger border-opacity-25">
-                  <h6 class="text-danger small">Reject</h6>
+                  <h6 class="text-danger small">{{ locale.t('Reject') }}</h6>
                   <h4 class="text-danger mb-0">{{ totalReject }}</h4>
-                  <small class="text-danger">pcs</small>
+                  <small class="text-danger">{{ locale.t('pcs') }}</small>
                 </div>
               </div>
               <div class="col-4">
