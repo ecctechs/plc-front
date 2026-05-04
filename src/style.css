@@ -1,10 +1,93 @@
 /* ===== Import Shared Styles ===== */
 @import './assets/shared-styles.css';
 
-/* ===== Table Styles for Language Toggle ===== */
+/* ===== Table Styles - Minimalist Blue-White Theme ===== */
+/* Fixed layout prevents column width shifts on language/content change */
 .table {
   table-layout: fixed;
   width: 100%;
+  margin-bottom: 0;
+  border: 1.5px solid var(--dash-card-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Blue header - override Bootstrap dark/light themes */
+.table thead.table-blue {
+  --bs-table-bg: var(--dash-accent);
+  --bs-table-accent-bg: transparent;
+  --bs-table-border-color: rgba(255,255,255,0.15);
+  background-color: var(--dash-accent) !important;
+  color: #ffffff !important;
+}
+
+.table thead.table-blue tr,
+.table thead.table-blue th {
+  background-color: var(--dash-accent) !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  box-shadow: none !important;
+}
+
+/* Header cell styling - compact and minimal */
+.table thead.table-blue th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.15) !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  vertical-align: middle;
+  background-color: var(--dash-accent) !important;
+}
+
+/* No right border on last header cell */
+.table thead.table-blue th:last-child {
+  border-right: none !important;
+}
+
+/* Body rows - clean hover effect */
+.table tbody tr {
+  vertical-align: middle;
+  transition: background-color 0.12s ease;
+}
+
+/* Hover uses light blue background from theme */
+.table tbody tr:hover {
+  background-color: var(--dash-page-bg) !important;
+}
+
+/* Body cells - consistent sizing for language stability */
+.table tbody td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.65rem 0.75rem;
+  border-color: var(--dash-card-border);
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+/* Table responsive wrapper - maintain border radius */
+.table-responsive {
+  overflow-x: auto;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Ensure borders don't cause layout shift */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Minimalist row border (optional - can be commented out for super minimal) */
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--dash-card-border);
 }
 
 .table thead th {

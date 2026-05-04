@@ -20,28 +20,38 @@
     </div>
 
     <!-- MAIN OEE SCORE -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card shadow border-0 bg-primary text-white">
-          <div class="card-body text-center py-4">
-            <h5 class="text-white-50 text-uppercase fw-bold tracking-wide">{{ locale.t('Overall Equipment Effectiveness') }}</h5>
-            <h1 class="display-1 fw-bold mb-3">{{ oee }}<span class="fs-3">%</span></h1>
-            
-            <div class="d-inline-flex align-items-center bg-white bg-opacity-10 rounded-pill px-4 py-2">
-              <span class="fs-5">{{ locale.t('OEE = ') }}</span>
-              <span class="fs-5 ms-2 text-info fw-bold">A</span> 
-              <span class="mx-2 text-white-50">×</span> 
-              <span class="fs-5 text-warning fw-bold">P</span> 
-              <span class="mx-2 text-white-50">×</span> 
-              <span class="fs-5 text-success fw-bold">Q</span>
-            </div>
-            <div class="mt-2 text-white-50 small">
-              {{ (availability/100).toFixed(2) }} × {{ (performance/100).toFixed(2) }} × {{ (quality/100).toFixed(2) }} = {{ (oee/100).toFixed(2) }}
-            </div>
+<div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 oee-card bg-white">
+        <div class="card-body text-center py-5">
+          <!-- หัวข้อ -->
+          <h6 class="text-uppercase fw-bold oee-subtitle mb-3">
+            {{ locale.t('Overall Equipment Effectiveness') }}
+          </h6>
+          
+          <!-- ตัวเลขหลัก OEE -->
+          <h1 class="display-1 fw-bolder oee-value mb-4">
+            {{ oee }}<span class="fs-3 text-muted ms-1">%</span>
+          </h1>
+          
+          <!-- สูตรคำนวณแบบ Pill -->
+          <div class="d-inline-flex align-items-center formula-pill px-4 py-2 mb-2">
+            <span class="fs-6 text-muted fw-medium">{{ locale.t('OEE = ') }}</span>
+            <span class="fs-5 ms-3 text-theme-blue fw-bold">A</span> 
+            <span class="mx-2 text-muted fw-light">×</span> 
+            <span class="fs-5 text-theme-orange fw-bold">P</span> 
+            <span class="mx-2 text-muted fw-light">×</span> 
+            <span class="fs-5 text-theme-green fw-bold">Q</span>
+          </div>
+          
+          <!-- รายละเอียดตัวเลข -->
+          <div class="mt-2 text-muted small fw-medium">
+            {{ (availability/100).toFixed(2) }} × {{ (performance/100).toFixed(2) }} × {{ (quality/100).toFixed(2) }} = {{ (oee/100).toFixed(2) }}
           </div>
         </div>
       </div>
     </div>
+  </div>
 
     <!-- 3 PILLARS: A, P, Q -->
     <div class="row g-4 mb-4">
@@ -453,4 +463,36 @@ code {
   color: #d63384;
   word-wrap: break-word;
 }
+
+/* การ์ดหลัก - พื้นขาว ขอบมน และเงาอมฟ้าอ่อนๆ */
+.oee-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.08) !important;
+  transition: transform 0.3s ease;
+}
+
+/* หัวข้อ - สีเทาอมฟ้า ให้ดูซอฟต์ ไม่แย่งความสนใจ */
+.oee-subtitle {
+  color: #64748b; 
+  letter-spacing: 1.5px;
+  font-size: 0.85rem;
+}
+
+/* ตัวเลข OEE - สีน้ำเงินเข้ม (Navy) ให้ตัดกับพื้นขาวชัดเจน */
+.oee-value {
+  color: #1e3a8a; 
+  letter-spacing: -2px;
+}
+
+/* กล่องสูตร (Pill) - พื้นหลังสีเทาอ่อนมากๆ เส้นขอบบางๆ */
+.formula-pill {
+  background-color: #f8fafc; 
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+}
+
+/* ปรับสีตัวอักษร A P Q ให้เป็นโทนพาสเทลที่ดูพรีเมียมขึ้น */
+.text-theme-blue { color: #3b82f6; }   /* ฟ้า */
+.text-theme-orange { color: #f59e0b; } /* ส้ม/เหลืองเข้ม */
+.text-theme-green { color: #10b981; }  /* เขียวมิ้นต์ */
 </style>

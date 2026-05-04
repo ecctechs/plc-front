@@ -13,7 +13,7 @@
       <!-- Table -->
       <div class="table-responsive rounded-3 border shadow-sm">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark">
+           <thead class="table-blue">
             <tr>
               <th class="ps-3 py-3" style="width: 25%">{{ locale.t('Device Type') }}</th>
               <th class="py-3 text-center" style="width: 15%">ON/OFF</th>
