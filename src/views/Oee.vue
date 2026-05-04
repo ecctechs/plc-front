@@ -220,51 +220,63 @@
       </div>
     </div>
 
-    <!-- PLC STATUS -->
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-bold text-muted"><i class="bi bi-cpu me-2"></i>PLC Real-time Status</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-3 text-center">
-          <!-- Output Status -->
-          <div class="col-md-4">
-            <div class="p-3 border rounded">
-              <h6 class="text-muted small text-uppercase">Output Signal</h6>
-              <div class="my-2">
-                <span v-if="latestPLCLog.plc_onoff_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
-                <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
-              </div>
-              <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_output || 'Address N/A' }}</small>
-            </div>
-          </div>
-          
-          <!-- Active Status -->
-          <div class="col-md-4">
-            <div class="p-3 border rounded border-info">
-              <h6 class="text-info small text-uppercase fw-bold">Active Model</h6>
-              <div class="my-2">
-                <span class="badge bg-info px-4 py-2 fs-5">{{ latestPLCLog.plc_active_value || '-' }}</span>
-              </div>
-              <small class="text-dark fw-bold d-block mb-1">{{ getProductNameById(latestPLCLog.plc_active_value) }}</small>
-              <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_active || 'Address N/A' }}</small>
-            </div>
-          </div>
-          
-          <!-- Complete Status -->
-          <div class="col-md-4">
-            <div class="p-3 border rounded">
-              <h6 class="text-muted small text-uppercase">Complete Signal</h6>
-              <div class="my-2">
-                <span v-if="latestPLCLog.plc_complete_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
-                <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
-              </div>
-              <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_complete || 'Address N/A' }}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+     <!-- PLC STATUS -->
+     <div class="card shadow-sm border-0">
+       <div class="card-header bg-white py-3">
+         <h5 class="mb-0 fw-bold text-muted"><i class="bi bi-cpu me-2"></i>PLC Real-time Status</h5>
+       </div>
+       <div class="card-body">
+         <div class="row g-3 text-center">
+           <!-- Output Status -->
+           <div class="col-md-3">
+             <div class="p-3 border rounded">
+               <h6 class="text-muted small text-uppercase">Output Signal</h6>
+               <div class="my-2">
+                 <span v-if="latestPLCLog.plc_onoff_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
+                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
+               </div>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_output || 'Address N/A' }}</small>
+             </div>
+           </div>
+           
+           <!-- Active Status -->
+           <div class="col-md-3">
+             <div class="p-3 border rounded border-info">
+               <h6 class="text-info small text-uppercase fw-bold">Active Model</h6>
+               <div class="my-2">
+                 <span class="badge bg-info px-4 py-2 fs-5">{{ latestPLCLog.plc_active_value || '-' }}</span>
+               </div>
+               <small class="text-dark fw-bold d-block mb-1">{{ getProductNameById(latestPLCLog.plc_active_value) }}</small>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_active || 'Address N/A' }}</small>
+             </div>
+           </div>
+           
+           <!-- Complete Status -->
+           <div class="col-md-3">
+             <div class="p-3 border rounded">
+               <h6 class="text-muted small text-uppercase">Complete Signal</h6>
+               <div class="my-2">
+                 <span v-if="latestPLCLog.plc_complete_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
+                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
+               </div>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_complete || 'Address N/A' }}</small>
+             </div>
+           </div>
+
+           <!-- Reject Status -->
+           <div class="col-md-3">
+             <div class="p-3 border rounded border-danger">
+               <h6 class="text-danger small text-uppercase fw-bold">Reject Signal</h6>
+               <div class="my-2">
+                 <span v-if="latestPLCLog.plc_reject_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
+                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
+               </div>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_reject || 'Address N/A' }}</small>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
 
   </div>
 </template>
@@ -290,18 +302,20 @@ export default {
       operatingTime: 0, // เพิ่มเข้ามาใน Data เพื่อให้ Template เรียกใช้ได้ง่าย
       elapsed_minutes: 0,
       downtime: 0,
-      plcAddresses: {
-        plc_address_output: null,
-        plc_address_active: null,
-        plc_address_complete: null
-      },
-      downtimeProducts: [],
-      latestPLCLog: {
-        plc_onoff_value: null,
-        plc_active_value: null,
-        plc_complete_value: null,
-        created_at: null
-      }
+       plcAddresses: {
+         plc_address_output: null,
+         plc_address_active: null,
+         plc_address_complete: null,
+         plc_address_reject: null
+       },
+       downtimeProducts: [],
+       latestPLCLog: {
+         plc_onoff_value: null,
+         plc_active_value: null,
+         plc_complete_value: null,
+         plc_reject_value: null,
+         created_at: null
+       }
     };
   },
   async mounted() {
@@ -349,11 +363,12 @@ export default {
         this.totalReject = product.reject_output || 0;
         this.goodCount = Math.max(0, this.totalOutput - this.totalReject);
         
-        this.plcAddresses = {
-          plc_address_output: product.plc_address_output || null,
-          plc_address_active: product.plc_address_active || null,
-          plc_address_complete: product.plc_address_complete || null
-        };
+         this.plcAddresses = {
+           plc_address_output: product.plc_address_output || null,
+           plc_address_active: product.plc_address_active || null,
+           plc_address_complete: product.plc_address_complete || null,
+           plc_address_reject: product.plc_address_reject || null
+         };
         
         this.calculateOEE();
       } catch (err) {
@@ -400,14 +415,15 @@ export default {
         const res = await fetch(`${BASE_API}/api/products/latest-log`);
         if (!res.ok) throw new Error("Failed to load latest PLC log");
         const data = await res.json();
-        if (data.success && data.data) {
-          this.latestPLCLog = {
-            plc_onoff_value: data.data.plc_onoff_value,
-            plc_active_value: data.data.plc_active_value,
-            plc_complete_value: data.data.plc_complete_value,
-            created_at: data.data.created_at
-          };
-        }
+         if (data.success && data.data) {
+           this.latestPLCLog = {
+             plc_onoff_value: data.data.plc_onoff_value,
+             plc_active_value: data.data.plc_active_value,
+             plc_complete_value: data.data.plc_complete_value,
+             plc_reject_value: data.data.plc_reject_value,
+             created_at: data.data.created_at
+           };
+         }
       } catch (err) {
         console.error("Load latest PLC log error:", err);
       }
