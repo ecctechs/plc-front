@@ -4,13 +4,14 @@
       <div class="modal-content border-0 shadow-lg">
         <!-- Header -->
         <div class="modal-header modal-header-custom">
-          <h5 class="modal-title modal-title-custom fw-bold">{{ editingCard ? locale.t('Edit Card') : locale.t('Add Card') }}</h5>
+          <h5 class="modal-title modal-title-custom fw-bold">
+            {{ editingCard ? locale.t('Edit Card') : locale.t('Add Card') }}
+          </h5>
           <button class="btn-close" @click="$emit('close')"></button>
         </div>
 
         <!-- Body -->
         <div class="modal-body">
-
           <!-- Room -->
           <div class="mb-3">
             <label class="form-label fw-bold">{{ locale.t('Room') }}</label>
@@ -26,12 +27,8 @@
           <div class="mb-3">
             <label class="form-label fw-bold">{{ locale.t('Device') }}</label>
             <select class="form-select" v-model="selectedDeviceId">
-              <option disabled value="">Select {{ locale.t('Device') }}</option>
-              <option
-                v-for="d in devices"
-                :key="d.id"
-                :value="d.id"
-              >
+              <option disabled value="">{{ locale.current === 'th' ? '– เลือก Device --' : '-- Select Device --' }}</option>
+              <option v-for="d in devices" :key="d.id" :value="d.id">
                 {{ d.name }}
               </option>
             </select>
@@ -45,25 +42,17 @@
               v-model="selectedAddressId"
               :disabled="!selectedDeviceId"
             >
-              <option disabled value="">Select {{ locale.t('Address') }}</option>
-              <option
-                v-for="a in filteredAddresses"
-                :key="a.id"
-                :value="a.id"
-              >
+              <option disabled value="">{{ locale.current === 'th' ? '– เลือก Address --' : '-- Select Address --' }}</option>
+              <option v-for="a in filteredAddresses" :key="a.id" :value="a.id">
                 {{ a.label }} ({{ a.plc_address }})
               </option>
-
             </select>
           </div>
 
           <!-- Display Type -->
           <div class="mb-3" v-if="selectedAddress">
             <label class="form-label fw-bold">Display {{ locale.t('Type') }}</label>
-            <select
-              class="form-select"
-              v-model="selectedDisplayType"
-            >
+            <select class="form-select" v-model="selectedDisplayType">
               <option disabled value="">{{ locale.current === 'th' ? '– Select ประเภท Display --' : '-- Select Display Type --' }}</option>
               <option value="onoff">ON/OFF</option>
               <option value="number">Number</option>
@@ -76,42 +65,31 @@
           <div class="mb-3" v-if="selectedAddress">
             <label class="form-label fw-bold">{{ locale.t('Insert Position') }}</label>
             <select class="form-select" v-model.number="selectedPosition">
-              <option
-                v-for="n in parseInt(currentCardCount) + 1"
-                :key="n"
-                :value="n"
-              >
+              <option v-for="n in parseInt(currentCardCount) + 1" :key="n" :value="n">
                 Position {{ n }} {{ n === parseInt(currentCardCount) + 1 ? '(End)' : '' }}
               </option>
             </select>
           </div>
-
-          <!-- Validation Error -->
-          <div v-if="validationError" class="alert alert-warning py-2">
-            {{ validationError }}
-          </div>
-
         </div>
 
         <!-- Footer -->
         <div class="modal-footer">
-          <button class="btn btn-outline-secondary" @click="$emit('close')">
+          <button class="btn btn-outline-secondary" @click="$emit('close')" :disabled="isLoading">
             {{ locale.t('Cancel') }}
           </button>
-          <button
-            class="btn btn-primary"
-            @click="submit"
-          >
-            {{ editingCard ? locale.t('Save Changes') : locale.t('Add Card') }}
+          <button class="btn btn-primary" :disabled="isLoading" @click="submit">
+            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isLoading ? (locale.current === 'th' ? 'กำลังบันทึก...' : 'Saving...') : (editingCard ? locale.t('Save Changes') : locale.t('Add Card')) }}
           </button>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { showAlert, showConfirm } from "../utils/swalHelper";
+
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
@@ -141,7 +119,7 @@ export default {
       selectedPosition: 1,
       devices: [],
       rooms: [],
-      validationError: ""
+      isLoading: false
     };
   },
 
@@ -155,7 +133,7 @@ export default {
       const roomsData = await roomsRes.json();
       this.devices = devicesData;
       this.rooms = roomsData.data || roomsData || [];
-      
+
       if (this.editingCard) {
         this.form.room_id = this.editingCard.device.room_id || "";
         for (const device of this.devices) {
@@ -172,6 +150,7 @@ export default {
     } catch (err) {
       console.error("Failed to load devices:", err);
       this.devices = [];
+      this.rooms = [];
     }
   },
 
@@ -181,9 +160,7 @@ export default {
     },
 
     selectedDevice() {
-      return this.devices.find(
-        d => d.id === this.selectedDeviceId
-      );
+      return this.devices.find(d => d.id === this.selectedDeviceId);
     },
 
     filteredAddresses() {
@@ -191,9 +168,7 @@ export default {
     },
 
     selectedAddress() {
-      return this.filteredAddresses.find(
-        a => a.id === this.selectedAddressId
-      );
+      return this.filteredAddresses.find(a => a.id === this.selectedAddressId);
     }
   },
 
@@ -208,54 +183,112 @@ export default {
       if (!this.selectedDisplayType) {
         return this.locale.current === 'th' ? 'กรุณาเลือก Display Type' : 'Please select a Display Type';
       }
+      if (!this.selectedPosition || this.selectedPosition < 1) {
+        return this.locale.current === 'th' ? 'กรุณาเลือกตำแหน่งที่ถูกต้อง' : 'Please select a valid position';
+      }
       return "";
     },
 
     async submit() {
+      // Validation
       const error = this.getValidationError();
       if (error) {
-        this.validationError = error;
+        await showAlert(
+          this.locale.current === 'th' ? 'ข้อมูลไม่ครบถ้วน' : 'Incomplete Data',
+          error,
+          'warning'
+        );
         return;
       }
-      this.validationError = "";
 
-      if (this.isEditMode) {
-        this.$emit('update', {
-          selectedDeviceId: this.selectedDeviceId,
-          selectedAddressId: this.selectedAddressId,
-          selectedDisplayType: this.selectedDisplayType,
-          selectedPosition: this.selectedPosition,
-        });
+      this.isLoading = true;
 
-        if (this.selectedDeviceId) {
-          await fetch(`${BASE_API}/api/devices/${this.selectedDeviceId}`, {
+      try {
+        if (this.isEditMode) {
+          // Update existing dashboard card
+          const response = await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_id: this.form.room_id ? parseInt(this.form.room_id) : null })
-          });
-        }
-      } else {
-        try {
-          await fetch(`${BASE_API}/api/dashboard/cards`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              address_id: this.selectedAddress.id,
+              address_id: this.selectedAddressId,
               display_type: this.selectedDisplayType,
               position: this.selectedPosition
             })
           });
-          
-          this.$emit("add", {
-            address_id: this.selectedAddress.id,
-            display_type: this.selectedDisplayType
+
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถอัปเดตการ์ดได้' : 'Failed to update card'));
+          }
+
+          // Show success popup
+          await showAlert(
+            this.locale.current === 'th' ? 'สำเร็จ!' : 'Success!',
+            this.locale.current === 'th' ? 'อัปเดตการ์ดสำเร็จ' : 'Card updated successfully',
+            'success'
+          );
+
+          this.$emit('update', {
+            selectedDeviceId: this.selectedDeviceId,
+            selectedAddressId: this.selectedAddressId,
+            selectedDisplayType: this.selectedDisplayType,
+            selectedPosition: this.selectedPosition,
           });
-        } catch (err) {
-          console.error("Failed to add card:", err);
+
+        } else {
+          // Add new dashboard card
+          const response = await fetch(`${BASE_API}/api/dashboard/cards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address_id: this.selectedAddressId,
+              display_type: this.selectedDisplayType,
+              position: this.selectedPosition
+            })
+          });
+
+          if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถเพิ่มการ์ดได้' : 'Failed to add card'));
+          }
+
+          // Show success popup
+          await showAlert(
+            this.locale.current === 'th' ? 'สำเร็จ!' : 'Success!',
+            this.locale.current === 'th' ? 'เพิ่มการ์ดลงแดชบอร์ดแล้ว' : 'Card added to dashboard',
+            'success'
+          );
+
+          this.$emit("add", {
+            address_id: this.selectedAddressId,
+            display_type: this.selectedDisplayType,
+            position: this.selectedPosition
+          });
         }
+
+        // Close modal after success
+        this.$emit('close');
+
+      } catch (err) {
+        console.error(this.locale.current === 'th' ? 'เกิดข้อผิดพลาด:' : 'Error:', err);
+        // Show error popup
+        await showAlert(
+          this.locale.current === 'th' ? 'เกิดข้อผิดพลาด' : 'Error',
+          err.message || (this.locale.current === 'th' ? 'กรุณาลองใหม่อีกครั้ง' : 'Please try again'),
+          'error'
+        );
+      } finally {
+        this.isLoading = false;
       }
     }
   }
 };
-
 </script>
+
+<style scoped>
+/* Modal backdrop animation support */
+.modal-backdrop-custom {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+</style>
