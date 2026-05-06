@@ -1,154 +1,83 @@
 # ⚡ PLC Web Dashboard
 
-เว็บแอปพลิเคชันสำหรับ Monitoring, Simulation และ Alarm Management ของระบบ PLC
-ออกแบบมาเพื่อใช้งานจริงในโรงงาน / ระบบอุตสาหกรรม และสามารถ Demo ได้โดยไม่ต้องเชื่อมต่อ PLC จริง
+**PLC Web Dashboard** เป็นเว็บแอปพลิเคชันระดับ Industrial-grade สำหรับการ Monitoring, Simulation และ Alarm Management ของระบบ **PLC (Programmable Logic Controller)** ออกแบบมาเพื่อเพิ่มประสิทธิภาพในการเฝ้าติดตามกระบวนการผลิต พร้อมความสามารถในการจำลองสถานการณ์ (Demo Mode) โดยไม่ต้องเชื่อมต่ออุปกรณ์จริง
 
 ---
 
-## 🚀 Features Overview
+## 🚀 ฟีเจอร์หลัก (Key Features)
 
-* 📊 Real-time Device Dashboard
-* ⚙️ Flexible Device & PLC Configuration
-* 🧪 Simulation (Demo Mode)
-* 🚨 Alarm Management & History
-* ⏱ Global Working Time Control
-* 📈 Performance & Data Visualization
-
----
-
-## 📊 Dashboard
-
-* แสดงอุปกรณ์แบบ **Card Layout**
-* รองรับหลาย Data Type
-
-  * 🔴 **ON / OFF**
-  * 🔢 **Number**
-  * 🎛 **Number Gauge**
-  * 📶 **Level**
-* แสดงสถานะการเชื่อมต่อ (Online / Offline)
-* แสดงค่า Current Value แบบ Real-time
-* ปุ่ม **More Info** สำหรับดูรายละเอียด
-* ปุ่ม **Chart** สำหรับดูกราฟย้อนหลัง
-* Responsive Design รองรับทุกขนาดหน้าจอ
+* 📊 **Real-time Dashboard**: แสดงผลสถานะอุปกรณ์แบบ Card Layout รองรับข้อมูลหลายประเภท (ON/OFF, Number, Gauge, Level)
+* ⚙️ **Flexible Configuration**: ตั้งค่า Device และ PLC Address (เช่น M0, D0) ได้อย่างอิสระผ่าน UI
+* 🧪 **Demo Mode (Simulation)**: จำลองค่า Input/Output เพื่อทดสอบระบบหรือนำเสนอผลงาน
+* 🚨 **Alarm Management**: ระบบแจ้งเตือนตามเงื่อนไขที่กำหนด พร้อมหน้าประวัติ (Alarm History)
+* ⏱️ **Working Time Control**: กำหนดเวลาทำงานของระบบ (Global Rule) สำหรับการวิเคราะห์ข้อมูลอย่างแม่นยำ
+* 📈 **Data Visualization**: แสดงกราฟข้อมูลย้อนหลัง (Time-series) ด้วย Chart.js และ ApexCharts
 
 ---
 
-## ⚙️ Device Setting
+## 🖥️ รายละเอียดเมนูและหน้าจอการใช้งาน (Module Details)
 
-* เพิ่ม / แก้ไข / ลบ Device
-* ตั้งค่าอุปกรณ์
+แอปพลิเคชันทำงานแบบ **Single Page Application (SPA)** ใช้ระบบ Tab-based Navigation:
 
-  * Device Name
-  * Device Type
-  * Data Display Type
-* ตั้งค่า PLC Address
+### 1. 🏠 หน้า Dashboard (Main Monitor)
+ใช้สำหรับเฝ้าติดตามสถานะอุปกรณ์แบบ Real-time
+* **Card Layout**: ปรับแต่งลำดับ (Position) และเลือกประเภทการแสดงผลได้อิสระ
+* **Display Types**: 
+    * `ON/OFF`: แสดงสถานะด้วยไฟสัญญาณ (Indicator)
+    * `Number`: แสดงค่าตัวเลขพร้อมหน่วยวัด
+    * `Gauge`: แสดงค่าในรูปแบบเข็มไมล์ (Radial Gauge)
+    * `Level`: แสดงระดับสถานะตามช่วงค่าที่ตั้งไว้ (Status Bar)
+* **Quick Actions**: ปุ่มดูกราฟย้อนหลัง (Chart) และรายละเอียดเชิงลึก (More Info)
+* **Edit Mode**: สามารถเพิ่ม ลบ หรือย้ายตำแหน่งการ์ดได้ทันที
 
-  * Address (เช่น D0, M0)
-  * Refresh Rate (ms)
-* PLC Address Debug
+### 2. 🎮 หน้า Interaction (Visual Control)
+เน้นการแสดงผลแบบ Interactive บนภาพจำลองเครื่องจักร
+* **Background Layout**: เลือกภาพพื้นหลังเครื่องจักร (Machine Image) ได้เอง
+* **Interactive Elements**: วางปุ่มกด (Control Button), ไฟสถานะ (Status Lamp), หรือเกจวัด ลงบนตำแหน่งบนภาพ
+* **Manual Control**: คลิกสั่งงาน PLC (Start/Stop) หรือจำลองสถานะได้จากหน้าจอ
 
-  * ▶️ Test (อ่านค่าครั้งเดียว)
-  * 🔄 Poll (อ่านค่าแบบ Real-time)
+### 3. 📊 หน้า OEE Dashboard (Productivity)
+วิเคราะห์ประสิทธิภาพการผลิต (Overall Equipment Effectiveness)
+* **Analysis**: แสดงค่า Availability, Performance และ Quality
+* **Time Breakdown**: วิเคราะห์เวลาผลิต (Planned Time) และเวลาหยุดเครื่อง (Downtime)
+* **Output**: สรุปยอดผลผลิตทั้งหมด, ของดี (Good) และของเสีย (Reject)
 
----
+### 4. ⚙️ หน้า Setting (Configuration)
+ศูนย์กลางการกำหนดค่าระบบ
+* **Device Setting**: จัดการ PLC Address (เช่น M0, D100) และ Refresh Rate
+* **Alarm Config**: ตั้งเงื่อนไขแจ้งเตือน (Thresholds) และการส่ง Email
+* **Working Time**: กำหนดเวลาทำงานและเวลาพักเพื่อใช้คำนวณ OEE
+* **PLC Debug**: เครื่องมือสำหรับทดสอบอ่านค่าจาก PLC โดยตรง
 
-## 📈 Level Configuration
+### 5. 📜 หน้า Alarm History (Logs)
+ตรวจสอบเหตุการณ์ผิดปกติย้อนหลัง
+* **Event Logs**: บันทึกการเกิด Alarm และการคืนสู่สภาวะปกติ (Recovery)
+* **Filter**: ค้นหาตามชื่ออุปกรณ์, โซน (Room) หรือช่วงเวลา
+* **Contextual Chart**: ย้อนดูกราฟในช่วงเวลาที่เกิดเหตุการณ์ได้ทันที
 
-* ตั้งค่า Level ได้หลายช่วง (Multi-Level)
-* รองรับเงื่อนไข
-
-  * Exact Value
-  * Between
-  * More Than / Less Than
-* กำหนด Min / Max / Value ต่อ Level
-* เพิ่ม / ลบ Level แบบ Dynamic
-* ใช้ Level ร่วมกับ Logic การแสดงผลและ Alarm
-
----
-
-## ⏱ Working Time Setting (Global)
-
-* ตั้งค่าวันทำงาน (Mon – Sun)
-* ตั้งเวลาเริ่ม / เลิกงาน
-* ตั้งเวลา Break (Optional)
-* ใช้เป็น Global Rule สำหรับ Alarm และ Event
-* บันทึกค่าแบบรวมศูนย์ (Global Setting)
-
----
-
-## 🧪 Demo Mode (Simulation)
-
-* เปิด / ปิด Simulation Mode
-* จำลองการทำงานโดยไม่ต้องต่อ PLC จริง
-* รองรับทุก Data Type
-
-  * ON / OFF → ปุ่มควบคุม
-  * Number / Level → Slider + Input
-  * Number Gauge → Slider
-* เหมาะสำหรับ
-
-  * Demo ลูกค้า
-  * ทดสอบ Alarm Logic
-  * พัฒนา Frontend
+### 6. 🧪 หน้า Demo / Simulation (Testing)
+ทดสอบระบบโดยไม่ต้องต่อ PLC จริง
+* **Manual Override**: ปรับค่า Slider หรือเปิด-ปิดสถานะเพื่อทดสอบ Logic
+* **Random Mode**: สุ่มค่าอุปกรณ์ทุกตัวเพื่อทดสอบ Stress Test ของระบบ Dashboard
 
 ---
 
-## 🚨 Alarm Settings
+## 🛠 Tech Stack
 
-* ตั้งค่า Alarm ต่อ Device
-* กำหนด
-
-  * Alarm Name
-  * Condition (>, >=, <, <=, =)
-  * Threshold Value
-* รองรับ Email Notification
-* แยก Alarm Rule ออกจาก Device ชัดเจน
-
----
-
-## 📜 Alarm History
-
-* แสดงประวัติ Alarm จาก PLC
-* แสดงข้อมูล
-
-  * Device Name
-  * Alarm Name
-  * Condition
-  * Threshold
-  * Actual Value
-  * Event Type (Trigger / Recovery)
-  * Timestamp
-* ค้นหาด้วยช่วงวันที่ (Start / End Date)
-* แสดง Empty State เมื่อไม่มีข้อมูล
+| Category | Technology |
+| :--- | :--- |
+| **Frontend** | Vue 3 (Composition API), Vite |
+| **Styling** | Bootstrap 5 (Modern Industrial Theme) |
+| **UI Framework** | Font Awesome 6, SweetAlert2 |
+| **Charts** | Chart.js, ApexCharts, Canvas-gauges |
+| **Utilities** | Axios, Date-fns |
 
 ---
 
-## 📉 Performance (Analytics)
-
-* โครงสร้างแยกตาม Data Type
-* รองรับกราฟ
-
-  * ON / OFF Analysis
-  * Number Trend
-  * Average / Min / Max
-* เลือกช่วงเวลาได้
-* Auto Refresh
-* ใช้ Chart.js
+## 🎨 UI/UX Design
+* **Theme**: Modern Industrial (โทนสี ฟ้า-กรม-ขาว)
+* **Localization**: รองรับ 2 ภาษา (ไทย / English)
+* **Responsiveness**: รองรับการแสดงผลทุกขนาดหน้าจอ (Desktop & Tablet)
 
 ---
-
-## 🧩 System Architecture
-
-* **Frontend:** Vue.js
-* Component-based Architecture
-* แยกหน้าการทำงานชัดเจน
-
-  * Dashboard
-  * Setting
-  * Performance
-  * Demo
-  * Alarm History
-* รองรับทั้ง PLC จริง และ Mock Data
-* ออกแบบให้ Scale เพิ่ม Device / Feature ได้ง่าย
-
----
+*Developed for Industrial Automation and Smart Factory Solutions.*
