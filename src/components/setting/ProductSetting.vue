@@ -11,8 +11,8 @@
        </div>
 
        <!-- PLC Address Card -->
-       <div class="card mb-4 border-primary">
-         <div class="card-header bg-primary text-white">
+       <div class="card mb-4 border-warning shadow-sm">
+         <div class="card-header bg-warning text-white">
            <h6 class="mb-0 fw-bold">
              <i class="bi bi-cpu me-2"></i>{{ locale.t('PLC Address Configuration') }}
            </h6>
@@ -94,7 +94,7 @@
        <!-- Table -->
       <div class="table-responsive rounded-3 border shadow-sm">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark">
+           <thead class="table-blue">
             <tr>
               <th class="ps-3 py-3">{{ locale.t('Model Name') }}</th>
               <th class="py-3 text-center">{{ locale.t('Image') }}</th>

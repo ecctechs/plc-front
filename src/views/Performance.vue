@@ -113,7 +113,7 @@
         <div class="card shadow-sm overflow-hidden mb-5">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 text-nowrap">
-              <thead class="table-light text-muted small">
+               <thead class="table-blue">
                 <tr>
                   <th class="ps-4">TIMESTAMP</th>
                   <th>VALUE</th>
