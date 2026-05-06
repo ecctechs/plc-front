@@ -43,8 +43,6 @@
 * **Interactive Elements**: วางปุ่มกด (Control Button), ไฟสถานะ (Status Lamp), หรือเกจวัด ลงบนตำแหน่งบนภาพ
 * **Manual Control**: คลิกสั่งงาน PLC (Start/Stop) หรือจำลองสถานะได้จากหน้าจอ
 
-<img width="1878" height="868" alt="Screenshot 2026-05-06 115707" src="https://github.com/user-attachments/assets/757446d7-3201-433b-b7b1-610d63c377dc" />
-
 ### 3. 📊 หน้า OEE Dashboard (Productivity)
 
 <img width="1878" height="868" alt="Screenshot 2026-05-06 115707" src="https://github.com/user-attachments/assets/b07249db-93bc-4bee-959b-c14e158cdf32" />
