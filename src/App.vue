@@ -1,5 +1,6 @@
 <template>
-  <div class="container-fluid mt-4">
+ <Login v-if="!isAuthenticated" />
+  <div v-else class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
       <ul class="nav nav-tabs mb-0">
         <li class="nav-item" v-for="t in ['dashboard', 'setting', 'oee', 'demo', 'alarmhistory' , 'interaction']" :key="t">
@@ -13,12 +14,22 @@
         </li>
       </ul>
 
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        @click="locale.toggle()"
-      >
-        <i class="bi bi-globe"></i> {{ locale.current === 'th' ? 'TH' : 'EN' }}
-      </button>
+      <div class="d-flex align-items-center gap-2">
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          @click="locale.toggle()"
+        >
+          <i class="fas fa-globe"></i> {{ locale.current === 'th' ? 'TH' : 'EN' }}
+        </button>
+        
+        <button
+          class="btn btn-outline-danger btn-sm"
+          @click="logout"
+          title="Logout"
+        >
+          <i class="fas fa-right-from-bracket"></i>
+        </button>
+      </div>
     </div>
 
     <div class="tab-content">
@@ -74,12 +85,13 @@ import Oee from "./views/Oee.vue";
 import Demo from "./views/Demo.vue";
 import AlarmHistory from "./views/AlarmHistory.vue";
 import Interaction from "./views/Interaction.vue";
+import Login from "./views/Login.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction },
+  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction, Login },
 
   inject: ['locale'],
 
@@ -95,11 +107,25 @@ export default {
         interaction: 'Interaction'
       },
       dashboard: [],
+      dashboardCards: [],
       isSimulate: false,
       isRunAllRandom: false,
       pollTimer: null,
-      autoTimers: new Set() // เก็บ ID ของเครื่องที่กำลังรัน Auto
+      autoTimers: new Set()
     };
+  },
+
+  computed: {
+    isAuthenticated() {
+      return !!localStorage.getItem('token')
+    }
+  },
+
+  created() {
+   if (!localStorage.getItem('token')) {
+     localStorage.removeItem('token')
+     localStorage.removeItem('user')
+   }
   },
 
   async mounted() {
@@ -240,6 +266,12 @@ export default {
       await this.loadDevices();
       this.tab = "dashboard";
     },
+
+    logout() {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.reload()
+    }
   }
 };
 </script>
