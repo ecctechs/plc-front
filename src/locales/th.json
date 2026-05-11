@@ -186,5 +186,15 @@
   "Complete Signal": "สัญญาณเสร็จสิ้น",
   "Reject Signal": "สัญญาณปฏิเสธ",
   "÷": "÷",
-  "×": "×"
+  "×": "×",
+  "Register": "ลงทะเบียน",
+  "Registering...": "กำลังลงทะเบียน...",
+  "Create your account": "สร้างบัญชีใหม่",
+  "Confirm Password": "ยืนยันรหัสผ่าน",
+  "Re-enter your password": "กรอกรหัสผ่านอีกครั้ง",
+  "Role": "บทบาท",
+  "Room Access": "สิทธิ์การเข้าถึงห้อง",
+  "Passwords do not match": "รหัสผ่านไม่ตรงกัน",
+  "Please select a role": "กรุณาเลือกบทบาท",
+  "Please sign in to continue": "กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ"
 }

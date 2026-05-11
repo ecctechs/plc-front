@@ -181,5 +181,15 @@
   "Complete Signal": "Complete Signal",
   "Reject Signal": "Reject Signal",
   "÷": "÷",
-  "×": "×"
+  "×": "×",
+  "Register": "Register",
+  "Registering...": "Registering...",
+  "Create your account": "Create your account",
+  "Confirm Password": "Confirm Password",
+  "Re-enter your password": "Re-enter your password",
+  "Role": "Role",
+  "Room Access": "Room Access",
+  "Passwords do not match": "Passwords do not match",
+  "Please select a role": "Please select a role",
+  "Please sign in to continue": "Please sign in to continue"
 }
