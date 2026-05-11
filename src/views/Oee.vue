@@ -65,10 +65,10 @@
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('Calculation Formula:') }}</p>
               <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('Operating Time / Planned Time') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('Actual Values:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border">
                 <span class="text-info fw-bold">{{ operatingTime.toFixed(2) }} {{ locale.t('min') }}</span>
                 <span class="text-muted mx-2">{{ locale.t('÷') }}</span>
@@ -89,10 +89,10 @@
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('Calculation Formula:') }}</p>
               <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('(Ideal Cycle Time × Total Output) / Operating Time') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('Actual Values:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border text-center">
                 <span>
                   <span class="text-warning fw-bold">({{ idealCycleTime }}</span>
@@ -117,10 +117,10 @@
             </div>
             <hr class="text-muted">
             <div class="calculation-box bg-light rounded p-3">
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('สูตรคำนวณ:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-calculator me-1"></i> {{ locale.t('Calculation Formula:') }}</p>
               <code class="d-block text-dark mb-3 bg-white p-2 rounded border">{{ locale.t('Good Count / Total Output') }}</code>
               
-              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('แทนค่าจริง:') }}</p>
+              <p class="text-muted small mb-1 fw-bold"><i class="bi bi-123 me-1"></i> {{ locale.t('Actual Values:') }}</p>
               <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border">
                 <span class="text-success fw-bold">{{ goodCount }} {{ locale.t('pcs') }}</span>
                 <span class="text-muted mx-2">{{ locale.t('÷') }}</span>
@@ -205,15 +205,15 @@
               </div>
               <div class="col-4">
                 <div class="p-3 bg-success bg-opacity-10 rounded h-100 border border-success border-opacity-25">
-                  <h6 class="text-success small">Good Count</h6>
+                  <h6 class="text-success small">{{ locale.t('Good Count') }}</h6>
                   <h4 class="text-success mb-0">{{ goodCount }}</h4>
-                  <small class="text-success">pcs</small>
+                  <small class="text-success">{{ locale.t('pcs') }}</small>
                 </div>
               </div>
             </div>
             <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
-              <span class="text-muted fw-bold">Ideal Cycle Time</span>
-              <span class="badge bg-warning text-dark fs-6">{{ idealCycleTime }} minutes / pc</span>
+              <span class="text-muted fw-bold">{{ locale.t('Ideal Cycle Time') }}</span>
+              <span class="badge bg-warning text-dark fs-6">{{ idealCycleTime }} {{ locale.t('minutes / pc') }}</span>
             </div>
           </div>
         </div>
@@ -223,57 +223,57 @@
      <!-- PLC STATUS -->
      <div class="card shadow-sm border-0">
        <div class="card-header bg-white py-3">
-         <h5 class="mb-0 fw-bold text-muted"><i class="bi bi-cpu me-2"></i>PLC Real-time Status</h5>
+         <h5 class="mb-0 fw-bold text-muted"><i class="bi bi-cpu me-2"></i>{{ locale.t('PLC Real-time Status') }}</h5>
        </div>
        <div class="card-body">
          <div class="row g-3 text-center">
            <!-- Output Status -->
            <div class="col-md-3">
              <div class="p-3 border rounded">
-               <h6 class="text-muted small text-uppercase">Output Signal</h6>
+               <h6 class="text-muted small text-uppercase">{{ locale.t('Output Signal') }}</h6>
                <div class="my-2">
-                 <span v-if="latestPLCLog.plc_onoff_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
-                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
+<span v-if="latestPLCLog.plc_onoff_value === 1" class="badge bg-success px-4 py-2 fs-5">{{ locale.t('ON') }}</span>
+                  <span v-else class="badge bg-danger px-4 py-2 fs-5">{{ locale.t('OFF') }}</span>
                </div>
-               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_output || 'Address N/A' }}</small>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_output || locale.t('Address N/A') }}</small>
              </div>
            </div>
            
            <!-- Active Status -->
            <div class="col-md-3">
              <div class="p-3 border rounded border-info">
-               <h6 class="text-info small text-uppercase fw-bold">Active Model</h6>
+               <h6 class="text-info small text-uppercase fw-bold">{{ locale.t('Active Model') }}</h6>
                <div class="my-2">
                  <span class="badge bg-info px-4 py-2 fs-5">{{ latestPLCLog.plc_active_value || '-' }}</span>
                </div>
                <small class="text-dark fw-bold d-block mb-1">{{ getProductNameById(latestPLCLog.plc_active_value) }}</small>
-               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_active || 'Address N/A' }}</small>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_active || locale.t('Address N/A') }}</small>
              </div>
            </div>
            
            <!-- Complete Status -->
            <div class="col-md-3">
              <div class="p-3 border rounded">
-               <h6 class="text-muted small text-uppercase">Complete Signal</h6>
+               <h6 class="text-muted small text-uppercase">{{ locale.t('Complete Signal') }}</h6>
                <div class="my-2">
-                 <span v-if="latestPLCLog.plc_complete_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
-                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
+<span v-if="latestPLCLog.plc_complete_value === 1" class="badge bg-success px-4 py-2 fs-5">{{ locale.t('ON') }}</span>
+                  <span v-else class="badge bg-danger px-4 py-2 fs-5">{{ locale.t('OFF') }}</span>
                </div>
-               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_complete || 'Address N/A' }}</small>
+               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_complete || locale.t('Address N/A') }}</small>
              </div>
            </div>
 
            <!-- Reject Status -->
-           <div class="col-md-3">
-             <div class="p-3 border rounded border-danger">
-               <h6 class="text-danger small text-uppercase fw-bold">Reject Signal</h6>
-               <div class="my-2">
-                 <span v-if="latestPLCLog.plc_reject_value === 1" class="badge bg-success px-4 py-2 fs-5">ON</span>
-                 <span v-else class="badge bg-danger px-4 py-2 fs-5">OFF</span>
-               </div>
-               <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_reject || 'Address N/A' }}</small>
-             </div>
-           </div>
+<div class="col-md-3">
+              <div class="p-3 border rounded border-danger">
+                <h6 class="text-danger small text-uppercase fw-bold">{{ locale.t('Reject Signal') }}</h6>
+                <div class="my-2">
+                  <span v-if="latestPLCLog.plc_reject_value === 1" class="badge bg-success px-4 py-2 fs-5">{{ locale.t('ON') }}</span>
+                  <span v-else class="badge bg-danger px-4 py-2 fs-5">{{ locale.t('OFF') }}</span>
+                </div>
+                <small class="text-muted d-block font-monospace bg-light p-1 rounded">{{ plcAddresses.plc_address_reject || locale.t('Address N/A') }}</small>
+              </div>
+            </div>
          </div>
        </div>
      </div>
