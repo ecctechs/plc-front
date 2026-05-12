@@ -196,11 +196,14 @@ export default {
       this.errorMessage = '';
       if (!this.validate()) return;
 
+      // 1. ดึง token จาก localStorage มาเก็บในตัวแปร
+      const token = localStorage.getItem('token');
+
       this.isLoading = true;
       try {
-        const res = await fetch(`${BASE_API}/users`, {
+        const res = await fetch(`${BASE_API}/api/users`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' , 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             email: this.form.email,
             password: this.form.password,
