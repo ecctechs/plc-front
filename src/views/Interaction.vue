@@ -7,7 +7,7 @@
         </h3>
         <p class="page-title-subtitle mb-0">Interactive visualization and control of PLC devices</p>
       </div>
-      <button class="btn btn-primary" @click="showAddElementModal = true">
+      <button v-if="canControl" class="btn btn-primary" @click="showAddElementModal = true">
         <i class="bi bi-plus-circle me-1"></i> {{ locale.t('Add Element') }}
       </button>
     </div>
@@ -40,7 +40,7 @@
 
         <!-- Dynamic Elements -->
         <template v-for="element in visibleElements" :key="element.id">
-          <StatusLamp 
+          <StatusLamp
             v-if="element.element_type === 'status_lamp'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -50,10 +50,10 @@
             :isOn="getValue(element.address_id) !== 0"
             :name="element.name"
             :addressId="element.address_id"
-            @toggle="(newValue) => handleLampToggle(element, newValue)"
+            @toggle="canControl ? (newValue) => handleLampToggle(element, newValue) : undefined"
           />
-          
-          <NumberDisplay 
+
+          <NumberDisplay
             v-else-if="element.element_type === 'number_display'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -63,12 +63,12 @@
             :unit="element.unit"
             :decimals="element.precision"
             :value="getValue(element.address_id)"
-            :editable="true"
+            :editable="canControl"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
           />
-          
+
           <GaugeDisplay
             v-else-if="element.element_type === 'gauge_display'"
             :x_percent="parseFloat(element.x_percent)"
@@ -82,13 +82,13 @@
             :minValue="getDeviceMinMax(element.address_id).min"
             :maxValue="getDeviceMinMax(element.address_id).max"
             :alarms="getDeviceMinMax(element.address_id).alarms"
-            :editable="true"
+            :editable="canControl"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
           />
-          
-          <ControlButton 
+
+          <ControlButton
             v-else-if="element.element_type === 'control_button'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -98,7 +98,7 @@
             :inactiveColor="element.inactive_color"
             :isPressed="getValue(element.address_id) !== 0"
             :name="element.name"
-            @click="writePlcValue(element)"
+            @click="canControl && writePlcValue(element)"
           />
 
           <LevelProgressBar
@@ -113,7 +113,7 @@
             :decimals="element.precision"
             :value="getValue(element.address_id)"
             :levels="getDeviceLevels(element.address_id)"
-            :editable="true"
+            :editable="canControl"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
@@ -158,7 +158,8 @@ export default {
   emits: ['update-device'],
   props: {
     devices: { type: Array, default: () => [] },
-    isSimulate: { type: Boolean, default: false }
+    isSimulate: { type: Boolean, default: false },
+    userRole: { type: String, default: '' }
   },
   data() {
     return {
@@ -181,6 +182,9 @@ export default {
     }
   },
   computed: {
+    canControl() {
+      return ['super_admin', 'admin'].includes(this.userRole)
+    },
     containerStyle() {
       if (!this.layoutData) return {}
 

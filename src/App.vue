@@ -3,7 +3,7 @@
   <div v-else class="container-fluid mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
       <ul class="nav nav-tabs mb-0">
-        <li class="nav-item" v-for="t in ['dashboard', 'setting', 'oee', 'demo', 'alarmhistory' , 'interaction']" :key="t">
+        <li class="nav-item" v-for="t in visibleTabs" :key="t">
           <button
             class="nav-link text-capitalize"
             :class="{ active: tab === t }"
@@ -58,7 +58,7 @@
                 <span>{{ locale.current === 'th' ? 'โปรไฟล์ส่วนตัว' : 'Personal Profile' }}</span>
               </button>
 
-              <button class="menu-item" @click="showRegisterModal = true; dropdownOpen = false">
+              <button v-if="['super_admin','admin'].includes(currentUser.role)" class="menu-item" @click="showRegisterModal = true; dropdownOpen = false">
                 <div class="icon-box bg-light-success">
                   <i class="fas fa-user-plus"></i>
                 </div>
@@ -87,6 +87,7 @@
         v-if="tab === 'dashboard'"
         :devices="dashboard"
         :dashboard-cards="dashboardCards"
+        :user-role="currentUser.role"
         @add-card="onAddCard"
         @delete-card="onDeleteCard"
       />
@@ -117,11 +118,13 @@
         v-if="tab === 'interaction'"
         :devices="dashboard"
         :is-simulate="isSimulate"
+        :user-role="currentUser.role"
       />
 
       <AlarmHistory
         v-if="tab === 'alarmhistory'"
         :devices="dashboard"
+        :user-role="currentUser.role"
       />
     </div>
   </div>
@@ -179,6 +182,18 @@ export default {
       } catch {
         return {};
       }
+    },
+    visibleTabs() {
+      const role = this.currentUser?.role
+      const tabs = [
+        { key: 'dashboard',    roles: ['super_admin', 'admin', 'operator', 'viewer'] },
+        { key: 'oee',          roles: ['super_admin', 'admin', 'operator', 'viewer'] },
+        { key: 'alarmhistory', roles: ['super_admin', 'admin', 'operator', 'viewer'] },
+        { key: 'interaction',  roles: ['super_admin', 'admin', 'operator'] },
+        { key: 'demo',         roles: ['super_admin', 'admin'] },
+        { key: 'setting',      roles: ['super_admin', 'admin'] },
+      ]
+      return tabs.filter(t => t.roles.includes(role)).map(t => t.key)
     }
   },
 

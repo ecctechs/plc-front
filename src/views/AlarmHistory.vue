@@ -206,7 +206,8 @@ export default {
   inject: ['locale'],
   
   props: {
-    devices: { type: Array, default: () => [] }
+    devices: { type: Array, default: () => [] },
+    userRole: { type: String, default: '' }
   },
   data() {
     return {

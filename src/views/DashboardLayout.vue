@@ -8,7 +8,7 @@
         </h3>
         <p class="page-title-subtitle mb-0">{{ locale.t('Real-time device monitoring and control') }}</p>
       </div>
-      <div>
+      <div v-if="['super_admin','admin'].includes(userRole)">
         <button class="btn btn-edit-mode me-2" @click="editMode = !editMode">
           {{ editMode ? locale.t('Exit Edit') : locale.t('Edit Mode') }}
         </button>
@@ -66,6 +66,7 @@ export default {
 
   props: {
     devices: Array,
+    userRole: String,
   },
 
   data() {
