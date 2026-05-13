@@ -52,13 +52,13 @@
             <div class="target-bar-wrap mx-auto mt-4" style="max-width: 520px;">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <span :class="parseFloat(oee) >= targetOee ? 'badge bg-success px-3 py-2' : 'badge bg-danger px-3 py-2'">
-                  จริง {{ oee }}%
+                  {{ locale.t('Actual') }} {{ oee }}%
                 </span>
                 <span :class="parseFloat(oee) >= targetOee ? 'text-success fw-bold' : 'text-danger fw-bold'">
-                  {{ parseFloat(oee) >= targetOee ? '▲ เกินเป้า' : '▼ ต่ำกว่าเป้า' }}
+                  {{ parseFloat(oee) >= targetOee ? '▲ ' + locale.t('Above target') : '▼ ' + locale.t('Below target') }}
                   {{ Math.abs(parseFloat(oee) - targetOee).toFixed(2) }}%
                 </span>
-                <span class="badge bg-secondary px-3 py-2">เป้า {{ targetOee }}%</span>
+                <span class="badge bg-secondary px-3 py-2">{{ locale.t('Target') }} {{ targetOee }}%</span>
               </div>
               <div class="position-relative" style="height: 22px;">
                 <div class="progress h-100 rounded-pill">
@@ -240,10 +240,10 @@
                   <small class="text-success">{{ locale.t('pcs') }}</small>
                 </div>
               </div>
-            </div>
+            </div>       
             <div v-if="targetOutput > 0" class="bg-light rounded border p-3 mb-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-muted small text-uppercase">Target Output</span>
+                <span class="fw-bold text-muted small text-uppercase">{{ locale.t('Target Output') }}</span>
                 <span :class="totalOutput >= targetOutput ? 'badge bg-success' : 'badge bg-warning text-dark'">
                   {{ ((totalOutput / targetOutput) * 100).toFixed(1) }}%
                 </span>
@@ -258,16 +258,16 @@
               <div class="d-flex justify-content-between small">
                 <span><b>{{ totalOutput }}</b> / {{ targetOutput }} {{ locale.t('pcs') }}</span>
                 <span v-if="totalOutput < targetOutput" class="text-danger fw-bold">
-                  ขาด {{ targetOutput - totalOutput }} ชิ้น
+                  {{ locale.t('Short by') }} {{ targetOutput - totalOutput }} {{ locale.t('pcs') }}
                 </span>
                 <span v-else class="text-success fw-bold">
-                  เกินเป้า {{ totalOutput - targetOutput }} ชิ้น ✓
+                  {{ locale.t('Exceeded by') }} {{ totalOutput - targetOutput }} {{ locale.t('pcs') }} ✓
                 </span>
               </div>
               <div v-if="projectedOutput > 0" class="text-muted small mt-2 border-top pt-2">
-                <i class="bi bi-graph-up me-1"></i>คาดการณ์สิ้นวัน: ~<b>{{ projectedOutput }}</b> ชิ้น
-                <span v-if="projectedOutput >= targetOutput" class="text-success ms-1">(บรรลุเป้า ✓)</span>
-                <span v-else class="text-danger ms-1">(ต่ำกว่าเป้า {{ targetOutput - projectedOutput }} ชิ้น)</span>
+                <i class="bi bi-graph-up me-1"></i>{{ locale.t('Estimated end of day') }}: ~<b>{{ projectedOutput }}</b> {{ locale.t('pcs') }}
+                <span v-if="projectedOutput >= targetOutput" class="text-success ms-1">({{ locale.t('Target achieved') }} ✓)</span>
+                <span v-else class="text-danger ms-1">({{ locale.t('Below target') }} {{ targetOutput - projectedOutput }} {{ locale.t('pcs') }})</span>
               </div>
             </div>
             <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
@@ -276,6 +276,40 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- OEE TREND CHART -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">
+          <i class="bi bi-graph-up me-2 text-primary"></i>{{ locale.t('OEE Trend') }}
+        </h5>
+        <div class="btn-group btn-group-sm">
+          <button
+            :class="trendDays === 7 ? 'btn btn-primary' : 'btn btn-outline-primary'"
+            @click="trendDays = 7">{{ locale.t('7 Days') }}</button>
+          <button
+            :class="trendDays === 30 ? 'btn btn-primary' : 'btn btn-outline-primary'"
+            @click="trendDays = 30">{{ locale.t('30 Days') }}</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div v-if="trendLoading" class="text-center py-5 text-muted">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 mb-0">{{ locale.t('Loading...') }}</p>
+        </div>
+        <div v-else-if="!trendData.length" class="text-center py-5 text-muted">
+          <i class="bi bi-bar-chart fs-1 opacity-25"></i>
+          <p class="mt-2">{{ locale.t('No trend data') }}</p>
+        </div>
+        <vue-apex-charts
+          v-else
+          type="line"
+          height="350"
+          :options="trendChartOptions"
+          :series="trendSeries"
+        />
       </div>
     </div>
 
@@ -340,10 +374,13 @@
 </template>
 
 <script>
+import VueApexCharts from 'vue3-apexcharts'
+
 const BASE_API = import.meta.env.VITE_API_BASE_URL
 
 export default {
   name: 'Oee',
+  components: { VueApexCharts },
   inject: ['locale'],
 
   data() {
@@ -367,6 +404,9 @@ export default {
       },
       pollTimer: null,
       plcPollTimer: null,
+      trendDays: 7,
+      trendData: [],
+      trendLoading: false,
     }
   },
 
@@ -413,11 +453,67 @@ export default {
       const rate = this.totalOutput / opTime
       return Math.round(rate * this.plannedMin)
     },
+    trendSeries() {
+      if (!this.trendData.length) return []
+      const toNum = v => v != null ? parseFloat(parseFloat(v).toFixed(2)) : null
+      return [
+        {
+          name: 'OEE',
+          data: this.trendData.map(d => ({ x: d.date, y: toNum(d.oee) })),
+        },
+        {
+          name: 'Availability',
+          data: this.trendData.map(d => ({ x: d.date, y: toNum(d.availability) })),
+        },
+        {
+          name: 'Performance',
+          data: this.trendData.map(d => ({ x: d.date, y: toNum(d.performance) })),
+        },
+        {
+          name: 'Quality',
+          data: this.trendData.map(d => ({ x: d.date, y: toNum(d.quality) })),
+        },
+        {
+          name: 'Target OEE',
+          data: this.trendData.map(d => ({ x: d.date, y: this.targetOee })),
+        },
+      ]
+    },
+    trendChartOptions() {
+      return {
+        chart: { type: 'line', height: 350, toolbar: { show: false }, animations: { enabled: false } },
+        stroke: {
+          width: [4, 1.5, 1.5, 1.5, 1.5],
+          dashArray: [0, 0, 0, 0, 6],
+          curve: 'smooth',
+        },
+        colors: ['#1e3a8a', '#0ea5e9', '#f59e0b', '#10b981', '#ef4444'],
+        markers: { size: [4, 3, 3, 3, 0] },
+        xaxis: { type: 'category', labels: { rotate: -45 } },
+        yaxis: { min: 0, max: 100, tickAmount: 5, labels: { formatter: v => v != null ? v.toFixed(1) + '%' : '' } },
+        legend: {
+          show: true,
+          position: 'top',
+          markers: { width: 12, height: 4, radius: 2 },
+        },
+        tooltip: {
+          shared: true,
+          y: { formatter: v => v != null ? v.toFixed(2) + '%' : '-' },
+        },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 3 },
+      }
+    },
   },
 
   watch: {
     selectedProductId(id) {
-      if (id) this.loadProductDetail(id)
+      if (id) {
+        this.loadProductDetail(id)
+        this.loadTrend()
+      }
+    },
+    trendDays() {
+      this.loadTrend()
     },
   },
 
@@ -490,6 +586,22 @@ export default {
         }
       } catch (err) {
         console.error('Latest PLC log error:', err)
+      }
+    },
+
+    async loadTrend() {
+      if (!this.selectedProductId) return
+      this.trendLoading = true
+      try {
+        const res = await fetch(`${BASE_API}/api/oee/snapshot/${this.selectedProductId}/history?days=${this.trendDays}`)
+        if (!res.ok) throw new Error('Failed to load trend')
+        const json = await res.json()
+        this.trendData = json.data || []
+      } catch (err) {
+        console.error('OEE trend error:', err)
+        this.trendData = []
+      } finally {
+        this.trendLoading = false
       }
     },
 

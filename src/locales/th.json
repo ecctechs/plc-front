@@ -200,5 +200,18 @@
   "Room Access": "สิทธิ์การเข้าถึงห้อง",
   "Passwords do not match": "รหัสผ่านไม่ตรงกัน",
   "Please select a role": "กรุณาเลือกบทบาท",
-  "Please sign in to continue": "กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ"
+  "Please sign in to continue": "กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ",
+  "Actual": "จริง",
+  "Target": "เป้า",
+  "Above target": "เกินเป้า",
+  "Below target": "ต่ำกว่าเป้า",
+  "Target Output": "เป้าหมายผลผลิต",
+  "Short by": "ขาด",
+  "Exceeded by": "เกินเป้า",
+  "Estimated end of day": "คาดการณ์สิ้นวัน",
+  "Target achieved": "บรรลุเป้า",
+  "OEE Trend": "แนวโน้ม OEE",
+  "7 Days": "7 วัน",
+  "30 Days": "30 วัน",
+  "No trend data": "ไม่มีข้อมูลแนวโน้ม"
 }

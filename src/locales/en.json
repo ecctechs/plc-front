@@ -195,5 +195,18 @@
   "Room Access": "Room Access",
   "Passwords do not match": "Passwords do not match",
   "Please select a role": "Please select a role",
-  "Please sign in to continue": "Please sign in to continue"
+  "Please sign in to continue": "Please sign in to continue",
+  "Actual": "Actual",
+  "Target": "Target",
+  "Above target": "Above target",
+  "Below target": "Below target",
+  "Target Output": "Target Output",
+  "Short by": "Short by",
+  "Exceeded by": "Exceeded by",
+  "Estimated end of day": "Estimated end of day",
+  "Target achieved": "Target achieved",
+  "OEE Trend": "OEE Trend",
+  "7 Days": "7 Days",
+  "30 Days": "30 Days",
+  "No trend data": "No trend data"
 }
