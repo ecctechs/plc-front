@@ -48,6 +48,35 @@
               <span class="mx-2">=</span>
               <span class="fw-bold text-dark">{{ oee }}%</span>
             </div>
+            <!-- Target OEE Bar -->
+            <div class="target-bar-wrap mx-auto mt-4" style="max-width: 520px;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span :class="parseFloat(oee) >= targetOee ? 'badge bg-success px-3 py-2' : 'badge bg-danger px-3 py-2'">
+                  จริง {{ oee }}%
+                </span>
+                <span :class="parseFloat(oee) >= targetOee ? 'text-success fw-bold' : 'text-danger fw-bold'">
+                  {{ parseFloat(oee) >= targetOee ? '▲ เกินเป้า' : '▼ ต่ำกว่าเป้า' }}
+                  {{ Math.abs(parseFloat(oee) - targetOee).toFixed(2) }}%
+                </span>
+                <span class="badge bg-secondary px-3 py-2">เป้า {{ targetOee }}%</span>
+              </div>
+              <div class="position-relative" style="height: 22px;">
+                <div class="progress h-100 rounded-pill">
+                  <div class="progress-bar rounded-pill"
+                    :class="parseFloat(oee) >= targetOee ? 'bg-success' : 'bg-danger'"
+                    :style="{ width: Math.min(parseFloat(oee), 100) + '%' }"
+                    role="progressbar">
+                  </div>
+                </div>
+                <div class="position-absolute top-0 bottom-0"
+                  :style="{ left: Math.min(targetOee, 100) + '%', transform: 'translateX(-50%)' }"
+                  style="width: 3px; background: #212529; border-radius: 2px; z-index: 1;">
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-1 small text-muted">
+                <span>0%</span><span>50%</span><span>100%</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -75,6 +104,11 @@
                 <span class="text-muted mx-1">=</span>
                 <span class="text-info fw-bold">{{ availability }}%</span>
               </div>
+              <div class="progress mt-3" style="height: 8px; border-radius: 4px;">
+                <div class="progress-bar bg-info" role="progressbar"
+                  :style="{ width: Math.min(parseFloat(availability), 100) + '%' }">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -100,6 +134,11 @@
                 <span class="text-muted">=</span>
                 <span class="text-warning fw-bold">{{ performance }}%</span>
               </div>
+              <div class="progress mt-3" style="height: 8px; border-radius: 4px;">
+                <div class="progress-bar bg-warning" role="progressbar"
+                  :style="{ width: Math.min(parseFloat(performance), 100) + '%' }">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -124,6 +163,11 @@
                 <span class="text-secondary fw-bold">{{ totalOutput }} {{ locale.t('pcs') }}</span>
                 <span class="text-muted mx-1">=</span>
                 <span class="text-success fw-bold">{{ quality }}%</span>
+              </div>
+              <div class="progress mt-3" style="height: 8px; border-radius: 4px;">
+                <div class="progress-bar bg-success" role="progressbar"
+                  :style="{ width: Math.min(parseFloat(quality), 100) + '%' }">
+                </div>
               </div>
             </div>
           </div>
@@ -195,6 +239,35 @@
                   <h4 class="text-success mb-0">{{ goodCount }}</h4>
                   <small class="text-success">{{ locale.t('pcs') }}</small>
                 </div>
+              </div>
+            </div>
+            <div v-if="targetOutput > 0" class="bg-light rounded border p-3 mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-muted small text-uppercase">Target Output</span>
+                <span :class="totalOutput >= targetOutput ? 'badge bg-success' : 'badge bg-warning text-dark'">
+                  {{ ((totalOutput / targetOutput) * 100).toFixed(1) }}%
+                </span>
+              </div>
+              <div class="progress mb-2" style="height: 12px; border-radius: 6px;">
+                <div class="progress-bar"
+                  :class="totalOutput >= targetOutput ? 'bg-success' : 'bg-warning'"
+                  :style="{ width: Math.min((totalOutput / targetOutput) * 100, 100) + '%' }"
+                  role="progressbar">
+                </div>
+              </div>
+              <div class="d-flex justify-content-between small">
+                <span><b>{{ totalOutput }}</b> / {{ targetOutput }} {{ locale.t('pcs') }}</span>
+                <span v-if="totalOutput < targetOutput" class="text-danger fw-bold">
+                  ขาด {{ targetOutput - totalOutput }} ชิ้น
+                </span>
+                <span v-else class="text-success fw-bold">
+                  เกินเป้า {{ totalOutput - targetOutput }} ชิ้น ✓
+                </span>
+              </div>
+              <div v-if="projectedOutput > 0" class="text-muted small mt-2 border-top pt-2">
+                <i class="bi bi-graph-up me-1"></i>คาดการณ์สิ้นวัน: ~<b>{{ projectedOutput }}</b> ชิ้น
+                <span v-if="projectedOutput >= targetOutput" class="text-success ms-1">(บรรลุเป้า ✓)</span>
+                <span v-else class="text-danger ms-1">(ต่ำกว่าเป้า {{ targetOutput - projectedOutput }} ชิ้น)</span>
               </div>
             </div>
             <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
@@ -278,6 +351,8 @@ export default {
       results: [],
       selectedProductId: null,
       idealCycleTime: 0,
+      targetOee: 85,
+      targetOutput: 0,
       plcAddresses: {
         plc_address_output: null,
         plc_address_active: null,
@@ -303,13 +378,13 @@ export default {
       return this.results.find(r => r.product_id === this.selectedProductId) || {}
     },
     oee() {
-      return ((this.selected.oee || 0) * 100).toFixed(2)
+      return (this.selected.oee || 0).toFixed(2)
     },
     availability() {
       return (this.selected.availability || 0).toFixed(2)
     },
     performance() {
-      return ((this.selected.performance || 0) * 100).toFixed(2)
+      return ((this.selected.performance || 0)).toFixed(2)
     },
     quality() {
       return (this.selected.quality || 0).toFixed(2)
@@ -331,6 +406,12 @@ export default {
     },
     operatingTime() {
       return Math.max(0, (this.selected.planned_min || 0) - (this.selected.downtime_min || 0)).toFixed(2)
+    },
+    projectedOutput() {
+      const opTime = parseFloat(this.operatingTime)
+      if (opTime <= 0 || this.totalOutput <= 0) return 0
+      const rate = this.totalOutput / opTime
+      return Math.round(rate * this.plannedMin)
     },
   },
 
@@ -381,6 +462,8 @@ export default {
         const json = await res.json()
         const product = json.data || json
         this.idealCycleTime = product.cycle_time || 0
+        this.targetOee    = product.target_oee    || 85
+        this.targetOutput = product.target_output || 0
         this.plcAddresses = {
           plc_address_output: product.plc_address_output || null,
           plc_address_active: product.plc_address_active || null,

@@ -25,6 +25,16 @@
                    <label class="form-label fw-bold">Cycle Time (s)</label>
                    <input v-model="form.cycle_time" type="number" class="form-control" placeholder="e.g., 10" min="0" step="0.1" />
                  </div>
+                 <div class="row">
+                   <div class="col-md-6 mb-3">
+                     <label class="form-label fw-bold">Target OEE (%)</label>
+                     <input v-model="form.target_oee" type="number" class="form-control" placeholder="e.g., 85" min="0" max="100" step="0.1" />
+                   </div>
+                   <div class="col-md-6 mb-3">
+                     <label class="form-label fw-bold">Target Output (pcs)</label>
+                     <input v-model="form.target_output" type="number" class="form-control" placeholder="e.g., 500" min="0" step="1" />
+                   </div>
+                 </div>
                </div>
              </div>
           </div>
@@ -69,7 +79,9 @@ export default {
       selectedFile: null,
       form: {
         name: "",
-        cycle_time: ""
+        cycle_time: "",
+        target_oee: "",
+        target_output: ""
       }
     };
   },
@@ -80,7 +92,9 @@ export default {
         this.editingId = product.id;
         this.form = {
           name: product.name || "",
-          cycle_time: product.cycle_time || ""
+          cycle_time: product.cycle_time || "",
+          target_oee: product.target_oee ?? "",
+          target_output: product.target_output ?? ""
         };
         this.imagePreview = product.image_url || product.image || null;
         this.selectedFile = null;
@@ -89,7 +103,9 @@ export default {
         this.editingId = null;
         this.form = {
           name: "",
-          cycle_time: ""
+          cycle_time: "",
+          target_oee: "",
+          target_output: ""
         };
         this.imagePreview = null;
         this.selectedFile = null;
@@ -125,8 +141,14 @@ export default {
 
         const formData = new FormData();
         formData.append("name", this.form.name);
-        if (this.form.cycle_time) {
+        if (this.form.cycle_time !== "") {
           formData.append("cycle_time", this.form.cycle_time);
+        }
+        if (this.form.target_oee !== "") {
+          formData.append("target_oee", this.form.target_oee);
+        }
+        if (this.form.target_output !== "") {
+          formData.append("target_output", this.form.target_output);
         }
         if (this.selectedFile) {
           formData.append("image", this.selectedFile);
