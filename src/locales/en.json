@@ -208,5 +208,18 @@
   "OEE Trend": "OEE Trend",
   "7 Days": "7 Days",
   "30 Days": "30 Days",
-  "No trend data": "No trend data"
+  "No trend data": "No trend data",
+  "Overview": "Overview",
+  "Analysis": "Analysis",
+  "Alarm Log": "Alarm Log",
+  "Total Downtime": "Total Downtime",
+  "Total Alarms": "Total Alarms",
+  "Avg MTTR (min)": "Avg MTTR (min)",
+  "Affected Devices": "Affected Devices",
+  "Top 5 Most Problematic Devices": "Top 5 Most Problematic Devices",
+  "times": "times",
+  "min": "min",
+  "Alarm History Trend": "Alarm History Trend",
+  "Alarm Count": "Alarm Count",
+  "Downtime (sec)": "Downtime (sec)"
 }

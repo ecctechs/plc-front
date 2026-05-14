@@ -41,68 +41,99 @@
     </div>
 
     <!-- Section 1: Summary Cards -->
-    <div v-if="history.length > 0" class="row g-3 mb-4">
-      <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-body text-center py-3">
-            <div class="fs-2 fw-bold text-danger">{{ downtimeSummary.total_downtime_min }}</div>
-            <div class="text-muted small mt-1">{{ locale.t('Total Downtime (min)') }}</div>
+    <div v-if="history.length > 0">
+      <div class="section-label mb-3">
+        <i class="bi bi-speedometer2 me-2"></i>{{ locale.t('Overview') }}
+      </div>
+      <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-3 h-100 stat-card stat-danger">
+            <div class="card-body text-center py-4">
+              <div class="stat-icon mb-2"><i class="bi bi-clock-history"></i></div>
+              <div class="fs-2 fw-bold text-danger">{{ (downtimeSummary.total_downtime_sec / 60).toFixed(2) }}</div>
+              <div class="text-muted small mt-1">{{ locale.t('Total Downtime') }} ({{ locale.t('min') }})</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-body text-center py-3">
-            <div class="fs-2 fw-bold text-warning">{{ downtimeSummary.total_alarms }}</div>
-            <div class="text-muted small mt-1">{{ locale.t('Total Alarms') }}</div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-3 h-100 stat-card stat-warning">
+            <div class="card-body text-center py-4">
+              <div class="stat-icon mb-2"><i class="bi bi-exclamation-triangle"></i></div>
+              <div class="fs-2 fw-bold text-warning">{{ downtimeSummary.total_alarms }}</div>
+              <div class="text-muted small mt-1">{{ locale.t('Total Alarms') }}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-body text-center py-3">
-            <div class="fs-2 fw-bold text-info">{{ downtimeSummary.avg_mttr }}</div>
-            <div class="text-muted small mt-1">{{ locale.t('Avg MTTR (min)') }}</div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-3 h-100 stat-card stat-info">
+            <div class="card-body text-center py-4">
+              <div class="stat-icon mb-2"><i class="bi bi-arrow-repeat"></i></div>
+              <div class="fs-2 fw-bold text-info">{{ downtimeSummary.avg_mttr }}</div>
+              <div class="text-muted small mt-1">{{ locale.t('Avg MTTR (min)') }}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-body text-center py-3">
-            <div class="fs-2 fw-bold text-primary">{{ downtimeSummary.affected_devices }}</div>
-            <div class="text-muted small mt-1">{{ locale.t('Affected Devices') }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Top 5 Devices -->
-    <div v-if="top5.length > 0" class="card border-0 shadow-sm rounded-3 mb-4">
-      <div class="card-header bg-white fw-bold py-3">
-        <i class="bi bi-bar-chart-fill text-danger me-2"></i>{{ locale.t('Top 5 Most Problematic Devices') }}
-      </div>
-      <div class="card-body p-0">
-        <div
-          v-for="(item, idx) in top5"
-          :key="idx"
-          class="d-flex align-items-center px-4 py-3"
-          :class="{ 'border-bottom': idx < top5.length - 1 }"
-        >
-          <span class="badge rounded-pill me-3 fw-bold fs-6"
-            :class="idx === 0 ? 'bg-danger' : idx === 1 ? 'bg-warning text-dark' : idx === 2 ? 'bg-info text-dark' : 'bg-secondary'"
-          >{{ idx + 1 }}</span>
-          <div class="flex-grow-1">
-            <div class="fw-bold text-dark">{{ item.device_name }}</div>
-            <div class="text-muted small">{{ item.room_name || '-' }}</div>
-          </div>
-          <div class="text-end">
-            <div class="fw-bold text-danger">{{ item.total_min.toFixed(0) }} {{ locale.t('min') }}</div>
-            <div class="text-muted small">{{ item.count }} {{ locale.t('times') }}</div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm rounded-3 h-100 stat-card stat-primary">
+            <div class="card-body text-center py-4">
+              <div class="stat-icon mb-2"><i class="bi bi-cpu"></i></div>
+              <div class="fs-2 fw-bold text-primary">{{ downtimeSummary.affected_devices }}</div>
+              <div class="text-muted small mt-1">{{ locale.t('Affected Devices') }}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Section 2: Top 5 + Chart -->
+    <div v-if="top5.length > 0">
+      <div class="section-label mb-3">
+        <i class="bi bi-bar-chart-line me-2"></i>{{ locale.t('Analysis') }}
+      </div>
+      <div class="row g-4 mb-5">
+        <div class="col-12 col-lg-4">
+          <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card-header bg-white fw-bold py-3 border-bottom-0">
+              <i class="bi bi-trophy-fill text-warning me-2"></i>{{ locale.t('Top 5 Most Problematic Devices') }}
+            </div>
+            <div class="card-body p-0">
+              <div
+                v-for="(item, idx) in top5"
+                :key="idx"
+                class="d-flex align-items-center px-4 py-3"
+                :class="{ 'border-bottom': idx < top5.length - 1 }"
+              >
+                <span class="rank-badge me-3"
+                  :class="idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other'"
+                >{{ idx + 1 }}</span>
+                <div class="flex-grow-1">
+                  <div class="fw-bold text-dark small">{{ item.device_name }}</div>
+                  <div class="text-muted" style="font-size:0.75rem">{{ item.room_name || '-' }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-bold text-danger small">{{ formatDuration(item.total_sec) }}</div>
+                  <div class="text-muted" style="font-size:0.75rem">{{ item.count }} {{ locale.t('times') }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-8">
+          <AlarmHistoryChart />
+        </div>
+      </div>
+    </div>
+    <div v-else class="mb-5">
+      <div class="section-label mb-3">
+        <i class="bi bi-bar-chart-line me-2"></i>{{ locale.t('Analysis') }}
+      </div>
+      <AlarmHistoryChart />
+    </div>
+
+    <!-- Section 3: Alarm Table -->
+    <div class="section-label mb-3">
+      <i class="bi bi-table me-2"></i>{{ locale.t('Alarm Log') }}
+    </div>
     <div class="table-responsive rounded-3 border shadow-sm">
       <table class="table table-hover align-middle mb-0">
          <thead class="table-blue">
@@ -270,9 +301,10 @@
 
 <script>
 import Chart from './Chart.vue'
+import AlarmHistoryChart from '../components/chart/AlarmHistoryChart.vue'
 
 export default {
-  components: { Chart },
+  components: { Chart, AlarmHistoryChart },
   
   inject: ['locale'],
   
@@ -294,7 +326,7 @@ export default {
       itemsPerPage: 20,
       rooms: [],
       downtimeSummary: {
-        total_downtime_min: 0,
+        total_downtime_sec: 0,
         total_alarms: 0,
         avg_mttr: 0,
         affected_devices: 0
@@ -432,50 +464,58 @@ export default {
     },
 
     fetchDowntimeSummary() {
+      const now        = new Date()
       const triggers   = this.history.filter(e => e.event_type === 'TRIGGER')
       const recoveries = this.history.filter(e => e.event_type === 'RECOVER')
+
+      // group by alarm_rule_id (ตรงกับ backend) ถ้าไม่มีให้ fallback address_id
+      const getKey = e => e.alarm_rule_id ?? e.address_id
 
       const pairs = triggers.map(trg => {
         const rec = recoveries
           .filter(r =>
-            r.address_id === trg.address_id &&
+            getKey(r) === getKey(trg) &&
             new Date(r.created_at) > new Date(trg.created_at)
           )
           .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0]
+
+        const triggerTime = new Date(trg.created_at)
+        const endMs = rec ? new Date(rec.created_at) : now  // unresolved → นับถึง now
+        const diffMs = endMs - triggerTime
+
         return {
           address_id:   trg.address_id,
           device_name:  trg.device?.name,
           room_name:    trg.device?.room?.name,
           trigger_at:   trg.created_at,
-          duration_sec: rec
-            ? Math.floor((new Date(rec.created_at) - new Date(trg.created_at)) / 1000)
-            : null,
-          duration_min: rec
-            ? ((new Date(rec.created_at) - new Date(trg.created_at)) / 60000).toFixed(1)
-            : null
+          resolved:     !!rec,
+          duration_sec: Math.floor(diffMs / 1000),
+          duration_min: (diffMs / 60000).toFixed(1)
         }
       })
 
-      const resolved = pairs.filter(p => p.duration_min !== null)
       this.downtimeSummary = {
-        total_downtime_min: resolved.reduce((s, p) => s + parseFloat(p.duration_min), 0).toFixed(0),
+        total_downtime_sec: pairs.reduce((s, p) => s + (p.duration_sec || 0), 0),
         total_alarms:       triggers.length,
-        avg_mttr:           resolved.length
-                              ? (resolved.reduce((s, p) => s + parseFloat(p.duration_min), 0) / resolved.length).toFixed(1)
-                              : 0,
+        avg_mttr:           (() => {
+                              const res = pairs.filter(p => p.resolved)
+                              return res.length
+                                ? (res.reduce((s, p) => s + parseFloat(p.duration_min), 0) / res.length).toFixed(1)
+                                : 0
+                            })(),
         affected_devices:   new Set(triggers.map(t => t.address_id)).size,
       }
 
       const byDevice = {}
-      resolved.forEach(p => {
+      pairs.forEach(p => {
         if (!byDevice[p.address_id]) {
-          byDevice[p.address_id] = { device_name: p.device_name, room_name: p.room_name, total_min: 0, count: 0 }
+          byDevice[p.address_id] = { device_name: p.device_name, room_name: p.room_name, total_sec: 0, count: 0 }
         }
-        byDevice[p.address_id].total_min += parseFloat(p.duration_min)
+        byDevice[p.address_id].total_sec += (p.duration_sec || 0)
         byDevice[p.address_id].count++
       })
       this.top5 = Object.values(byDevice)
-        .sort((a, b) => b.total_min - a.total_min)
+        .sort((a, b) => b.total_sec - a.total_sec)
         .slice(0, 5)
 
       this.history = this.history.map(item => {
@@ -511,6 +551,55 @@ export default {
 </script>
 
 <style scoped>
-/* Component-specific styles only */
-/* Note: Shared styles are imported from src/assets/shared-styles.css */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+  margin-left: 8px;
+}
+
+.stat-card {
+  border-top: 3px solid transparent !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+}
+.stat-danger  { border-top-color: #ef4444 !important; }
+.stat-warning { border-top-color: #f59e0b !important; }
+.stat-info    { border-top-color: #0ea5e9 !important; }
+.stat-primary { border-top-color: #3b82f6 !important; }
+
+.stat-icon {
+  font-size: 1.25rem;
+  opacity: 0.35;
+}
+
+.rank-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.rank-1    { background: #fef2f2; color: #ef4444; border: 2px solid #ef4444; }
+.rank-2    { background: #fffbeb; color: #d97706; border: 2px solid #f59e0b; }
+.rank-3    { background: #f0f9ff; color: #0284c7; border: 2px solid #0ea5e9; }
+.rank-other { background: #f8fafc; color: #64748b; border: 2px solid #cbd5e1; }
 </style>

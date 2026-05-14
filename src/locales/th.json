@@ -213,5 +213,18 @@
   "OEE Trend": "แนวโน้ม OEE",
   "7 Days": "7 วัน",
   "30 Days": "30 วัน",
-  "No trend data": "ไม่มีข้อมูลแนวโน้ม"
+  "No trend data": "ไม่มีข้อมูลแนวโน้ม",
+  "Overview": "ภาพรวม",
+  "Analysis": "วิเคราะห์",
+  "Alarm Log": "บันทึกแจ้งเตือน",
+  "Total Downtime": "เวลาหยุดรวม",
+  "Total Alarms": "แจ้งเตือนทั้งหมด",
+  "Avg MTTR (min)": "MTTR เฉลี่ย (นาที)",
+  "Affected Devices": "เครื่องที่มีปัญหา",
+  "Top 5 Most Problematic Devices": "Top 5 เครื่องที่มีปัญหามากสุด",
+  "times": "ครั้ง",
+  "min": "นาที",
+  "Alarm History Trend": "แนวโน้มประวัติแจ้งเตือน",
+  "Alarm Count": "จำนวนแจ้งเตือน",
+  "Downtime (sec)": "เวลาหยุด (วิ)"
 }
