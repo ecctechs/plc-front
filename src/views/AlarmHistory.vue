@@ -40,6 +40,69 @@
       </div>
     </div>
 
+    <!-- Section 1: Summary Cards -->
+    <div v-if="history.length > 0" class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+          <div class="card-body text-center py-3">
+            <div class="fs-2 fw-bold text-danger">{{ downtimeSummary.total_downtime_min }}</div>
+            <div class="text-muted small mt-1">{{ locale.t('Total Downtime (min)') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+          <div class="card-body text-center py-3">
+            <div class="fs-2 fw-bold text-warning">{{ downtimeSummary.total_alarms }}</div>
+            <div class="text-muted small mt-1">{{ locale.t('Total Alarms') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+          <div class="card-body text-center py-3">
+            <div class="fs-2 fw-bold text-info">{{ downtimeSummary.avg_mttr }}</div>
+            <div class="text-muted small mt-1">{{ locale.t('Avg MTTR (min)') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+          <div class="card-body text-center py-3">
+            <div class="fs-2 fw-bold text-primary">{{ downtimeSummary.affected_devices }}</div>
+            <div class="text-muted small mt-1">{{ locale.t('Affected Devices') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Top 5 Devices -->
+    <div v-if="top5.length > 0" class="card border-0 shadow-sm rounded-3 mb-4">
+      <div class="card-header bg-white fw-bold py-3">
+        <i class="bi bi-bar-chart-fill text-danger me-2"></i>{{ locale.t('Top 5 Most Problematic Devices') }}
+      </div>
+      <div class="card-body p-0">
+        <div
+          v-for="(item, idx) in top5"
+          :key="idx"
+          class="d-flex align-items-center px-4 py-3"
+          :class="{ 'border-bottom': idx < top5.length - 1 }"
+        >
+          <span class="badge rounded-pill me-3 fw-bold fs-6"
+            :class="idx === 0 ? 'bg-danger' : idx === 1 ? 'bg-warning text-dark' : idx === 2 ? 'bg-info text-dark' : 'bg-secondary'"
+          >{{ idx + 1 }}</span>
+          <div class="flex-grow-1">
+            <div class="fw-bold text-dark">{{ item.device_name }}</div>
+            <div class="text-muted small">{{ item.room_name || '-' }}</div>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold text-danger">{{ item.total_min.toFixed(0) }} {{ locale.t('min') }}</div>
+            <div class="text-muted small">{{ item.count }} {{ locale.t('times') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="table-responsive rounded-3 border shadow-sm">
       <table class="table table-hover align-middle mb-0">
          <thead class="table-blue">
@@ -50,12 +113,13 @@
             <th class="py-3 text-center border-0">{{ locale.t('Threshold') }}</th>
             <th class="py-3 text-center border-0">{{ locale.t('Actual Value') }}</th>
             <th class="py-3 text-center border-0">{{ locale.t('Event Type') }}</th>
+            <th class="py-3 text-center border-0">{{ locale.t('Duration (min)') }}</th>
             <th class="py-3 border-0">{{ locale.t('Time Stamp') }}</th>
           </tr>
         </thead>
         <tbody>
             <tr v-if="loading">
-              <td colspan="7" class="text-center py-5">
+              <td colspan="8" class="text-center py-5">
               <div class="spinner-border text-primary" role="status"></div>
               <p class="text-muted mt-2 mb-0">{{ locale.t('Loading...') }}</p>
             </td>
@@ -111,13 +175,20 @@
               </span>
             </td>
 
+            <td class="text-center">
+              <span v-if="item.event_type === 'TRIGGER' && item.duration_sec != null"
+                    class="badge bg-warning text-dark">
+                {{ formatDuration(item.duration_sec) }}
+              </span>
+              <span v-else class="text-muted">—</span>
+            </td>
             <td class="pe-3 text-muted small">
               {{ formatDate(item.created_at) }}
             </td>
           </tr>
 
 <tr v-else>
-              <td colspan="7" class="text-center py-5">
+              <td colspan="8" class="text-center py-5">
               <div class="py-4">
                 <i class="bi bi-database-exclamation fs-1 text-muted opacity-50"></i>
                 <p class="text-muted mt-2">{{ locale.t('No alarm history found in selected date range') }}</p>
@@ -222,6 +293,13 @@ export default {
       currentPage: 1,
       itemsPerPage: 20,
       rooms: [],
+      downtimeSummary: {
+        total_downtime_min: 0,
+        total_alarms: 0,
+        avg_mttr: 0,
+        affected_devices: 0
+      },
+      top5: [],
       filter: {
         deviceName: "",
         room: "",
@@ -303,6 +381,7 @@ export default {
         const res = await fetch(url);
         if (!res.ok) throw new Error('API Error');
         this.history = await res.json();
+        this.fetchDowntimeSummary();
       } catch (err) {
         console.error("Fetch history error:", err);
       } finally {
@@ -350,6 +429,71 @@ export default {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
+    },
+
+    fetchDowntimeSummary() {
+      const triggers   = this.history.filter(e => e.event_type === 'TRIGGER')
+      const recoveries = this.history.filter(e => e.event_type === 'RECOVER')
+
+      const pairs = triggers.map(trg => {
+        const rec = recoveries
+          .filter(r =>
+            r.address_id === trg.address_id &&
+            new Date(r.created_at) > new Date(trg.created_at)
+          )
+          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0]
+        return {
+          address_id:   trg.address_id,
+          device_name:  trg.device?.name,
+          room_name:    trg.device?.room?.name,
+          trigger_at:   trg.created_at,
+          duration_sec: rec
+            ? Math.floor((new Date(rec.created_at) - new Date(trg.created_at)) / 1000)
+            : null,
+          duration_min: rec
+            ? ((new Date(rec.created_at) - new Date(trg.created_at)) / 60000).toFixed(1)
+            : null
+        }
+      })
+
+      const resolved = pairs.filter(p => p.duration_min !== null)
+      this.downtimeSummary = {
+        total_downtime_min: resolved.reduce((s, p) => s + parseFloat(p.duration_min), 0).toFixed(0),
+        total_alarms:       triggers.length,
+        avg_mttr:           resolved.length
+                              ? (resolved.reduce((s, p) => s + parseFloat(p.duration_min), 0) / resolved.length).toFixed(1)
+                              : 0,
+        affected_devices:   new Set(triggers.map(t => t.address_id)).size,
+      }
+
+      const byDevice = {}
+      resolved.forEach(p => {
+        if (!byDevice[p.address_id]) {
+          byDevice[p.address_id] = { device_name: p.device_name, room_name: p.room_name, total_min: 0, count: 0 }
+        }
+        byDevice[p.address_id].total_min += parseFloat(p.duration_min)
+        byDevice[p.address_id].count++
+      })
+      this.top5 = Object.values(byDevice)
+        .sort((a, b) => b.total_min - a.total_min)
+        .slice(0, 5)
+
+      this.history = this.history.map(item => {
+        if (item.event_type !== 'TRIGGER') return item
+        const pair = pairs.find(p =>
+          p.address_id === item.address_id &&
+          p.trigger_at === item.created_at
+        )
+        return { ...item, duration_min: pair?.duration_min || null, duration_sec: pair?.duration_sec ?? null }
+      })
+    },
+
+    formatDuration(sec) {
+      if (sec == null) return '—'
+      if (sec < 60) return `${sec} วิ`
+      const m = Math.floor(sec / 60)
+      const s = sec % 60
+      return s > 0 ? `${m} นาที ${s} วิ` : `${m} นาที`
     },
 
     async loadRooms() {
