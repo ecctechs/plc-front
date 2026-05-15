@@ -7,7 +7,7 @@
         </h3>
         <p class="page-title-subtitle mb-0">Interactive visualization and control of PLC devices</p>
       </div>
-      <button v-if="canControl" class="btn btn-primary" @click="showAddElementModal = true">
+      <button v-if="canAddElement" class="btn btn-primary" @click="showAddElementModal = true">
         <i class="bi bi-plus-circle me-1"></i> {{ locale.t('Add Element') }}
       </button>
     </div>
@@ -50,7 +50,7 @@
             :isOn="getValue(element.address_id) !== 0"
             :name="element.name"
             :addressId="element.address_id"
-            @toggle="canControl ? (newValue) => handleLampToggle(element, newValue) : undefined"
+            @toggle="canControlElement(element) ? (newValue) => handleLampToggle(element, newValue) : undefined"
           />
 
           <NumberDisplay
@@ -63,7 +63,7 @@
             :unit="element.unit"
             :decimals="element.precision"
             :value="getValue(element.address_id)"
-            :editable="canControl"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
@@ -82,7 +82,7 @@
             :minValue="getDeviceMinMax(element.address_id).min"
             :maxValue="getDeviceMinMax(element.address_id).max"
             :alarms="getDeviceMinMax(element.address_id).alarms"
-            :editable="canControl"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
@@ -98,7 +98,7 @@
             :inactiveColor="element.inactive_color"
             :isPressed="getValue(element.address_id) !== 0"
             :name="element.name"
-            @click="canControl && writePlcValue(element)"
+            @click="canControlElement(element) && writePlcValue(element)"
           />
 
           <LevelProgressBar
@@ -113,7 +113,7 @@
             :decimals="element.precision"
             :value="getValue(element.address_id)"
             :levels="getDeviceLevels(element.address_id)"
-            :editable="canControl"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
@@ -159,7 +159,9 @@ export default {
   props: {
     devices: { type: Array, default: () => [] },
     isSimulate: { type: Boolean, default: false },
-    userRole: { type: String, default: '' }
+    userRole: { type: String, default: '' },
+    allowedRoomIds: { type: Array, default: null },
+    canControlRoom: { type: Function, default: null },
   },
   data() {
     return {
@@ -182,7 +184,7 @@ export default {
     }
   },
   computed: {
-    canControl() {
+    canAddElement() {
       return ['super_admin', 'admin'].includes(this.userRole)
     },
     containerStyle() {
@@ -195,10 +197,25 @@ export default {
     },
     visibleElements() {
       if (!this.layoutData || !this.layoutData.elements) return []
-      return this.layoutData.elements.filter(el => el.is_visible)
+      return this.layoutData.elements.filter(el => {
+        if (!el.is_visible) return false
+        if (this.allowedRoomIds === null) return true
+        const roomId = this.getDeviceRoomId(el.address_id)
+        return roomId === null || this.allowedRoomIds.includes(roomId)
+      })
     }
   },
   methods: {
+    getDeviceRoomId(addressId) {
+      const device = this.devices.find(d => d.address_id === addressId)
+      return device?.device?.room_id ?? null
+    },
+    canControlElement(element) {
+      if (this.canControlRoom) {
+        return this.canControlRoom(this.getDeviceRoomId(element.address_id))
+      }
+      return ['super_admin', 'admin'].includes(this.userRole)
+    },
     getButtonLabel(element) {
       const value = this.getValue(element.address_id)
       return value === 0 ? 'START' : 'STOP'

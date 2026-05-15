@@ -58,7 +58,7 @@
                 <span>{{ locale.current === 'th' ? 'โปรไฟล์ส่วนตัว' : 'Personal Profile' }}</span>
               </button>
 
-              <button v-if="['super_admin','admin'].includes(currentUser.role)" class="menu-item" @click="showRegisterModal = true; dropdownOpen = false">
+              <button v-if="currentUser.role === 'super_admin'" class="menu-item" @click="showRegisterModal = true; dropdownOpen = false">
                 <div class="icon-box bg-light-success">
                   <i class="fas fa-user-plus"></i>
                 </div>
@@ -88,6 +88,7 @@
         :devices="dashboard"
         :dashboard-cards="dashboardCards"
         :user-role="currentUser.role"
+        :allowed-room-ids="allowedRoomIds"
         @add-card="onAddCard"
         @delete-card="onDeleteCard"
       />
@@ -119,12 +120,15 @@
         :devices="dashboard"
         :is-simulate="isSimulate"
         :user-role="currentUser.role"
+        :allowed-room-ids="allowedRoomIds"
+        :can-control-room="canControlRoom"
       />
 
       <AlarmHistory
         v-if="tab === 'alarmhistory'"
         :devices="dashboard"
         :user-role="currentUser.role"
+        :allowed-room-ids="allowedRoomIds"
       />
     </div>
   </div>
@@ -194,6 +198,17 @@ export default {
         { key: 'setting',      roles: ['super_admin', 'admin'] },
       ]
       return tabs.filter(t => t.roles.includes(role)).map(t => t.key)
+    },
+    userRooms() {
+      return this.currentUser.rooms || []
+    },
+    hasFullRoomAccess() {
+      return ['super_admin', 'admin'].includes(this.currentUser.role)
+        || this.userRooms.some(r => r.id === null)
+    },
+    allowedRoomIds() {
+      if (this.hasFullRoomAccess) return null
+      return this.userRooms.map(r => r.id)
     }
   },
 
@@ -340,6 +355,11 @@ export default {
       }
     },
 
+    canControlRoom(roomId) {
+      if (['super_admin', 'admin'].includes(this.currentUser.role)) return true
+      const entry = this.userRooms.find(r => r.id === roomId || r.id === null)
+      return entry?.scope === 'control'
+    },
     async reloadDevices() {
       await this.loadDevices();
       this.tab = "dashboard";

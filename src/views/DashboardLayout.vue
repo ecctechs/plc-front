@@ -67,6 +67,7 @@ export default {
   props: {
     devices: Array,
     userRole: String,
+    allowedRoomIds: { type: Array, default: null },
   },
 
   data() {
@@ -89,16 +90,19 @@ export default {
     },
     filteredDevices() {
       let result = [...this.devices];
-      
+
+      if (this.allowedRoomIds !== null) {
+        result = result.filter(d => this.allowedRoomIds.includes(d.device?.room_id));
+      }
+
       if (this.filters.room) {
         result = result.filter(d => d.device.room_name === this.filters.room);
       }
-      
+
       if (this.filters.deviceType) {
-        console.log('Applying device type filter:', this.filters);
         result = result.filter(d => d.device.type === this.filters.deviceType);
       }
-      
+
       return result.sort((a, b) => (a.position || 0) - (b.position || 0));
     },
     dashboardAddresses() {
@@ -118,12 +122,13 @@ export default {
   methods: {
     async loadFilters() {
       try {
-        // Load rooms
         const roomsRes = await fetch(`${BASE_API}/api/rooms`);
         const roomsData = await roomsRes.json();
-        this.rooms = roomsData.data || [];
-        
-        // Load device types
+        const allRooms = roomsData.data || [];
+        this.rooms = this.allowedRoomIds !== null
+          ? allRooms.filter(r => this.allowedRoomIds.includes(r.id))
+          : allRooms;
+
         const typesRes = await fetch(`${BASE_API}/api/device-types`);
         const typesData = await typesRes.json();
         this.deviceTypes = typesData.data || [];

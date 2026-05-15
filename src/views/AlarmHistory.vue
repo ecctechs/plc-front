@@ -310,7 +310,8 @@ export default {
   
   props: {
     devices: { type: Array, default: () => [] },
-    userRole: { type: String, default: '' }
+    userRole: { type: String, default: '' },
+    allowedRoomIds: { type: Array, default: null },
   },
   data() {
     return {
@@ -345,7 +346,13 @@ export default {
    filteredHistory() {
       let result = this.history;
 
-      // Filter Device Name
+      if (this.allowedRoomIds !== null) {
+        result = result.filter(item => {
+          const roomId = item.device?.room?.id
+          return roomId != null && this.allowedRoomIds.includes(roomId)
+        });
+      }
+
       if (this.filter.deviceName) {
         const search = this.filter.deviceName.toLowerCase();
         result = result.filter(item => {
@@ -354,13 +361,9 @@ export default {
         });
       }
 
-      // Filter Room (แก้ไขตรงนี้)
       if (this.filter.room) {
         result = result.filter(item => {
-          // ดึงค่า Room Name ออกมาแบบดัก Error ทุกจุด
-          // ตรวจสอบทั้ง item.device.room.name และ item.device.room_name
           const currentRoomName = item.device?.room?.name || item.device?.room_name;
-          
           return currentRoomName === this.filter.room;
         });
       }
@@ -541,7 +544,10 @@ export default {
       try {
         const res = await fetch(`${BASE_API}/api/rooms`);
         const data = await res.json();
-        this.rooms = data.data || [];
+        const allRooms = data.data || [];
+        this.rooms = this.allowedRoomIds !== null
+          ? allRooms.filter(r => this.allowedRoomIds.includes(r.id))
+          : allRooms;
       } catch (err) {
         console.error("Load rooms error:", err);
       }
