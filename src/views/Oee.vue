@@ -279,6 +279,32 @@
       </div>
     </div>
 
+    <!-- OEE HOURLY CHART -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">
+          <i class="bi bi-clock me-2 text-primary"></i>{{ locale.t('Hourly OEE') }}
+        </h5>
+      </div>
+      <div class="card-body">
+        <div v-if="hourlyLoading" class="text-center py-5 text-muted">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 mb-0">{{ locale.t('Loading...') }}</p>
+        </div>
+        <div v-else-if="!hourlyData.length" class="text-center py-5 text-muted">
+          <i class="bi bi-clock fs-1 opacity-25"></i>
+          <p class="mt-2">{{ locale.t('No hourly data') }}</p>
+        </div>
+        <vue-apex-charts
+          v-else
+          type="line"
+          height="320"
+          :options="hourlyChartOptions"
+          :series="hourlyChartSeries"
+        />
+      </div>
+    </div>
+
     <!-- OEE TREND CHART -->
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -404,9 +430,12 @@ export default {
       },
       pollTimer: null,
       plcPollTimer: null,
+      hourlyPollTimer: null,
       trendDays: 7,
       trendData: [],
       trendLoading: false,
+      hourlyData: [],
+      hourlyLoading: false,
     }
   },
 
@@ -452,6 +481,87 @@ export default {
       if (opTime <= 0 || this.totalOutput <= 0) return 0
       const rate = this.totalOutput / opTime
       return Math.round(rate * this.plannedMin)
+    },
+    hourlyChartSeries() {
+      if (!this.hourlyData.length) return []
+      const toNum = v => v != null ? parseFloat(parseFloat(v).toFixed(2)) : null
+      return [
+        {
+          name: 'OEE',
+          type: 'bar',
+          data: this.hourlyData.map(d => toNum(d.oee)),
+        },
+        {
+          name: 'Availability',
+          type: 'line',
+          data: this.hourlyData.map(d => toNum(d.availability)),
+        },
+        {
+          name: 'Performance',
+          type: 'line',
+          data: this.hourlyData.map(d => toNum(d.performance)),
+        },
+        {
+          name: 'Quality',
+          type: 'line',
+          data: this.hourlyData.map(d => toNum(d.quality)),
+        },
+      ]
+    },
+    hourlyChartOptions() {
+      const labels = this.hourlyData.map(d => {
+        const date = new Date(d.hour)
+        return `${date.getHours().toString().padStart(2, '0')}:00`
+      })
+      const maxOee = Math.max(...this.hourlyData.map(d => d.oee || 0))
+      const yMax = Math.ceil(Math.max(100, maxOee) / 10) * 10
+      return {
+        chart: {
+          type: 'line',
+          height: 320,
+          toolbar: { show: false },
+          animations: { enabled: false },
+        },
+        stroke: { width: [0, 2.5, 2.5, 2.5], curve: 'smooth' },
+        colors: ['#1e3a8a', '#0ea5e9', '#f59e0b', '#10b981'],
+        plotOptions: {
+          bar: { columnWidth: '55%', borderRadius: 3 },
+        },
+        fill: { opacity: [0.85, 1, 1, 1] },
+        markers: { size: [0, 3, 3, 3] },
+        xaxis: {
+          categories: labels,
+          labels: { style: { fontSize: '11px' } },
+        },
+        yaxis: {
+          min: 0,
+          max: yMax,
+          tickAmount: 5,
+          labels: { formatter: v => v != null ? v.toFixed(0) + '%' : '' },
+        },
+        legend: {
+          show: true,
+          position: 'top',
+          markers: { width: 12, height: 4, radius: 2 },
+        },
+        tooltip: {
+          shared: true,
+          y: { formatter: v => v != null ? v.toFixed(2) + '%' : '-' },
+        },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 3 },
+        annotations: {
+          yaxis: [{
+            y: this.targetOee,
+            borderColor: '#ef4444',
+            borderWidth: 2,
+            strokeDashArray: 6,
+            label: {
+              text: `Target ${this.targetOee}%`,
+              style: { color: '#fff', background: '#ef4444', fontSize: '11px' },
+            },
+          }],
+        },
+      }
     },
     trendSeries() {
       if (!this.trendData.length) return []
@@ -510,6 +620,7 @@ export default {
       if (id) {
         this.loadProductDetail(id)
         this.loadTrend()
+        this.loadHourlySnapshot()
       }
     },
     trendDays() {
@@ -522,11 +633,13 @@ export default {
     await this.loadLatestLog()
     this.pollTimer = setInterval(() => this.loadSnapshot(), 5000)
     this.plcPollTimer = setInterval(() => this.loadLatestLog(), 2000)
+    this.hourlyPollTimer = setInterval(() => this.loadHourlySnapshot(), 60000)
   },
 
   beforeUnmount() {
     clearInterval(this.pollTimer)
     clearInterval(this.plcPollTimer)
+    clearInterval(this.hourlyPollTimer)
   },
 
   methods: {
@@ -602,6 +715,26 @@ export default {
         this.trendData = []
       } finally {
         this.trendLoading = false
+      }
+    },
+
+    async loadHourlySnapshot() {
+      if (!this.selectedProductId) return
+      this.hourlyLoading = true
+      try {
+
+        const date = new Date().toISOString().split('T')[0]
+        const res = await fetch(`${BASE_API}/api/oee/hourly-snapshot/${this.selectedProductId}/intraday?date=${date}`)
+        // console.log('Hourly snapshot response:', res)
+        if (!res.ok) throw new Error('Failed to load hourly snapshot')
+        const json = await res.json()
+        this.hourlyData = json.data || []
+        // console.log('Hourly snapshot data:', this.hourlyData  )
+      } catch (err) {
+        console.error('OEE hourly error:', err)
+        this.hourlyData = []
+      } finally {
+        this.hourlyLoading = false
       }
     },
 
