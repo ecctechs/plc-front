@@ -7,6 +7,11 @@
       <p class="page-title-subtitle mb-4">{{ locale.t('Manage PLC system settings') }}</p>
     </div>
 
+    <!-- Section 0: Role Setting (100%) -->
+    <div class="setting-section mb-4">
+      <RoleSetting />
+    </div>
+
     <!-- Section 1: Type + Room (70% + 30%) -->
     <div class="row g-4 mb-4">
       <div class="col-12 col-md-8">
@@ -44,6 +49,7 @@
 </template>
 
 <script>
+import RoleSetting from "../components/setting/RoleSetting.vue";
 import TypeSetting from "../components/setting/TypeSetting.vue";
 import RoomSetting from "../components/setting/RoomSetting.vue";
 import ProductSetting from "../components/setting/ProductSetting.vue";
@@ -60,6 +66,7 @@ export default {
   inject: ['locale'],
   
   components: {
+    RoleSetting,
     TypeSetting,
     RoomSetting,
     ProductSetting,
