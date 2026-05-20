@@ -64,6 +64,13 @@
                 </div>
                 <span>{{ locale.t('Register User') }}</span>
               </button>
+
+              <button v-if="currentUser.role === 'super_admin'" class="menu-item" @click="showRoleModal = true; dropdownOpen = false">
+                <div class="icon-box bg-light-warning">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <span>{{ locale.current === 'th' ? 'จัดการบทบาท' : 'Role Setting' }}</span>
+              </button>
             </div>
 
             <div class="dropdown-footer-custom border-top p-2">
@@ -80,6 +87,7 @@
 
     <ProfileModal v-if="showProfile" :user="currentUser" @close="showProfile = false" />
     <RegisterModal v-if="showRegisterModal" @close="showRegisterModal = false" />
+    <RoleSettingModal v-if="showRoleModal" @close="showRoleModal = false" />
 
     <div class="tab-content">
 
@@ -144,12 +152,13 @@ import Interaction from "./views/Interaction.vue";
 import Login from "./views/Login.vue";
 import ProfileModal from "./components/ProfileModal.vue";
 import RegisterModal from "./components/RegisterModal.vue";
+import RoleSettingModal from "./components/RoleSettingModal.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction, Login, ProfileModal, RegisterModal },
+  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction, Login, ProfileModal, RegisterModal, RoleSettingModal },
 
   inject: ['locale'],
 
@@ -158,6 +167,7 @@ export default {
       dropdownOpen: false,
       showProfile: false,
       showRegisterModal: false,
+      showRoleModal: false,
       tab: "dashboard",
       tabLabels: {
         dashboard: 'Dashboard',
