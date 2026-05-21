@@ -403,6 +403,7 @@
 import VueApexCharts from 'vue3-apexcharts'
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'Oee',
@@ -650,7 +651,7 @@ export default {
       try {
         const res = await fetch(`${BASE_API}/api/oee/snapshot`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authH() },
           body: JSON.stringify({ date, current_time: currentTime }),
         })
         if (!res.ok) throw new Error('Failed to fetch OEE snapshot')
@@ -666,7 +667,7 @@ export default {
 
     async loadProductDetail(id) {
       try {
-        const res = await fetch(`${BASE_API}/api/products/${id}`)
+        const res = await fetch(`${BASE_API}/api/products/${id}`, { headers: authH() })
         if (!res.ok) throw new Error('Failed to load product detail')
         const json = await res.json()
         const product = json.data || json
@@ -686,7 +687,7 @@ export default {
 
     async loadLatestLog() {
       try {
-        const res = await fetch(`${BASE_API}/api/products/latest-log`)
+        const res = await fetch(`${BASE_API}/api/products/latest-log`, { headers: authH() })
         if (!res.ok) throw new Error('Failed to load latest PLC log')
         const data = await res.json()
         if (data.success && data.data) {
@@ -706,7 +707,7 @@ export default {
       if (!this.selectedProductId) return
       this.trendLoading = true
       try {
-        const res = await fetch(`${BASE_API}/api/oee/snapshot/${this.selectedProductId}/history?days=${this.trendDays}`)
+        const res = await fetch(`${BASE_API}/api/oee/snapshot/${this.selectedProductId}/history?days=${this.trendDays}`, { headers: authH() })
         if (!res.ok) throw new Error('Failed to load trend')
         const json = await res.json()
         this.trendData = json.data || []
@@ -724,7 +725,7 @@ export default {
       try {
 
         const date = new Date().toISOString().split('T')[0]
-        const res = await fetch(`${BASE_API}/api/oee/hourly-snapshot/${this.selectedProductId}/intraday?date=${date}`)
+        const res = await fetch(`${BASE_API}/api/oee/hourly-snapshot/${this.selectedProductId}/intraday?date=${date}`, { headers: authH() })
         // console.log('Hourly snapshot response:', res)
         if (!res.ok) throw new Error('Failed to load hourly snapshot')
         const json = await res.json()

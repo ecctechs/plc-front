@@ -37,6 +37,7 @@
 import VueApexCharts from 'vue3-apexcharts'
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'AlarmHistoryChart',
@@ -132,7 +133,7 @@ export default {
     async fetchData() {
       this.loading = true
       try {
-        const res = await fetch(`${BASE_API}/api/alarms/events/history?days=${this.days}`)
+        const res = await fetch(`${BASE_API}/api/alarms/events/history?days=${this.days}`, { headers: authH() })
         const json = await res.json()
         this.chartData = json.data || []
       } catch (err) {

@@ -121,6 +121,7 @@
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "TypeSetting",
@@ -147,7 +148,7 @@ export default {
   methods: {
     async loadDeviceTypes() {
       try {
-        const res = await fetch(`${BASE_API}/api/device-types`);
+        const res = await fetch(`${BASE_API}/api/device-types`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.deviceTypes = json.data || []  ;
@@ -198,7 +199,7 @@ export default {
 
         const res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.form)
         });
 
@@ -227,7 +228,8 @@ export default {
       if (confirmed) {
         try {
           const res = await fetch(`${BASE_API}/api/device-types/${type.id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: authH()
           });
           
         if (!res.ok) {

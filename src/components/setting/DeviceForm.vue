@@ -121,6 +121,7 @@ import AlertForm from "./AlertForm.vue";
 import { showAlert } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   components: { AddressForm, DisplayNumber, DisplayLevel, AlertForm },
@@ -172,7 +173,7 @@ export default {
   methods: {
     async loadRooms() {
       try {
-        const res = await fetch(`${BASE_API}/api/rooms`);
+        const res = await fetch(`${BASE_API}/api/rooms`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.rooms = json.data || [];
@@ -183,7 +184,7 @@ export default {
     
     async loadDeviceTypes() {
       try {
-        const res = await fetch(`${BASE_API}/api/device-types`);
+        const res = await fetch(`${BASE_API}/api/device-types`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.deviceTypes = json.data || [];
@@ -363,7 +364,7 @@ export default {
 
         const res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(formData)
         });
 
@@ -433,7 +434,7 @@ export default {
     // --- Sub-Config API Calls ---
   async saveChildConfigs(originalId, savedAddrId, formAddr, isNewAddress = false) {
   const addressId = isNewAddress ? savedAddrId : originalId;
-    const jsonHeaders = { "Content-Type": "application/json" };
+    const jsonHeaders = { "Content-Type": "application/json", ...authH() };
     const safeFetch = async (url, options = {}) => {
       const res = await fetch(url, options);
       if (!res.ok) throw new Error(await res.text());
@@ -521,7 +522,7 @@ export default {
   if (this.deletedAlarmIds.length > 0) {
     for (const id of this.deletedAlarmIds) {
       try {
-        await fetch(`${BASE_API}/api/alarms/${id}`, { method: "DELETE" });
+        await fetch(`${BASE_API}/api/alarms/${id}`, { method: "DELETE", headers: authH() });
       } catch (e) {
         console.warn(`Could not delete alarm ${id}`, e);
       }

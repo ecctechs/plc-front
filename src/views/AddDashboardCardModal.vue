@@ -91,6 +91,7 @@
 import { showAlert, showConfirm } from "../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "AddDashboardCardModal",
@@ -208,7 +209,7 @@ export default {
           // Update existing dashboard card
           const response = await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authH() },
             body: JSON.stringify({
               address_id: this.selectedAddressId,
               display_type: this.selectedDisplayType,
@@ -239,7 +240,7 @@ export default {
           // Add new dashboard card
           const response = await fetch(`${BASE_API}/api/dashboard/cards`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authH() },
             body: JSON.stringify({
               address_id: this.selectedAddressId,
               display_type: this.selectedDisplayType,

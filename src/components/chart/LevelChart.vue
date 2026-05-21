@@ -62,6 +62,7 @@ import { showConfirm } from '../../utils/swalHelper'
 Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "LevelChart",
@@ -194,7 +195,7 @@ export default {
                 `&end=${endStr}`;
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, { headers: authH() });
         const data = await res.json();
 
         this.levels = JSON.parse(JSON.stringify(data.levels || []));

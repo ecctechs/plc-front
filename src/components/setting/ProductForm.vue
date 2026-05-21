@@ -56,6 +56,7 @@
 import { showAlert } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "ProductForm",
@@ -156,6 +157,7 @@ export default {
 
         const res = await fetch(url, {
           method,
+          headers: authH(),
           body: formData
         });
 

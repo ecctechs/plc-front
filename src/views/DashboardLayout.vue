@@ -58,6 +58,7 @@
 import Dashboard from './DashboardCards.vue';
 import AddDashboardCard from './AddDashboardCardModal.vue';
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   components: { Dashboard, AddDashboardCard },
@@ -122,14 +123,14 @@ export default {
   methods: {
     async loadFilters() {
       try {
-        const roomsRes = await fetch(`${BASE_API}/api/rooms`);
+        const roomsRes = await fetch(`${BASE_API}/api/rooms`, { headers: authH() });
         const roomsData = await roomsRes.json();
         const allRooms = roomsData.data || [];
         this.rooms = this.allowedRoomIds !== null
           ? allRooms.filter(r => this.allowedRoomIds.includes(r.id))
           : allRooms;
 
-        const typesRes = await fetch(`${BASE_API}/api/device-types`);
+        const typesRes = await fetch(`${BASE_API}/api/device-types`, { headers: authH() });
         const typesData = await typesRes.json();
         this.deviceTypes = typesData.data || [];
       } catch (err) {
@@ -149,7 +150,8 @@ export default {
     async deleteCard(card) {
       // call API
       await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authH()
       });
       this.$emit('delete-card', card);
     },
@@ -161,7 +163,7 @@ export default {
       try {
         await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authH() },
           body: JSON.stringify({
             selectedDeviceId: payload.selectedDeviceId,
             selectedAddressId: payload.selectedAddressId,

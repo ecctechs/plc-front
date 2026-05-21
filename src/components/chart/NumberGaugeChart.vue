@@ -113,6 +113,7 @@ import { showConfirm } from '../../utils/swalHelper'
 Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'NumberGaugeChart',
@@ -246,7 +247,7 @@ export default {
           ? `${baseUrl}/api/devices/chart-by-alarm?address_id=${this.device.address_id}&alarm_time=${encodeURIComponent(this.alarmTime)}&expand=20`
           : `${baseUrl}/api/devices/chart?address_id=${this.device.address_id}&start=${this.startDate}&end=${this.endDate}`
 
-        const res = await fetch(url)
+        const res = await fetch(url, { headers: authH() })
         const raw = await res.json()
 
         if (!raw || raw.length === 0) {

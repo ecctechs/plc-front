@@ -417,7 +417,7 @@ export default {
 
       try {
         const url = `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         if (!res.ok) throw new Error('API Error');
         this.history = await res.json();
         this.fetchDowntimeSummary();
@@ -567,7 +567,7 @@ export default {
     async loadRooms() {
       const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       try {
-        const res = await fetch(`${BASE_API}/api/rooms`);
+        const res = await fetch(`${BASE_API}/api/rooms`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         const data = await res.json();
         const allRooms = data.data || [];
         this.rooms = this.allowedRoomIds !== null

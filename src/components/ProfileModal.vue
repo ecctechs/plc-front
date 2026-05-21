@@ -13,7 +13,7 @@
             <div class="status-dot" :class="{ online: user.is_active }"></div>
           </div>
           <h3 class="user-name">{{ user.email?.split('@')[0] }}</h3>
-          <p class="user-role-badge">{{ user.role?.replace(/_/g, ' ') }}</p>
+          <p class="user-role-badge">{{ user.role_name || user.permissions?.role_name || user.role?.replace(/_/g, ' ') }}</p>
         </div>
 
         <!-- ── VIEW MODE ── -->

@@ -156,6 +156,7 @@ import RoleSettingModal from "./components/RoleSettingModal.vue";
 import UserSettingModal from "./components/UserSettingModal.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "App",
@@ -284,7 +285,7 @@ export default {
     },
     async loadDevices() {
       try {
-        const res = await fetch(`${BASE_API}/api/dashboard/cards`);
+        const res = await fetch(`${BASE_API}/api/dashboard/cards`, { headers: authH() });
         const data = await res.json();
 
         this.dashboard = data.map(newAddr => {

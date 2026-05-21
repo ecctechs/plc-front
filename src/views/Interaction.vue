@@ -141,6 +141,7 @@ import LevelProgressBar from '../components/interaction/LevelProgressBar.vue'
 import AddElementModal from './AddElementModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'Interaction',
@@ -230,7 +231,7 @@ export default {
     },
     async fetchLayouts() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`)
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`, { headers: authH() })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -260,7 +261,7 @@ export default {
         this.loading = true
         this.error = null
         
-        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`)
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`, { headers: authH() })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -346,7 +347,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,
@@ -394,7 +396,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,
@@ -439,7 +442,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,

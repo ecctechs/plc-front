@@ -73,6 +73,7 @@
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "RoomSetting",
@@ -97,7 +98,7 @@ export default {
   methods: {
     async loadRooms() {
       try {
-        const res = await fetch(`${BASE_API}/api/rooms`);
+        const res = await fetch(`${BASE_API}/api/rooms`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.rooms = json.data || [];
@@ -140,7 +141,7 @@ export default {
 
         const res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.form)
         });
 
@@ -170,7 +171,8 @@ export default {
       if (confirmed) {
         try {
           const res = await fetch(`${BASE_API}/api/rooms/${room.id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: authH()
           });
           
          if (!res.ok) {
