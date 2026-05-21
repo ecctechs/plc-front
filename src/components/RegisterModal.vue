@@ -37,19 +37,35 @@
                 <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
               </div>
 
-              <!-- Role -->
+              <!-- Role (dynamic) -->
               <div class="field-full">
                 <label>{{ locale.t('Role') }}</label>
                 <div class="input-wrapper" :class="{ 'has-error': errors.role }">
-                  <i class="fas fa-user-shield input-icon"></i>
-                  <select v-model="form.role" :disabled="isLoading">
+                  <i class="fas fa-shield-alt input-icon"></i>
+                  <select v-model="form.role" @change="onRoleChange" :disabled="isLoading || loadingRoles">
                     <option value="">{{ locale.current === 'th' ? '-- เลือกบทบาท --' : '-- Select Role --' }}</option>
-                    <option value="admin">Admin</option>
-                    <option value="operator">Operator</option>
-                    <option value="viewer">Viewer</option>
+                    <option v-if="loadingRoles" disabled>{{ locale.current === 'th' ? 'กำลังโหลด...' : 'Loading...' }}</option>
+                    <option v-for="r in roles" :key="r.id" :value="r.name">{{ r.name }}</option>
                   </select>
                 </div>
                 <span v-if="errors.role" class="error-text">{{ errors.role }}</span>
+              </div>
+
+              <!-- Active Status -->
+              <div class="field-full">
+                <div class="active-toggle-row">
+                  <span class="active-label">{{ locale.current === 'th' ? 'สถานะบัญชี' : 'Account Status' }}</span>
+                  <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="regActiveSwitch" v-model="form.is_active" :disabled="isLoading" />
+                    <label class="form-check-label" for="regActiveSwitch">
+                      <span :class="form.is_active ? 'text-success fw-semibold' : 'text-muted'">
+                        {{ form.is_active
+                          ? (locale.current === 'th' ? 'ใช้งาน' : 'Active')
+                          : (locale.current === 'th' ? 'ปิดใช้' : 'Inactive') }}
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <!-- Password -->
@@ -133,27 +149,55 @@ export default {
 
   data() {
     return {
-      form: { email: '', password: '', confirmPassword: '', role: '', rooms: [] },
+      form: { email: '', password: '', confirmPassword: '', role: '', role_id: null, is_active: true, rooms: [] },
+
       showPassword: false,
       showConfirmPassword: false,
       isLoading: false,
       errorMessage: '',
       errors: { email: '', password: '', confirmPassword: '', role: '' },
-      rooms: []
+      rooms: [],
+      roles: [],
+      loadingRoles: false
     };
   },
 
   async mounted() {
-    try {
-      const res = await fetch(`${BASE_API}/api/rooms`);
-      const data = await res.json();
-      this.rooms = data.data || data || [];
-    } catch {
-      this.rooms = [];
-    }
+    await Promise.all([this.loadRooms(), this.loadRoles()]);
   },
 
   methods: {
+    async loadRooms() {
+      try {
+        const res = await fetch(`${BASE_API}/api/rooms`);
+        const data = await res.json();
+        this.rooms = data.data || data || [];
+      } catch {
+        this.rooms = [];
+      }
+    },
+
+    async loadRoles() {
+      this.loadingRoles = true;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_API}/api/settings/roles`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        this.roles = (data.data || []).filter(r => r.is_active);
+      } catch {
+        this.roles = [];
+      } finally {
+        this.loadingRoles = false;
+      }
+    },
+
+    onRoleChange() {
+      const found = this.roles.find(r => r.name === this.form.role);
+      this.form.role_id = found ? found.id : null;
+    },
+
     addRoom() {
       this.form.rooms.push({ room_id: null, scope: 'view' });
     },
@@ -198,18 +242,31 @@ export default {
 
       // 1. ดึง token จาก localStorage มาเก็บในตัวแปร
       const token = localStorage.getItem('token');
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
       this.isLoading = true;
       try {
-        const res = await fetch(`${BASE_API}/api/users`, {
+        const res = await fetch(`${BASE_API}/api/settings/users`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' , 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             email: this.form.email,
             password: this.form.password,
             role: this.form.role,
+            role_id: this.form.role_id,
+            is_active: this.form.is_active,
+            company_id: currentUser.company_id,
             rooms: this.form.rooms
           })
+        });
+        console.log('Request Payload:', {
+          email: this.form.email,
+          password: this.form.password,
+          role: this.form.role,
+          role_id: this.form.role_id,
+          is_active: this.form.is_active,
+          company_id: currentUser.company_id,
+          rooms: this.form.rooms
         });
 
         const data = await res.json();
@@ -406,6 +463,22 @@ label {
   width: 32px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.active-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+
+.active-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
 }
 
 /* Buttons */
