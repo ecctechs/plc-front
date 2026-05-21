@@ -58,18 +58,18 @@
                 <span>{{ locale.current === 'th' ? 'โปรไฟล์ส่วนตัว' : 'Personal Profile' }}</span>
               </button>
 
-              <button v-if="currentUser.role === 'super_admin'" class="menu-item" @click="showRegisterModal = true; dropdownOpen = false">
-                <div class="icon-box bg-light-success">
-                  <i class="fas fa-user-plus"></i>
-                </div>
-                <span>{{ locale.t('Register User') }}</span>
-              </button>
-
               <button v-if="currentUser.role === 'super_admin'" class="menu-item" @click="showRoleModal = true; dropdownOpen = false">
                 <div class="icon-box bg-light-warning">
                   <i class="fas fa-shield-alt"></i>
                 </div>
                 <span>{{ locale.current === 'th' ? 'จัดการบทบาท' : 'Role Setting' }}</span>
+              </button>
+
+              <button v-if="currentUser.role === 'super_admin'" class="menu-item" @click="showUserModal = true; dropdownOpen = false">
+                <div class="icon-box bg-light-info">
+                  <i class="fas fa-users-cog"></i>
+                </div>
+                <span>{{ locale.current === 'th' ? 'จัดการผู้ใช้' : 'User Management' }}</span>
               </button>
             </div>
 
@@ -86,8 +86,8 @@
     </div>
 
     <ProfileModal v-if="showProfile" :user="currentUser" @close="showProfile = false" />
-    <RegisterModal v-if="showRegisterModal" @close="showRegisterModal = false" />
     <RoleSettingModal v-if="showRoleModal" @close="showRoleModal = false" />
+    <UserSettingModal v-if="showUserModal" @close="showUserModal = false" />
 
     <div class="tab-content">
 
@@ -137,6 +137,7 @@
         :devices="dashboard"
         :user-role="currentUser.role"
         :allowed-room-ids="allowedRoomIds"
+        :can-export="canExport"
       />
     </div>
   </div>
@@ -151,14 +152,14 @@ import AlarmHistory from "./views/AlarmHistory.vue";
 import Interaction from "./views/Interaction.vue";
 import Login from "./views/Login.vue";
 import ProfileModal from "./components/ProfileModal.vue";
-import RegisterModal from "./components/RegisterModal.vue";
 import RoleSettingModal from "./components/RoleSettingModal.vue";
+import UserSettingModal from "./components/UserSettingModal.vue";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: "App",
-  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction, Login, ProfileModal, RegisterModal, RoleSettingModal },
+  components: { DashboardLayout, Setting, Oee, Demo, AlarmHistory, Interaction, Login, ProfileModal, RoleSettingModal, UserSettingModal },
 
   inject: ['locale'],
 
@@ -166,8 +167,8 @@ export default {
     return {
       dropdownOpen: false,
       showProfile: false,
-      showRegisterModal: false,
       showRoleModal: false,
+      showUserModal: false,
       tab: "dashboard",
       tabLabels: {
         dashboard: 'Dashboard',
@@ -182,7 +183,8 @@ export default {
       isSimulate: false,
       isRunAllRandom: false,
       pollTimer: null,
-      autoTimers: new Set()
+      autoTimers: new Set(),
+      userVersion: 0
     };
   },
 
@@ -191,23 +193,25 @@ export default {
       return !!localStorage.getItem('token')
     },
     currentUser() {
+      void this.userVersion;
       try {
         return JSON.parse(localStorage.getItem('user')) || {};
       } catch {
         return {};
       }
     },
+    permissions() {
+      try {
+        return JSON.parse(localStorage.getItem('permissions')) || {};
+      } catch {
+        return {};
+      }
+    },
     visibleTabs() {
-      const role = this.currentUser?.role
-      const tabs = [
-        { key: 'dashboard',    roles: ['super_admin', 'admin', 'operator', 'viewer'] },
-        { key: 'oee',          roles: ['super_admin', 'admin', 'operator', 'viewer'] },
-        { key: 'alarmhistory', roles: ['super_admin', 'admin', 'operator', 'viewer'] },
-        { key: 'interaction',  roles: ['super_admin', 'admin', 'operator'] },
-        { key: 'demo',         roles: ['super_admin', 'admin'] },
-        { key: 'setting',      roles: ['super_admin', 'admin'] },
-      ]
-      return tabs.filter(t => t.roles.includes(role)).map(t => t.key)
+      const allTabs = ['dashboard', 'oee', 'alarmhistory', 'interaction', 'demo', 'setting'];
+      if (this.currentUser?.role === 'super_admin') return allTabs;
+      const perms = this.permissions;
+      return allTabs.filter(key => perms[key] === true);
     },
     userRooms() {
       return this.currentUser.rooms || []
@@ -218,7 +222,12 @@ export default {
     },
     allowedRoomIds() {
       if (this.hasFullRoomAccess) return null
+      if (this.userRooms.length === 0) return null
       return this.userRooms.map(r => r.id)
+    },
+    canExport() {
+      if (['super_admin', 'admin'].includes(this.currentUser.role)) return true
+      return this.currentUser.permissions?.scope_permissions?.export === true
     }
   },
 
@@ -242,6 +251,14 @@ export default {
   },
 
   watch: {
+    visibleTabs: {
+      immediate: true,
+      handler(tabs) {
+        if (tabs.length && !tabs.includes(this.tab)) {
+          this.tab = tabs[0];
+        }
+      }
+    },
     isSimulate(val) {
       if (val) {
         this.stopPolling();
@@ -384,6 +401,7 @@ export default {
     logout() {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      localStorage.removeItem('permissions')
       window.location.reload()
     }
   }
@@ -521,6 +539,7 @@ export default {
 
 .bg-light-primary { background: #e0e7ff; color: #4338ca; }
 .bg-light-success { background: #dcfce7; color: #15803d; }
+.bg-light-info    { background: #e0f2fe; color: #0369a1; }
 
 /* Logout Button */
 .btn-logout-custom {

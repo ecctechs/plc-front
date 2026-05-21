@@ -37,6 +37,9 @@
           <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
           <i v-else class="bi bi-search me-1"></i> {{ locale.t('Search') }}
         </button>
+        <button v-if="canExport" @click="exportCSV" class="btn btn-success btn-sm px-4 shadow-sm fw-bold">
+          <i class="bi bi-download me-1"></i> {{ locale.t('Export') }}
+        </button>
       </div>
     </div>
 
@@ -312,6 +315,7 @@ export default {
     devices: { type: Array, default: () => [] },
     userRole: { type: String, default: '' },
     allowedRoomIds: { type: Array, default: null },
+    canExport: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -537,6 +541,27 @@ export default {
       const m = Math.floor(sec / 60)
       const s = sec % 60
       return s > 0 ? `${m} นาที ${s} วิ` : `${m} นาที`
+    },
+
+    exportCSV() {
+      const headers = ['Device Name', 'Alarm Name', 'Room', 'Event Type', 'Value', 'Duration (min)', 'Timestamp']
+      const rows = this.filteredHistory.map(item => [
+        item.device?.name || '',
+        item.rule?.name || '',
+        item.device?.room?.name || '',
+        item.event_type || '',
+        item.value ?? '',
+        item.duration_min ?? '',
+        this.formatDate(item.created_at)
+      ])
+      const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `alarm-history-${this.filter.startDate}-${this.filter.endDate}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
     },
 
     async loadRooms() {
