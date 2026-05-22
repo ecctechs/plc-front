@@ -101,6 +101,7 @@ import { showConfirm } from '../../utils/swalHelper'
 Chart.register(annotationPlugin)
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: "OnOffChart",
@@ -242,7 +243,7 @@ export default {
                 `&end=${this.endDate}`
         }
 
-        const res = await fetch(url)
+        const res = await fetch(url, { headers: authH() })
         const raw = await res.json()
 
         this.isEmpty = !raw || raw.length === 0

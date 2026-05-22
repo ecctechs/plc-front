@@ -7,7 +7,7 @@
         </h3>
         <p class="page-title-subtitle mb-0">Interactive visualization and control of PLC devices</p>
       </div>
-      <button class="btn btn-primary" @click="showAddElementModal = true">
+      <button v-if="canAddElement" class="btn btn-primary" @click="showAddElementModal = true">
         <i class="bi bi-plus-circle me-1"></i> {{ locale.t('Add Element') }}
       </button>
     </div>
@@ -40,7 +40,7 @@
 
         <!-- Dynamic Elements -->
         <template v-for="element in visibleElements" :key="element.id">
-          <StatusLamp 
+          <StatusLamp
             v-if="element.element_type === 'status_lamp'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -50,10 +50,10 @@
             :isOn="getValue(element.address_id) !== 0"
             :name="element.name"
             :addressId="element.address_id"
-            @toggle="(newValue) => handleLampToggle(element, newValue)"
+            @toggle="canControlElement(element) ? (newValue) => handleLampToggle(element, newValue) : undefined"
           />
-          
-          <NumberDisplay 
+
+          <NumberDisplay
             v-else-if="element.element_type === 'number_display'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -63,12 +63,12 @@
             :unit="element.unit"
             :decimals="element.precision"
             :value="getValue(element.address_id)"
-            :editable="true"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
           />
-          
+
           <GaugeDisplay
             v-else-if="element.element_type === 'gauge_display'"
             :x_percent="parseFloat(element.x_percent)"
@@ -82,13 +82,13 @@
             :minValue="getDeviceMinMax(element.address_id).min"
             :maxValue="getDeviceMinMax(element.address_id).max"
             :alarms="getDeviceMinMax(element.address_id).alarms"
-            :editable="true"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
           />
-          
-          <ControlButton 
+
+          <ControlButton
             v-else-if="element.element_type === 'control_button'"
             :x_percent="parseFloat(element.x_percent)"
             :y_percent="parseFloat(element.y_percent)"
@@ -98,7 +98,7 @@
             :inactiveColor="element.inactive_color"
             :isPressed="getValue(element.address_id) !== 0"
             :name="element.name"
-            @click="writePlcValue(element)"
+            @click="canControlElement(element) && writePlcValue(element)"
           />
 
           <LevelProgressBar
@@ -113,7 +113,7 @@
             :decimals="element.precision"
             :value="getValue(element.address_id)"
             :levels="getDeviceLevels(element.address_id)"
-            :editable="true"
+            :editable="canControlElement(element)"
             :addressId="element.address_id"
             :name="element.name"
             @update-value="handleNumberUpdate"
@@ -141,6 +141,7 @@ import LevelProgressBar from '../components/interaction/LevelProgressBar.vue'
 import AddElementModal from './AddElementModal.vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'Interaction',
@@ -158,7 +159,10 @@ export default {
   emits: ['update-device'],
   props: {
     devices: { type: Array, default: () => [] },
-    isSimulate: { type: Boolean, default: false }
+    isSimulate: { type: Boolean, default: false },
+    userRole: { type: String, default: '' },
+    allowedRoomIds: { type: Array, default: null },
+    canControlRoom: { type: Function, default: null },
   },
   data() {
     return {
@@ -181,6 +185,9 @@ export default {
     }
   },
   computed: {
+    canAddElement() {
+      return ['super_admin', 'admin'].includes(this.userRole)
+    },
     containerStyle() {
       if (!this.layoutData) return {}
 
@@ -191,10 +198,25 @@ export default {
     },
     visibleElements() {
       if (!this.layoutData || !this.layoutData.elements) return []
-      return this.layoutData.elements.filter(el => el.is_visible)
+      return this.layoutData.elements.filter(el => {
+        if (!el.is_visible) return false
+        if (this.allowedRoomIds === null) return true
+        const roomId = this.getDeviceRoomId(el.address_id)
+        return roomId === null || this.allowedRoomIds.includes(roomId)
+      })
     }
   },
   methods: {
+    getDeviceRoomId(addressId) {
+      const device = this.devices.find(d => d.address_id === addressId)
+      return device?.device?.room_id ?? null
+    },
+    canControlElement(element) {
+      if (this.canControlRoom) {
+        return this.canControlRoom(this.getDeviceRoomId(element.address_id))
+      }
+      return ['super_admin', 'admin'].includes(this.userRole)
+    },
     getButtonLabel(element) {
       const value = this.getValue(element.address_id)
       return value === 0 ? 'START' : 'STOP'
@@ -209,7 +231,7 @@ export default {
     },
     async fetchLayouts() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`)
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`, { headers: authH() })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -239,7 +261,7 @@ export default {
         this.loading = true
         this.error = null
         
-        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`)
+        const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`, { headers: authH() })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -325,7 +347,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,
@@ -373,7 +396,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,
@@ -418,7 +442,8 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...authH()
           },
           body: JSON.stringify({
             address: plcAddress,

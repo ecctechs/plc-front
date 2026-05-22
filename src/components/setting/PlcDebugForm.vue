@@ -68,6 +68,7 @@
 
 <script>
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "PlcDebugForm",
@@ -94,7 +95,8 @@ export default {
 
       try {
         const res = await fetch(
-          `${BASE_API}/api/plc/read?address=${this.address}`
+          `${BASE_API}/api/plc/read?address=${this.address}`,
+          { headers: authH() }
         );
 
         const data = await res.json();

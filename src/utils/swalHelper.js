@@ -26,6 +26,10 @@ export const showAlert = async (title, text, icon = 'success') => {
     customClass: {
       popup: 'rounded-4 shadow-lg border-0',
     },
+    didOpen: () => {
+      const container = document.querySelector('.swal2-container');
+      if (container) container.style.zIndex = '99999';
+    },
     showClass: {
       popup: 'animate__animated animate__fadeInUp animate__faster'
     },
@@ -55,6 +59,10 @@ export const showConfirm = async (title, text, confirmText = 'ยืนยัน
     background: "#fff",
     customClass: {
       popup: 'rounded-4 shadow-lg border-0',
+    },
+    didOpen: () => {
+      const container = document.querySelector('.swal2-container');
+      if (container) container.style.zIndex = '99999';
     },
     showClass: {
       popup: 'animate__animated animate__fadeInUp animate__faster'

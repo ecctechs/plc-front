@@ -148,6 +148,7 @@
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "ProductSetting",
@@ -173,7 +174,7 @@ export default {
   methods: {
     async loadProducts() {
       try {
-        const res = await fetch(`${BASE_API}/api/products`);
+        const res = await fetch(`${BASE_API}/api/products`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.products = json.data || json;
@@ -184,7 +185,7 @@ export default {
 
     async loadPlcAddresses() {
       try {
-        const res = await fetch(`${BASE_API}/api/products/plc-addresses`);
+        const res = await fetch(`${BASE_API}/api/products/plc-addresses`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load PLC addresses");
         const json = await res.json();
         if (json.success) {
@@ -205,7 +206,7 @@ export default {
         this.savingPlc = true;
         const res = await fetch(`${BASE_API}/api/products/plc-addresses`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.plcAddresses)
         });
 
@@ -238,7 +239,8 @@ export default {
       if (confirmed) {
         try {
           const res = await fetch(`${BASE_API}/api/products/${product.id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: authH()
           });
           
           if (!res.ok) throw new Error("Delete failed");

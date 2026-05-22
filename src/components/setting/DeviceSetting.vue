@@ -115,6 +115,7 @@
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "DeviceSetting",
@@ -189,7 +190,7 @@ export default {
     
     async loadDevices() {
       try {
-        const res = await fetch(`${BASE_API}/api/devices?is_active=true`);
+        const res = await fetch(`${BASE_API}/api/devices?is_active=true`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         const devices = json.data || json;
@@ -235,7 +236,7 @@ export default {
     
     async loadRooms() {
       try {
-        const res = await fetch(`${BASE_API}/api/rooms`);
+        const res = await fetch(`${BASE_API}/api/rooms`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         this.rooms = json.data || [];
@@ -282,7 +283,8 @@ export default {
       if (confirmed) {
         try {
           const res = await fetch(`${BASE_API}/api/devices/${device.id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: authH()
           });
           
           if (!res.ok) throw new Error("Delete failed");

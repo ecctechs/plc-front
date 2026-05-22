@@ -171,6 +171,7 @@
 
 <script>
 const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "AddElementModal",
@@ -263,7 +264,7 @@ export default {
 
     async fetchDevices() {
       try {
-        const res = await fetch(`${BASE_API}/api/devices`);
+        const res = await fetch(`${BASE_API}/api/devices`, { headers: authH() });
         const data = await res.json();
         this.devices = data;
       } catch (err) {
@@ -306,7 +307,7 @@ export default {
 
         const response = await fetch(url, {
           method: method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authH() },
           body: JSON.stringify(this.form)
         });
 

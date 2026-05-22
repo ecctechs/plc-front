@@ -119,6 +119,7 @@
 
 <script>
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   props: {
@@ -141,7 +142,7 @@ export default {
       for (const alarm of this.modelValue) {
         await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify({
             ...alarm,
             data_type: this.dataType,
@@ -165,7 +166,7 @@ export default {
       if (["number", "number_gauge"].includes(this.dataType) && this.numberConfig) {
         await fetch(`${BASE_API}/api/addresses/${savedAddrId}/number-config`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.numberConfig)
         });
       }
@@ -174,12 +175,12 @@ export default {
       if (this.dataType === "level" && this.levels) {
         await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.levels)
         });
 
         // Fetch saved levels to get the new level_index for alarms
-        const levelsResponse = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`);
+        const levelsResponse = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/levels`, { headers: authH() });
         const savedLevels = await levelsResponse.json();
         console.log('Saved levels for alarm mapping:', savedLevels);
 

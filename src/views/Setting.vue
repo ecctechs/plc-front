@@ -37,6 +37,7 @@
       </div>
     </div>
 
+
     <DeviceForm ref="deviceFormModal" @saved="onDeviceSaved" :reloadDevices="reloadDevices" />
     <ProductForm ref="productFormModal" @saved="onProductSaved" :reloadProducts="reloadProducts" />
   </div>

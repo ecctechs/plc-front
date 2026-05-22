@@ -125,8 +125,11 @@ export default {
         })
         const data = await res.json()
         if (res.ok && data.success) {
+          const u = data.data.user
           localStorage.setItem('token', data.data.token)
-          localStorage.setItem('user', JSON.stringify(data.data.user))
+          localStorage.setItem('user', JSON.stringify(u))
+          const perms = u.permissions?.tab_permissions || u.tab_permissions || {}
+          localStorage.setItem('permissions', JSON.stringify(perms))
           window.location.reload()
         } else {
           this.errorMessage = data.message || this.locale.t('Invalid email or password')

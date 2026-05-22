@@ -109,6 +109,7 @@
 import Swal from "sweetalert2";
 
 const API = import.meta.env.VITE_API_BASE_URL;
+const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "WorkingTimeConfig",
@@ -143,7 +144,7 @@ export default {
   methods: {
     async load() {
       try {
-        const res = await fetch(`${API}/api/working-time`);
+        const res = await fetch(`${API}/api/working-time`, { headers: authH() });
         if (!res.ok) throw new Error("Load failed");
         const data = await res.json();
         
@@ -191,7 +192,7 @@ export default {
         this.savingDay = dayId;
         const res = await fetch(`${API}/api/working-time`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.buildPayload())
         });
         if (!res.ok) throw new Error("Save failed");
@@ -211,7 +212,7 @@ export default {
         this.loading = true;
         const res = await fetch(`${API}/api/working-time`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.buildPayload())
         });
         if (!res.ok) throw new Error("Save failed");
