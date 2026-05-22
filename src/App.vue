@@ -97,6 +97,7 @@
         :dashboard-cards="dashboardCards"
         :user-role="currentUser.role"
         :allowed-room-ids="allowedRoomIds"
+        :can-edit="canEdit"
         @add-card="onAddCard"
         @delete-card="onDeleteCard"
       />
@@ -229,6 +230,10 @@ export default {
     canExport() {
       if (['super_admin', 'admin'].includes(this.currentUser.role)) return true
       return this.currentUser.permissions?.scope_permissions?.export === true
+    },
+    canEdit() {
+      if (['super_admin', 'admin'].includes(this.currentUser.role)) return true
+      return this.currentUser.permissions?.scope_permissions?.edit === true
     }
   },
 

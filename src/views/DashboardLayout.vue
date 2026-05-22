@@ -8,7 +8,7 @@
         </h3>
         <p class="page-title-subtitle mb-0">{{ locale.t('Real-time device monitoring and control') }}</p>
       </div>
-      <div v-if="['super_admin','admin'].includes(userRole)">
+      <div v-if="canEdit">
         <button class="btn btn-edit-mode me-2" @click="editMode = !editMode">
           {{ editMode ? locale.t('Exit Edit') : locale.t('Edit Mode') }}
         </button>
@@ -69,6 +69,7 @@ export default {
     devices: Array,
     userRole: String,
     allowedRoomIds: { type: Array, default: null },
+    canEdit: { type: Boolean, default: false },
   },
 
   data() {
@@ -159,22 +160,8 @@ export default {
       this.$emit('add-card', payload);
       this.showAdd = false;
     },
-    async onUpdate(payload) {
-      try {
-        await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authH() },
-          body: JSON.stringify({
-            selectedDeviceId: payload.selectedDeviceId,
-            selectedAddressId: payload.selectedAddressId,
-            selectedDisplayType: payload.selectedDisplayType,
-            selectedPosition: payload.selectedPosition
-          })
-        });
-        this.$emit('update-card', payload);
-      } catch (err) {
-        console.error('Failed to update card:', err);
-      }
+    onUpdate(payload) {
+      this.$emit('update-card', payload);
       this.closeModal();
     }
   }

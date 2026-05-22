@@ -127,20 +127,23 @@ export default {
   async mounted() {
     try {
       const [devicesRes, roomsRes] = await Promise.all([
-        fetch(`${BASE_API}/api/devices`),
-        fetch(`${BASE_API}/api/rooms`)
+        fetch(`${BASE_API}/api/devices`, { headers: authH() }),
+        fetch(`${BASE_API}/api/rooms`, { headers: authH() })
       ]);
       const devicesData = await devicesRes.json();
       const roomsData = await roomsRes.json();
-      this.devices = devicesData;
+      this.devices = devicesData.data || devicesData || [];
       this.rooms = roomsData.data || roomsData || [];
 
       if (this.editingCard) {
-        this.form.room_id = this.editingCard.device.room_id || "";
+        this.form.room_id = this.editingCard.device?.room_id || "";
         for (const device of this.devices) {
-          const address = device.addresses?.find(a => a.id === this.editingCard.address_id);
+          const address = device.addresses?.find(
+            a => Number(a.id) === Number(this.editingCard.address_id)
+          );
           if (address) {
             this.selectedDeviceId = device.id;
+            await this.$nextTick();
             this.selectedAddressId = address.id;
             this.selectedDisplayType = this.editingCard.display_type;
             this.selectedPosition = this.editingCard.position || 1;
@@ -206,14 +209,14 @@ export default {
 
       try {
         if (this.isEditMode) {
-          // Update existing dashboard card
           const response = await fetch(`${BASE_API}/api/dashboard/cards/${this.editingCard.card_id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', ...authH() },
             body: JSON.stringify({
-              address_id: this.selectedAddressId,
-              display_type: this.selectedDisplayType,
-              position: this.selectedPosition
+              selectedDeviceId: this.selectedDeviceId,
+              selectedAddressId: this.selectedAddressId,
+              selectedDisplayType: this.selectedDisplayType,
+              selectedPosition: this.selectedPosition
             })
           });
 

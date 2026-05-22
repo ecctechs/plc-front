@@ -75,6 +75,23 @@
             </div>
           </div>
 
+          <!-- Scope Permissions -->
+          <div class="section-block">
+            <p class="section-label"><i class="fas fa-key me-2"></i>{{ locale.current === 'th' ? 'สิทธิ์การใช้งาน' : 'Scope Permissions' }}</p>
+            <div v-if="user.role === 'super_admin'" class="chip-row">
+              <span class="perm-chip all">
+                <i class="fas fa-infinity me-1"></i>{{ locale.current === 'th' ? 'ทุกสิทธิ์' : 'All Access' }}
+              </span>
+            </div>
+            <div v-else class="chip-row">
+              <span v-for="s in SCOPE_META" :key="s.key"
+                :class="['scope-perm-chip', scopePerms[s.key] ? 'active' : 'inactive']">
+                <i :class="['fas', s.icon, 'me-1']"></i>
+                {{ locale.current === 'th' ? s.th : s.en }}
+              </span>
+            </div>
+          </div>
+
         </div>
 
         <!-- ── CHANGE PASSWORD MODE ── -->
@@ -141,6 +158,13 @@ import { showAlert } from '../utils/swalHelper';
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
+const SCOPE_META = [
+  { key: 'view',    icon: 'fa-eye',           th: 'ดูข้อมูล',  en: 'View'    },
+  { key: 'edit',    icon: 'fa-pencil-alt',     th: 'แก้ไข',     en: 'Edit'    },
+  { key: 'export',  icon: 'fa-file-download',  th: 'ส่งออก',    en: 'Export'  },
+  { key: 'control', icon: 'fa-gamepad',        th: 'ควบคุม',    en: 'Control' },
+];
+
 const TAB_META = [
   { key: 'dashboard',   icon: 'fa-tachometer-alt', th: 'แดชบอร์ด',        en: 'Dashboard'     },
   { key: 'oee',         icon: 'fa-chart-line',      th: 'OEE',             en: 'OEE'           },
@@ -159,6 +183,7 @@ export default {
   },
   data() {
     return {
+      SCOPE_META,
       mode: 'view',
       saving: false,
       pwError: '',
@@ -175,6 +200,9 @@ export default {
     enabledTabs() {
       const perms = this.user.permissions?.tab_permissions || this.user.tab_permissions || {};
       return TAB_META.filter(t => perms[t.key] === true);
+    },
+    scopePerms() {
+      return this.user.permissions?.scope_permissions || {};
     }
   },
   methods: {
@@ -300,6 +328,15 @@ export default {
 .scope-dot.view    { background: #dbeafe; color: #1d4ed8; }
 .scope-dot.control { background: #fef3c7; color: #b45309; }
 .scope-dot.manage  { background: #ede9fe; color: #6d28d9; }
+
+/* Scope permission chips */
+.scope-perm-chip {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px; border-radius: 100px; font-size: 0.78rem; font-weight: 500;
+  border: 1px solid transparent;
+}
+.scope-perm-chip.active  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.scope-perm-chip.inactive { background: #f9fafb; color: #9ca3af; border-color: #e5e7eb; text-decoration: line-through; }
 
 /* Permission chips */
 .perm-chip {

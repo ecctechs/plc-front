@@ -16,9 +16,11 @@ app.use(VCalendar, {
   firstDayOfWeek: 1,
 });
 
+const savedLocale = localStorage.getItem('locale') || 'th';
+
 const i18n = createI18n({
   legacy: true,
-  locale: "th",
+  locale: savedLocale,
   fallbackLocale: "en",
   globalInjection: true,
   messages: {
@@ -39,6 +41,7 @@ const locale = {
   },
   toggle() {
     i18n.global.locale = i18n.global.locale === "th" ? "en" : "th";
+    localStorage.setItem('locale', i18n.global.locale);
   }
 };
 
