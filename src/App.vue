@@ -45,7 +45,11 @@
                 <i class="fas fa-user-circle"></i>
               </div>
               <div class="header-content">
-                <p class="h-name">{{ currentUser.email?.split('@')[0] }}</p>
+                <p class="h-name">
+                  {{ currentUser.employee
+                    ? `${currentUser.employee.first_name} ${currentUser.employee.last_name}`
+                    : currentUser.email?.split('@')[0] }}
+                </p>
                 <p class="h-email text-truncate">{{ currentUser.email }}</p>
               </div>
             </div>
