@@ -198,11 +198,15 @@ export default {
       }
     },
     
-    open(device = null) {
-      // Reload device types every time the popup is opened
-      this.loadDeviceTypes();
+    async open(device = null) {
+      await this.loadDeviceTypes();
       this.loadRooms();
-      
+
+      if (!device && this.deviceTypes.length === 0) {
+        await showAlert("แจ้งเตือน", "กรุณาเพิ่ม Type Setting ก่อนเพิ่ม Device", "warning");
+        return;
+      }
+
       if (device) {
         this.isEdit = true;
         this.editingId = device.id;
