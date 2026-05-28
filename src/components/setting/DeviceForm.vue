@@ -59,6 +59,10 @@
                     <option value="">Select {{ locale.t('Type') }}</option>
                     <option v-for="dt in availableDisplayTypes" :key="dt" :value="dt">{{ getDisplayTypeLabel(dt) }}</option>
                   </select>
+                  <div v-if="!form.device_type_id" class="d-flex align-items-center gap-1 mt-1">
+                    <i class="bi bi-arrow-up-circle-fill text-warning" style="font-size: 0.75rem;"></i>
+                    <span class="text-warning" style="font-size: 0.75rem;">{{ locale.t('Please select Device Type first') }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -82,11 +86,12 @@
             </div>
 
             <div class="mt-3">
-              <AlertForm 
+              <AlertForm
                 ref="alertForms"
-                v-model="addr.alarms" 
-                :dataType="addr.data_type" 
-                :levelLabels="addr.levels" 
+                v-model="addr.alarms"
+                :dataType="addr.data_type"
+                :levelLabels="addr.levels"
+                @remove-alarm="id => deletedAlarmIds.push(id)"
               />
             </div>
 
@@ -218,8 +223,9 @@ export default {
           room_id: "",
           device_type_id: "",
           refresh_rate_ms: 1000,
-          addresses: [this.createNewAddress()]
+          addresses: []
         };
+        this.form.addresses.push(this.createNewAddress());
       }
       this.showModal = true;
     },
