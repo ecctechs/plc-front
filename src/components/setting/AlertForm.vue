@@ -129,7 +129,7 @@ export default {
     numberConfig: { type: Object, default: null },
     levels: { type: Array, default: () => [] }
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'remove-alarm'],
   data() {
     return {
       errors: [] // เก็บสถานะ Error ภายใน
@@ -307,6 +307,10 @@ export default {
       this.$emit('update:modelValue', newList);
     },
     removeAlarm(index) {
+      const alarm = this.modelValue[index];
+      if (alarm && alarm.id) {
+        this.$emit('remove-alarm', alarm.id);
+      }
       const newList = this.modelValue.filter((_, i) => i !== index);
       this.$emit('update:modelValue', newList);
     },

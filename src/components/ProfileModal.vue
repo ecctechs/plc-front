@@ -12,7 +12,14 @@
             <div class="avatar-main"><i class="fas fa-user-shield"></i></div>
             <div class="status-dot" :class="{ online: user.is_active }"></div>
           </div>
-          <h3 class="user-name">{{ user.email?.split('@')[0] }}</h3>
+          <h3 class="user-name">
+            {{ user.employee
+              ? `${user.employee.first_name} ${user.employee.last_name}`
+              : user.email?.split('@')[0] }}
+          </h3>
+          <p v-if="user.employee" class="user-employee-info">
+            {{ [user.employee.position, user.employee.department].filter(Boolean).join(' — ') }}
+          </p>
           <p class="user-role-badge">{{ user.role_name || user.permissions?.role_name || user.role?.replace(/_/g, ' ') }}</p>
         </div>
 
@@ -32,6 +39,14 @@
             <div class="info-row">
               <div class="info-label"><i class="fas fa-building"></i><span>{{ locale.current === 'th' ? 'บริษัท' : 'COMPANY' }}</span></div>
               <div class="info-value">{{ user.company?.name || '—' }}</div>
+            </div>
+            <div v-if="user.employee" class="info-row">
+              <div class="info-label"><i class="fas fa-id-badge"></i><span>{{ locale.current === 'th' ? 'รหัสพนักงาน' : 'EMP ID' }}</span></div>
+              <div class="info-value">{{ user.employee.employee_id }}</div>
+            </div>
+            <div v-if="user.employee?.position" class="info-row">
+              <div class="info-label"><i class="fas fa-briefcase"></i><span>{{ locale.current === 'th' ? 'ตำแหน่ง' : 'POSITION' }}</span></div>
+              <div class="info-value">{{ user.employee.position }}</div>
             </div>
             <div class="info-row">
               <div class="info-label"><i class="fas fa-signal"></i><span>{{ locale.current === 'th' ? 'สถานะ' : 'STATUS' }}</span></div>
@@ -287,6 +302,7 @@ export default {
 }
 .status-dot.online { background: #22c55e; }
 .user-name { font-size: 1.15rem; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; text-transform: capitalize; }
+.user-employee-info { font-size: 0.78rem; color: #64748b; margin-bottom: 6px; }
 .user-role-badge {
   display: inline-block; font-size: 0.73rem; font-weight: 600;
   color: #0062ff; background: #eff6ff; padding: 3px 12px;

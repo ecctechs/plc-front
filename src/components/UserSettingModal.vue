@@ -220,9 +220,13 @@
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold small">{{ locale.current === 'th' ? 'รหัสพนักงาน' : 'Employee ID' }}</label>
-            <input v-model="editForm.employee_id" type="text" class="form-control form-control-sm"
-              :placeholder="locale.current === 'th' ? 'เช่น EMP001' : 'e.g. EMP001'" />
+            <label class="form-label fw-semibold small">{{ locale.current === 'th' ? 'เชื่อมกับพนักงาน' : 'Link to Employee' }}</label>
+            <select v-model="editForm.employee_id" class="form-select form-select-sm">
+              <option :value="null">{{ locale.current === 'th' ? 'ไม่เชื่อม' : 'None' }}</option>
+              <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                {{ emp.employee_id }} — {{ emp.first_name }} {{ emp.last_name }}
+              </option>
+            </select>
           </div>
           <div class="mb-3">
             <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light">
@@ -329,6 +333,7 @@ export default {
       // shared
       rooms: [],
       roles: [],
+      employees: [],
       loadingRoles: false,
       // edit
       showEditModal: false,
@@ -360,14 +365,16 @@ export default {
       this.loadingList = true;
       this.loadingRoles = true;
       try {
-        const [uRes, rRes, roRes] = await Promise.all([
+        const [uRes, rRes, roRes, empRes] = await Promise.all([
           fetch(`${BASE_API}/api/settings/users`, { headers: authHeader() }),
           fetch(`${BASE_API}/api/rooms`,           { headers: authHeader() }),
-          fetch(`${BASE_API}/api/settings/roles`,  { headers: authHeader() })
+          fetch(`${BASE_API}/api/settings/roles`,  { headers: authHeader() }),
+          fetch(`${BASE_API}/api/employees`,       { headers: authHeader() })
         ]);
-        this.users = (await uRes.json()).data  || [];
-        this.rooms = (await rRes.json()).data  || [];
-        this.roles = ((await roRes.json()).data || []).filter(r => r.is_active);
+        this.users     = (await uRes.json()).data  || [];
+        this.rooms     = (await rRes.json()).data  || [];
+        this.roles     = ((await roRes.json()).data || []).filter(r => r.is_active);
+        this.employees = (await empRes.json()).data || [];
       } catch (err) {
         console.error(err);
         await showAlert('Error', this.locale.current === 'th' ? 'โหลดข้อมูลไม่สำเร็จ' : 'Cannot load data', 'error');
@@ -386,7 +393,7 @@ export default {
         role:        user.role || '',
         role_id:     foundRole ? foundRole.id : (user.role_id || null),
         is_active:   user.is_active !== false,
-        employee_id: user.employee_id || '',
+        employee_id: user.employee_id ?? null,
         rooms:       user.roomAssignments ? user.roomAssignments.map(r => ({ room_id: r.room_id, scope: r.scope })) : []
       };
       this.showEditModal = true;

@@ -27,7 +27,12 @@
       <DeviceSetting ref="deviceSetting" @edit="openDeviceForm" @add="openDeviceForm" />
     </div>
 
-    <!-- Section 4: Working Time + PLC Debug (50% + 50%) -->
+    <!-- Section 4: Employee Management -->
+    <div class="setting-section mb-4">
+      <EmployeeSetting />
+    </div>
+
+    <!-- Section 5: Working Time + PLC Debug (50% + 50%) -->
     <div class="row g-4">
       <div class="col-12 col-md-12">
         <WorkingTimeForm />
@@ -49,6 +54,7 @@ import RoomSetting from "../components/setting/RoomSetting.vue";
 import ProductSetting from "../components/setting/ProductSetting.vue";
 import ProductForm from "../components/setting/ProductForm.vue";
 import DeviceSetting from "../components/setting/DeviceSetting.vue";
+import EmployeeSetting from "../components/setting/EmployeeSetting.vue";
 import WorkingTimeForm from "../components/setting/WorkingTimeForm.vue";
 import PlcDebugForm from "../components/setting/PlcDebugForm.vue";
 import DeviceForm from "../components/setting/DeviceForm.vue";
@@ -56,15 +62,16 @@ import DeviceForm from "../components/setting/DeviceForm.vue";
 export default {
   name: "Setting",
   emits: ["add-device", "add-product"],
-  
+
   inject: ['locale'],
-  
+
   components: {
     TypeSetting,
     RoomSetting,
     ProductSetting,
     ProductForm,
     DeviceSetting,
+    EmployeeSetting,
     WorkingTimeForm,
     PlcDebugForm,
     DeviceForm
