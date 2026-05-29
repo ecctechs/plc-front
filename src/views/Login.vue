@@ -82,8 +82,8 @@ export default {
   inject: ['locale'],
   data() {
     return {
-      email: '',
-      password: '',
+      email: 'superadmin@example.com',
+      password: 'SuperAdmin123!',
       showPassword: false,
       isLoading: false,
       errorMessage: '',

@@ -15,12 +15,12 @@
         <table class="table table-hover align-middle mb-0">
            <thead class="table-blue">
             <tr>
-              <th class="ps-3 py-3" style="width: 25%">{{ locale.t('Device Type') }}</th>
+              <th class="ps-3 py-3" style="width: 22%">{{ locale.t('Device Type') }}</th>
               <th class="py-3 text-center" style="width: 15%">ON/OFF</th>
               <th class="py-3 text-center" style="width: 15%">Number</th>
               <th class="py-3 text-center" style="width: 18%">Number Gauge</th>
               <th class="py-3 text-center" style="width: 15%">Level</th>
-              <th class="py-3 text-center" style="width: 12%">{{ locale.t('Actions') }}</th>
+              <th class="py-3 text-center" style="width: 15%">{{ locale.t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
