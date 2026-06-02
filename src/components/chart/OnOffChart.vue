@@ -97,6 +97,7 @@ import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
 import { showConfirm } from '../../utils/swalHelper'
+import { toUTC7 } from '../../utils/date-utils'
 
 Chart.register(annotationPlugin)
 
@@ -354,7 +355,7 @@ export default {
         data: {
           datasets: [{
             data: data.map(d => ({
-              x: new Date(d.x),
+              x: toUTC7(d.x),
               y: d.y,
               isAlarm: d.is_alarm
             })),

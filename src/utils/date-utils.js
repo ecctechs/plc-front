@@ -28,3 +28,11 @@ export const formatISO = (date) => {
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
+
+/**
+ * บวก 7 ชั่วโมงเข้า timestamp เพื่อแสดงผลเป็น UTC+7 บน Chart
+ * ใช้เฉพาะตอน render — ไม่กระทบ logic การ deduplication (lastFetchTime)
+ */
+export const toUTC7 = (date) => {
+  return new Date(new Date(date).getTime() + 7 * 60 * 60 * 1000);
+};

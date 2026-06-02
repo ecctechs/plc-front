@@ -108,6 +108,7 @@ import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
 import { showConfirm } from '../../utils/swalHelper'
+import { toUTC7 } from '../../utils/date-utils'
 
 // ลงทะเบียน Plugin สำหรับวาดเส้น Annotation (เส้นประ Alarm)
 Chart.register(annotationPlugin)
@@ -255,6 +256,8 @@ export default {
           return
         }
 
+        console.log("urs ->",url)
+
         const data = raw.map(d => ({
           x: d.value !== null ? Number(d.value) : null,
           y: new Date(d.created_at),
@@ -365,7 +368,7 @@ export default {
         data: {
           datasets: [{
             label: 'Value',
-            data: data.map(d => ({ x: d.y, y: d.x, isAlarm: d.is_alarm })),
+            data: data.map(d => ({ x: toUTC7(d.y), y: d.x, isAlarm: d.is_alarm })),
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59,130,246,0.1)',
             fill: true,
@@ -409,7 +412,7 @@ export default {
         type: 'line',
         data: {
           datasets: [{
-            data: data.map(d => ({ x: d.y, y: d.connected === null ? null : (d.connected ? 1 : 0), isAlarm: d.is_alarm })),
+            data: data.map(d => ({ x: toUTC7(d.y), y: d.connected === null ? null : (d.connected ? 1 : 0), isAlarm: d.is_alarm })),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.1)',
             fill: true, stepped: true,

@@ -108,6 +108,7 @@ import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
 import { showConfirm } from '../../utils/swalHelper'
+import { toUTC7 } from '../../utils/date-utils'
 
 Chart.register(annotationPlugin)
 
@@ -357,7 +358,7 @@ export default {
         plugins: [refPlugin],
         data: {
           datasets: [{
-            data: data.map(d => ({ x: new Date(d.y), y: d.x, isAlarm: d.is_alarm })),
+            data: data.map(d => ({ x: toUTC7(d.y), y: d.x, isAlarm: d.is_alarm })),
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59,130,246,0.1)',
             fill: true,
@@ -401,7 +402,7 @@ export default {
         type: 'line',
         data: {
           datasets: [{
-            data: data.map(d => ({ x: new Date(d.y), y: d.connected === null ? null : (d.connected ? 1 : 0), isAlarm: d.is_alarm })),
+            data: data.map(d => ({ x: toUTC7(d.y), y: d.connected === null ? null : (d.connected ? 1 : 0), isAlarm: d.is_alarm })),
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.1)',
             fill: true, stepped: true, pointRadius: ctx => (ctx.raw?.isAlarm ? 5 : 0), pointBackgroundColor: '#ef4444'
