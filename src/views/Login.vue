@@ -14,7 +14,7 @@
         <div class="app-logo">
           <div class="logo-inner"></div>
         </div>
-        <h2 class="app-title">{{ locale.t('PLC Dashboard') }} DEV</h2>
+        <h2 class="app-title">{{ locale.t('PLC Dashboard') }} </h2>
         <p class="app-subtitle">{{ locale.t('Please sign in to continue') }}</p>
       </div>
 
