@@ -26,7 +26,23 @@
 
         <!-- Body -->
         <div class="rs-card-body">
-          
+
+          <!-- Tab Navigation -->
+          <div class="rs-tab-nav">
+            <button
+              class="rs-tab-btn"
+              :class="{ active: activeTab === 'roles' }"
+              @click="activeTab = 'roles'"
+            >
+              <i class="fas fa-shield-alt"></i>
+              {{ locale.current === 'th' ? 'บทบาท' : 'Roles' }}
+            </button>
+            <!-- Future tabs go here -->
+          </div>
+
+          <!-- Tab: Roles -->
+          <div v-show="activeTab === 'roles'">
+
           <!-- Toolbar -->
           <div class="rs-toolbar">
             <div class="rs-count-badge" v-if="!loadingList">
@@ -129,6 +145,8 @@
               </tbody>
             </table>
           </div>
+
+          </div><!-- end tab: roles -->
         </div>
       </div>
     </transition>
@@ -272,6 +290,7 @@ export default {
 
   data() {
     return {
+      activeTab: 'roles',
       roles: [],
       loadingList: false,
       showModal: false,
@@ -482,6 +501,41 @@ export default {
 .btn-close-minimal:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+/* ── Tab Navigation ── */
+.rs-tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 0;
+}
+
+.rs-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px 8px 0 0;
+}
+.rs-tab-btn:hover {
+  color: #3b82f6;
+  background: #f8fafc;
+}
+.rs-tab-btn.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: transparent;
 }
 
 /* ── Body & Toolbar ── */
