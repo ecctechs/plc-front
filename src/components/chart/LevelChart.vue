@@ -93,14 +93,9 @@ export default {
   },
 
   watch: {
-    startDate: "restartAutoRefresh",
-    endDate: "restartAutoRefresh",
+    filterApplied: "restartAutoRefresh",
     alarmTime: "restartAutoRefresh",
     "device.address_id": "restartAutoRefresh",
-    filterApplied() {
-      // เมื่อผู้ใช้กดปุ่ม apply ให้รีเซ็ต flag เพื่อให้แสดง dialog เตือนได้
-      this.isInitialLoad = false
-    }
   },
 
   mounted() {
@@ -250,14 +245,7 @@ export default {
 
          this.lastData = this.allSeries
          this.processStats(this.allSeries)
-
-         // Always display last 500 points (sliding window)
-         let displayData = this.allSeries
-         if (this.allSeries.length > 500) {
-           displayData = this.allSeries.slice(-500)
-         }
-
-         this.renderCharts(displayData);
+         this.renderCharts(this.allSeries);
 
         if (this.alarmTime) this.stopAutoRefresh()
       } catch (err) {
