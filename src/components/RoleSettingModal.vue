@@ -395,7 +395,8 @@ export default {
       const ok = await showConfirm(
         this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
         this.locale.current === 'th' ? `ลบบทบาท "${role.name}" หรือไม่?` : `Delete role "${role.name}"?`,
-        this.locale.current === 'th' ? 'ลบ' : 'Delete'
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       if (!ok) return;
       try {

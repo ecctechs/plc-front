@@ -46,7 +46,7 @@ export const showAlert = async (title, text, icon = 'success') => {
  * @param {string} confirmText - ข้อความปุ่ม confirm
  * @returns {Promise<boolean>} true ถ้าผู้ใช้กด confirm, false ถ้ากด cancel
  */
-export const showConfirm = async (title, text, confirmText = 'ยืนยัน') => {
+export const showConfirm = async (title, text, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก') => {
   const result = await Swal.fire({
     icon: 'warning',
     title: `<span style='color:#ff9800; font-weight:600;'>${title}</span>`,
@@ -55,7 +55,7 @@ export const showConfirm = async (title, text, confirmText = 'ยืนยัน
     confirmButtonColor: '#dc3545',
     cancelButtonColor: '#6c757d',
     confirmButtonText: confirmText,
-    cancelButtonText: 'ยกเลิก',
+    cancelButtonText: cancelText,
     background: "#fff",
     customClass: {
       popup: 'rounded-4 shadow-lg border-0',

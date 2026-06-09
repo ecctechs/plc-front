@@ -106,7 +106,7 @@ const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}
 
 export default {
   name: "OnOffChart",
-
+  inject: ['locale'],
   props: {
     device: { type: Object, required: true }, // ต้องมี address_id, refresh_rate_ms
     startDate: { type: String, required: true },
@@ -217,9 +217,12 @@ export default {
       const dataCount = this.calculateEstimatedDataCount()
       if (dataCount > 500 && !isSilent && !isInitialLoad) {
         const confirmed = await showConfirm(
-          'ยืนยันดึงข้อมูลจำนวนมาก',
-          `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`,
-          'ดึงข้อมูล'
+          this.locale.current === 'th' ? 'ยืนยันดึงข้อมูลจำนวนมาก' : 'Large Data Warning',
+          this.locale.current === 'th'
+            ? `ช่วงเวลาที่เลือกจะดึงข้อมูลประมาณ <b>${dataCount.toLocaleString()}</b> ค่า<br>อาจทำให้ระบบช้าลง ต้องการดำเนินการต่อหรือไม่?`
+            : `The selected range will fetch approximately <b>${dataCount.toLocaleString()}</b> records.<br>This may slow down the system. Continue?`,
+          this.locale.current === 'th' ? 'ดึงข้อมูล' : 'Fetch',
+          this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
         )
         if (!confirmed) return
       }

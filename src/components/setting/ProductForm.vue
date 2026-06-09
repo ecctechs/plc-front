@@ -129,7 +129,7 @@ export default {
     },
     async save() {
       if (!this.form.name) {
-        await showAlert("Error", "Model Name is required", "warning");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อรุ่น' : 'Model Name is required', 'warning');
         return;
       }
 
@@ -166,7 +166,7 @@ export default {
           throw new Error(err.message || "Save failed");
         }
 
-        await showAlert("Success", "Product saved successfully", "success");
+        await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกผลิตภัณฑ์สำเร็จ' : 'Product saved successfully', 'success');
         this.closeModal();
         if (this.reloadProducts) {
           this.reloadProducts();
@@ -174,7 +174,7 @@ export default {
         this.$emit('saved');
       } catch (err) {
         console.error(err);
-        await showAlert("Error", err.message, "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
       } finally {
         this.loading = false;
       }

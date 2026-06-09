@@ -154,7 +154,7 @@ export default {
         this.deviceTypes = json.data || []  ;
       } catch (err) {
         console.error(err);
-        await showAlert("Error", "Cannot load device types", "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'โหลดประเภทอุปกรณ์ไม่สำเร็จ' : 'Cannot load device types', 'error');
       }
     },
     openModal(type = null) {
@@ -182,11 +182,11 @@ export default {
     },
     async save() {
       if (!this.form.name) {
-        await showAlert("Error", "Name is required", "warning");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อประเภท' : 'Name is required', 'warning');
         return;
       }
       if (this.form.display_types.length === 0) {
-        await showAlert("Error", "Please select at least one Display Type", "warning");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณาเลือก Display Type อย่างน้อย 1 รายการ' : 'Please select at least one Display Type', 'warning');
         return;
       }
 
@@ -208,7 +208,7 @@ export default {
           throw new Error(err.message || "Save failed");
         }
 
-        await showAlert("Success", "Device Type saved successfully", "success");
+        await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกประเภทอุปกรณ์สำเร็จ' : 'Device Type saved successfully', 'success');
         this.closeModal();
         this.loadDeviceTypes();
       } catch (err) {
@@ -220,9 +220,10 @@ export default {
     },
     async confirmDelete(type) {
       const confirmed = await showConfirm(
-        "ยืนยันการลบ",
-        `คุณต้องการลบ Device Type "${type.name}" หรือไม่?`,
-        "ลบ"
+        this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
+        this.locale.current === 'th' ? `คุณต้องการลบ Device Type "${type.name}" หรือไม่?` : `Delete Device Type "${type.name}"?`,
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       
       if (confirmed) {
@@ -237,7 +238,7 @@ export default {
           throw new Error(err.message || "Delete failed");
         }
           
-          await showAlert("Success", "Device Type deleted successfully", "success");
+          await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบประเภทอุปกรณ์สำเร็จ' : 'Device Type deleted successfully', 'success');
           this.loadDeviceTypes();
         } catch (err) {
           console.error(err);

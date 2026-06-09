@@ -203,7 +203,7 @@ export default {
       this.loadRooms();
 
       if (!device && this.deviceTypes.length === 0) {
-        await showAlert("แจ้งเตือน", "กรุณาเพิ่ม Type Setting ก่อนเพิ่ม Device", "warning");
+        await showAlert(this.locale.current === 'th' ? 'แจ้งเตือน' : 'Notice', this.locale.current === 'th' ? 'กรุณาเพิ่ม Type Setting ก่อนเพิ่ม Device' : 'Please add a Device Type before adding a Device', 'warning');
         return;
       }
 
@@ -416,7 +416,7 @@ export default {
         }
 
         // Step 3: Success
-        await showAlert("บันทึกสำเร็จ", "ข้อมูลถูกอัปเดตเรียบร้อยแล้ว", "success");
+        await showAlert(this.locale.current === 'th' ? 'บันทึกสำเร็จ' : 'Saved', this.locale.current === 'th' ? 'ข้อมูลถูกอัปเดตเรียบร้อยแล้ว' : 'Data updated successfully', 'success');
 
         // Reload devices table if function provided
         if (this.reloadDevices) {
@@ -428,7 +428,7 @@ export default {
 
       } catch (err) {
         console.error("Save Error:", err);
-        await showAlert("เกิดข้อผิดพลาด", err.message, "error");
+        await showAlert(this.locale.current === 'th' ? 'เกิดข้อผิดพลาด' : 'Error', err.message, 'error');
       } finally {
         this.loading = false;
       }

@@ -436,7 +436,8 @@ export default {
       const ok = await showConfirm(
         this.locale.current === 'th' ? 'ยืนยัน' : 'Confirm',
         this.locale.current === 'th' ? `${action}บัญชี "${user.email}"?` : `${action} "${user.email}"?`,
-        action
+        action,
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       if (!ok) return;
       try {

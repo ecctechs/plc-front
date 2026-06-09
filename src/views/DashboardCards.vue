@@ -173,6 +173,7 @@ import { showConfirm } from '../utils/swalHelper';
 export default {
   name: "Dashboard",
   components: { Chart },
+  inject: ['locale'],
   props: {
     addresses: { type: Array, required: true },
     simulate: { type: Boolean, default: false },
@@ -385,9 +386,10 @@ export default {
     closeChart() { this.showChart = false; this.selectedAddress = null; },
     async handleDeleteCard(addr) {
       const confirmed = await showConfirm(
-        'ลบการ์ด',
-        `คุณต้องการลบ \"${addr.label}\" ออกจากแดชบอร์ดหรือไม่?`,
-        'ลบ'
+        this.locale.current === 'th' ? 'ลบการ์ด' : 'Delete Card',
+        this.locale.current === 'th' ? `คุณต้องการลบ "${addr.label}" ออกจากแดชบอร์ดหรือไม่?` : `Remove "${addr.label}" from dashboard?`,
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       if (confirmed) {
         this.$emit('delete-card', addr);

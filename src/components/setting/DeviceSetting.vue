@@ -275,9 +275,10 @@ export default {
     
     async confirmDelete(device) {
       const confirmed = await showConfirm(
-        "ยืนยันการลบ",
-        `คุณต้องการลบ Device "${device.name}" หรือไม่?`,
-        "ลบ"
+        this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
+        this.locale.current === 'th' ? `คุณต้องการลบ Device "${device.name}" หรือไม่?` : `Delete device "${device.name}"?`,
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       
       if (confirmed) {
@@ -289,11 +290,11 @@ export default {
           
           if (!res.ok) throw new Error("Delete failed");
           
-          await showAlert("Success", "Device deleted successfully", "success");
+          await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบ Device สำเร็จ' : 'Device deleted successfully', 'success');
           this.loadDevices();
         } catch (err) {
           console.error(err);
-          await showAlert("Error", "Cannot delete device", "error");
+          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'ไม่สามารถลบ Device ได้' : 'Cannot delete device', 'error');
         }
       }
     }

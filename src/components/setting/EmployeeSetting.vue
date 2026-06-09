@@ -216,9 +216,10 @@ export default {
     async confirmDelete(emp) {
       const name = `${emp.first_name} ${emp.last_name}`.trim() || emp.employee_id;
       const confirmed = await showConfirm(
-        "ยืนยันการลบ",
-        `คุณต้องการลบพนักงาน "${name}" หรือไม่?`,
-        "ลบ"
+        this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
+        this.locale.current === 'th' ? `คุณต้องการลบพนักงาน "${name}" หรือไม่?` : `Delete employee "${name}"?`,
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
 
       if (confirmed) {

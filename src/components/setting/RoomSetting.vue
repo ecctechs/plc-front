@@ -104,7 +104,7 @@ export default {
         this.rooms = json.data || [];
       } catch (err) {
         console.error(err);
-        await showAlert("Error", "Cannot load rooms", "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'โหลดข้อมูลห้องไม่สำเร็จ' : 'Cannot load rooms', 'error');
       }
     },
     openModal(room = null) {
@@ -128,7 +128,7 @@ export default {
     },
     async save() {
       if (!this.form.name) {
-        await showAlert("Error", "Room name is required", "warning");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อห้อง' : 'Room name is required', 'warning');
         return;
       }
 
@@ -150,7 +150,7 @@ export default {
           throw new Error(err.message || "Save failed");
         }
 
-        await showAlert("Success", "Room saved successfully", "success");
+        await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกข้อมูลห้องสำเร็จ' : 'Room saved successfully', 'success');
         this.closeModal();
         this.loadRooms();
         this.$emit('room-updated');
@@ -163,9 +163,10 @@ export default {
     },
     async confirmDelete(room) {
       const confirmed = await showConfirm(
-        "ยืนยันการลบ",
-        `คุณต้องการลบ Room "${room.name}" หรือไม่?`,
-        "ลบ"
+        this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
+        this.locale.current === 'th' ? `คุณต้องการลบห้อง "${room.name}" หรือไม่?` : `Delete room "${room.name}"?`,
+        this.locale.current === 'th' ? 'ลบ' : 'Delete',
+        this.locale.current === 'th' ? 'ยกเลิก' : 'Cancel'
       );
       
       if (confirmed) {
@@ -180,7 +181,7 @@ export default {
           throw new Error(err.message || "Delete failed");
         }
           
-          await showAlert("Success", "Room deleted successfully", "success");
+          await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบห้องสำเร็จ' : 'Room deleted successfully', 'success');
           this.loadRooms();
           this.$emit('room-updated');
         } catch (err) {
