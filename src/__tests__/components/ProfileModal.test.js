@@ -1,6 +1,20 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import ProfileModal from "../../components/ProfileModal.vue";
+
+// ─── Mock fetch (สำหรับ savePassword) ─────────────────────────
+
+const mockFetch = vi.fn();
+vi.stubGlobal("fetch", mockFetch);
+
+vi.stubGlobal("localStorage", {
+  getItem: () => "fake-token",
+  setItem: () => {},
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 // ─── Mock Data ───────────────────────────────────────────────
 
@@ -166,5 +180,87 @@ describe("ProfileModal > Change Password", () => {
     await wrapper.find(".btn-secondary-action").trigger("click");
     expect(wrapper.find(".form-section").exists()).toBe(false);
     expect(wrapper.find(".scroll-body").exists()).toBe(true);
+  });
+});
+
+// ─── Save Password (Mock API) ────────────────────────────────
+
+describe("ProfileModal > Save Password (Async)", () => {
+  async function goToPasswordMode(wrapper) {
+    await wrapper.find(".btn-secondary-action").trigger("click");
+  }
+
+  it("ไม่กรอก current password → แสดง error", async () => {
+    const wrapper = mountModal();
+    await goToPasswordMode(wrapper);
+
+    await wrapper.setData({ pwForm: { current: "", newPw: "123456", confirm: "123456" } });
+    await wrapper.find(".btn-save-action").trigger("click");
+
+    expect(wrapper.find(".err-text").exists()).toBe(true);
+  });
+
+  it("new password สั้นกว่า 6 → แสดง error", async () => {
+    const wrapper = mountModal();
+    await goToPasswordMode(wrapper);
+
+    await wrapper.setData({ pwForm: { current: "oldpass", newPw: "123", confirm: "123" } });
+    await wrapper.find(".btn-save-action").trigger("click");
+
+    expect(wrapper.find(".err-text").exists()).toBe(true);
+  });
+
+  it("confirm ไม่ตรง → แสดง error", async () => {
+    const wrapper = mountModal();
+    await goToPasswordMode(wrapper);
+
+    await wrapper.setData({ pwForm: { current: "oldpass", newPw: "123456", confirm: "999999" } });
+    await wrapper.find(".btn-save-action").trigger("click");
+
+    expect(wrapper.find(".err-text").text()).toBe("Passwords do not match");
+  });
+
+  it("กรอกถูกต้อง → เรียก fetch API", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ success: true }),
+    });
+
+    const wrapper = mountModal();
+    await goToPasswordMode(wrapper);
+
+    await wrapper.setData({ pwForm: { current: "oldpass", newPw: "newpass123", confirm: "newpass123" } });
+    await wrapper.find(".btn-save-action").trigger("click");
+
+    await vi.waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/auth/change-password");
+    expect(options.method).toBe("PUT");
+
+    const body = JSON.parse(options.body);
+    expect(body.current_password).toBe("oldpass");
+    expect(body.new_password).toBe("newpass123");
+  });
+
+  it("API error → แสดง error message", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ message: "Current password is wrong" }),
+    });
+
+    const wrapper = mountModal();
+    await goToPasswordMode(wrapper);
+
+    await wrapper.setData({ pwForm: { current: "wrong", newPw: "newpass123", confirm: "newpass123" } });
+    await wrapper.find(".btn-save-action").trigger("click");
+
+    await vi.waitFor(() => {
+      expect(wrapper.find(".err-text").exists()).toBe(true);
+    });
+
+    expect(wrapper.find(".err-text").text()).toBe("Current password is wrong");
   });
 });
