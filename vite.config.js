@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   define: { __VUE_PROD_DEVTOOLS__: true },
   test: {
-    environment: "node",   // จำลอง DOM ให้ component เทสต์ได้
+    environment: "jsdom",
     globals: true,          // ใช้ describe/it/expect ได้โดยไม่ต้อง import
   },
 });

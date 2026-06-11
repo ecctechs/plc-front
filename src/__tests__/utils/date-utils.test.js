@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatThaiYear, formatISO, toUTC7 } from "./date-utils";
+import { formatThaiYear, formatISO, toUTC7 } from "../../utils/date-utils";
 
 describe("formatThaiYear", () => {
   it("คืนค่าว่างเมื่อไม่มี input", () => {
