@@ -7,5 +7,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,          // ใช้ describe/it/expect ได้โดยไม่ต้อง import
+    server: {
+      deps: {
+        inline: [/@csstools/, /@asamuzakjp/],
+      },
+    },
   },
 });

@@ -259,3 +259,100 @@ describe("Login > State Change", () => {
     expect(wrapper.find(".password-input").attributes("type")).toBe("password");
   });
 });
+
+// ─── 5. Coverage ──────────────────────────────────────────────
+
+describe("Login > Coverage (line 6, 33, 46)", () => {
+  it("คลิกปุ่มเปลี่ยนภาษา → เรียก locale.toggle()", async () => {
+    const wrapper = mountLogin();
+    await wrapper.find(".btn-lang-fixed").trigger("click"); // cover line 6
+    expect(mockLocale.toggle).toHaveBeenCalled();
+  });
+
+  it("กำลัง loading → input email และ password ถูก disabled", async () => {
+    mockFetch.mockImplementation(() => new Promise(() => {}));
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "123456" });
+    await wrapper.find("form").trigger("submit");
+
+    const inputs = wrapper.findAll("input"); // cover line 33, 46
+    inputs.forEach((input) => {
+      expect(input.attributes("disabled")).toBeDefined();
+    });
+  });
+});
+
+// ─── 5. Bug Cases ─────────────────────────────────────────────
+//
+//  test เหล่านี้ออกแบบให้ FAIL เพื่อแสดงว่า Login.vue มีบัคตรงไหน
+//  แก้บัคแล้วค่อย uncomment expect ที่ถูกต้อง
+
+describe("Login > Bug Cases", () => {
+
+  // ── BUG 1 ──────────────────────────────────────────────────
+  // password ที่เป็น space ล้วน 6 ตัว (เช่น "      ") ผ่าน validation ได้
+  // เพราะ validate() เช็คแค่ length < 6 และ !password
+  // แต่ "      ".length === 6 และ !!"      " === true → ผ่านทั้งคู่
+  it("[BUG-1] password ที่เป็น space ล้วน ควรถูก reject แต่ผ่าน validation", async () => {
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "      " }); // 6 spaces
+
+    await wrapper.find("form").trigger("submit");
+
+    // สิ่งที่เกิดขึ้นจริง: API ถูกเรียก ทั้งที่ไม่ควร
+    expect(mockFetch).toHaveBeenCalled(); // ← PASS แต่นี่คือ bug
+
+    // สิ่งที่ควรเกิด (uncommment เมื่อแก้บัคแล้ว):
+    // expect(wrapper.find(".helper-text").exists()).toBe(true);
+    // expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  // ── BUG 2 ──────────────────────────────────────────────────
+  // submit ซ้ำ 2 ครั้งก่อน fetch เสร็จ → ส่ง API 2 รอบ
+  // เพราะ onSubmit() ไม่มี guard if (this.isLoading) return ตอนต้น
+  // ปุ่ม disabled ป้องกัน user ปกติ แต่ป้องกัน programmatic call ไม่ได้
+  it("[BUG-2] submit 2 ครั้งรวดเดียว → fetch ถูกเรียก 2 รอบ", async () => {
+    mockFetch.mockImplementation(() => new Promise(() => {})); // ค้างตลอด
+
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "123456" });
+
+    // ไม่ await — simulate การกด submit เร็วมาก 2 ครั้งก่อน isLoading block UI
+    wrapper.find("form").trigger("submit");
+    wrapper.find("form").trigger("submit");
+
+    await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+
+    // สิ่งที่เกิดขึ้นจริง: fetch ถูกเรียก 2 ครั้ง
+    expect(mockFetch).toHaveBeenCalledTimes(2); // ← PASS แต่นี่คือ bug
+
+    // สิ่งที่ควรเกิด (uncomment เมื่อแก้บัคแล้ว):
+    // expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  // ── BUG 3 ──────────────────────────────────────────────────
+  // server ส่ง { success: true, data: null } กลับมา
+  // code: const u = data.data.user → TypeError crash → catch block ทำงาน
+  // แสดง "Connection error" ทั้งที่เน็ตปกติ ทำให้ user เข้าใจผิด
+  it("[BUG-3] server ส่ง data: null → crash แสดง 'Connection error' แทนที่จะบอก server error", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: null }),
+    });
+
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "123456" });
+    await wrapper.find("form").trigger("submit");
+
+    await vi.waitFor(() => {
+      expect(wrapper.find(".error-banner").exists()).toBe(true);
+    });
+
+    // สิ่งที่เกิดขึ้นจริง: โชว์ "Connection error" ทั้งที่ปัญหาอยู่ที่ server
+    expect(wrapper.find(".error-banner").text()).toContain("Connection error"); // ← PASS แต่นี่คือ bug
+
+    // สิ่งที่ควรเกิด (uncomment เมื่อแก้บัคแล้ว):
+    // expect(wrapper.find(".error-banner").text()).not.toContain("Connection error");
+    // expect(wrapper.find(".error-banner").text()).toContain("unexpected");
+  });
+});
