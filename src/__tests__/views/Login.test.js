@@ -282,64 +282,49 @@ describe("Login > Coverage (line 6, 33, 46)", () => {
   });
 });
 
-// ─── 5. Bug Cases ─────────────────────────────────────────────
+// ─── 5. Bug Cases (FAIL จนกว่าจะแก้ Login.vue) ───────────────
 //
-//  test เหล่านี้ออกแบบให้ FAIL เพื่อแสดงว่า Login.vue มีบัคตรงไหน
-//  แก้บัคแล้วค่อย uncomment expect ที่ถูกต้อง
+//  กติกา: ห้ามแก้ test — ต้องแก้ Login.vue เท่านั้น
 
 describe("Login > Bug Cases", () => {
 
-  // ── BUG 1 ──────────────────────────────────────────────────
-  // password ที่เป็น space ล้วน 6 ตัว (เช่น "      ") ผ่าน validation ได้
-  // เพราะ validate() เช็คแค่ length < 6 และ !password
-  // แต่ "      ".length === 6 และ !!"      " === true → ผ่านทั้งคู่
-  it("[BUG-1] password ที่เป็น space ล้วน ควรถูก reject แต่ผ่าน validation", async () => {
+  // ── BUG-1 ─────────────────────────────────────────────────
+  // validate() เช็ค !password และ length < 6
+  // แต่ "      " (6 spaces) → ไม่ empty, length = 6 → ผ่านทั้งคู่
+  // ควร trim ก่อนเช็ค
+  it("[BUG-1] password ที่เป็น space ล้วน ควรแสดง error ไม่ใช่เรียก API", async () => {
     const wrapper = mountLogin();
-    await wrapper.setData({ email: "test@mail.com", password: "      " }); // 6 spaces
-
+    await wrapper.setData({ email: "test@mail.com", password: "      " });
     await wrapper.find("form").trigger("submit");
 
-    // สิ่งที่เกิดขึ้นจริง: API ถูกเรียก ทั้งที่ไม่ควร
-    expect(mockFetch).toHaveBeenCalled(); // ← PASS แต่นี่คือ bug
-
-    // สิ่งที่ควรเกิด (uncommment เมื่อแก้บัคแล้ว):
-    // expect(wrapper.find(".helper-text").exists()).toBe(true);
-    // expect(mockFetch).not.toHaveBeenCalled();
+    expect(wrapper.vm.passwordError).toBeTruthy();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  // ── BUG 2 ──────────────────────────────────────────────────
-  // submit ซ้ำ 2 ครั้งก่อน fetch เสร็จ → ส่ง API 2 รอบ
-  // เพราะ onSubmit() ไม่มี guard if (this.isLoading) return ตอนต้น
-  // ปุ่ม disabled ป้องกัน user ปกติ แต่ป้องกัน programmatic call ไม่ได้
-  it("[BUG-2] submit 2 ครั้งรวดเดียว → fetch ถูกเรียก 2 รอบ", async () => {
-    mockFetch.mockImplementation(() => new Promise(() => {})); // ค้างตลอด
-
+  // ── BUG-2 ─────────────────────────────────────────────────
+  // onSubmit() ไม่มี guard if (isLoading) return ตอนต้น
+  // ทำให้ submit 2 ครั้งก่อน fetch แรกเสร็จ → ส่ง API 2 รอบ
+  it("[BUG-2] submit 2 ครั้งรวด → API ต้องถูกเรียกแค่ 1 ครั้ง", async () => {
+    mockFetch.mockImplementation(() => new Promise(() => {}));
     const wrapper = mountLogin();
     await wrapper.setData({ email: "test@mail.com", password: "123456" });
 
-    // ไม่ await — simulate การกด submit เร็วมาก 2 ครั้งก่อน isLoading block UI
     wrapper.find("form").trigger("submit");
     wrapper.find("form").trigger("submit");
 
     await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
-
-    // สิ่งที่เกิดขึ้นจริง: fetch ถูกเรียก 2 ครั้ง
-    expect(mockFetch).toHaveBeenCalledTimes(2); // ← PASS แต่นี่คือ bug
-
-    // สิ่งที่ควรเกิด (uncomment เมื่อแก้บัคแล้ว):
-    // expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
-  // ── BUG 3 ──────────────────────────────────────────────────
-  // server ส่ง { success: true, data: null } กลับมา
-  // code: const u = data.data.user → TypeError crash → catch block ทำงาน
-  // แสดง "Connection error" ทั้งที่เน็ตปกติ ทำให้ user เข้าใจผิด
-  it("[BUG-3] server ส่ง data: null → crash แสดง 'Connection error' แทนที่จะบอก server error", async () => {
+  // ── BUG-3 ─────────────────────────────────────────────────
+  // server ส่ง { success: true, data: null }
+  // code: data.data.user → TypeError → catch → "Connection error"
+  // error message ทำให้ user เข้าใจผิดว่าเน็ตหาย
+  it("[BUG-3] server ส่ง data: null → ไม่ควรแสดง 'Connection error'", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ success: true, data: null }),
     });
-
     const wrapper = mountLogin();
     await wrapper.setData({ email: "test@mail.com", password: "123456" });
     await wrapper.find("form").trigger("submit");
@@ -347,12 +332,30 @@ describe("Login > Bug Cases", () => {
     await vi.waitFor(() => {
       expect(wrapper.find(".error-banner").exists()).toBe(true);
     });
+    expect(wrapper.find(".error-banner").text()).not.toContain("Connection error");
+  });
 
-    // สิ่งที่เกิดขึ้นจริง: โชว์ "Connection error" ทั้งที่ปัญหาอยู่ที่ server
-    expect(wrapper.find(".error-banner").text()).toContain("Connection error"); // ← PASS แต่นี่คือ bug
+  // ── BUG-4 ─────────────────────────────────────────────────
+  // server ส่ง success: true แต่ไม่มี token ใน response
+  // code: localStorage.setItem('token', undefined) → บันทึก string "undefined"
+  // ทำให้ token ที่เก็บไว้ใช้งานไม่ได้
+  it("[BUG-4] server ไม่ส่ง token → ไม่ควรบันทึก 'undefined' ลง localStorage", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        success: true,
+        data: { user: { id: 1, permissions: {} } }, // ไม่มี token
+      }),
+    });
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "123456" });
+    await wrapper.find("form").trigger("submit");
 
-    // สิ่งที่ควรเกิด (uncomment เมื่อแก้บัคแล้ว):
-    // expect(wrapper.find(".error-banner").text()).not.toContain("Connection error");
-    // expect(wrapper.find(".error-banner").text()).toContain("unexpected");
+    await vi.waitFor(() => {
+      expect(
+        store["token"] !== undefined || wrapper.find(".error-banner").exists()
+      ).toBe(true);
+    });
+    expect(store["token"]).not.toBe("undefined");
   });
 });
