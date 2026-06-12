@@ -12,5 +12,9 @@ export default defineConfig({
         inline: [/@csstools/, /@asamuzakjp/],
       },
     },
+    coverage: {
+      reporter: ["text"],
+      reportOnFailure: true,
+    },
   },
 });
