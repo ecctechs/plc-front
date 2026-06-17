@@ -463,7 +463,8 @@ export default {
     },
 
     async confirmReset() {
-      if (this.resetPw.length < 6) {
+      const pw = this.resetPw ? this.resetPw.trim() : '';
+      if (pw.length < 6) {
         await showAlert('', this.locale.current === 'th' ? 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' : 'Min 6 characters', 'warning'); return;
       }
       if (this.resetPw !== this.resetConfirm) {
@@ -511,8 +512,9 @@ export default {
       if (!this.form.email) this.errors.email = this.locale.t('Please enter your email');
       else if (!emailRe.test(this.form.email)) this.errors.email = this.locale.t('Please enter a valid email address');
 
-      if (!this.form.password) this.errors.password = this.locale.t('Please enter your password');
-      else if (this.form.password.length < 6) this.errors.password = this.locale.t('Password must be at least 6 characters');
+      const pw = this.form.password ? this.form.password.trim() : '';
+      if (!pw) this.errors.password = this.locale.t('Please enter your password');
+      else if (pw.length < 6) this.errors.password = this.locale.t('Password must be at least 6 characters');
 
       if (!this.form.confirmPassword) this.errors.confirmPassword = isTh ? 'กรุณายืนยันรหัสผ่าน' : 'Please confirm your password';
       else if (this.form.password !== this.form.confirmPassword) this.errors.confirmPassword = this.locale.t('Passwords do not match');

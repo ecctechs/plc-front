@@ -319,17 +319,17 @@ export default {
       this.inputValue = parseFloat(event.target.value) || 0
     },
     finishEditing() {
-      console.log('finishEditing called', { editable: this.editable, inputValue: this.inputValue })
       if (!this.editing || !this.editable) return
-      
+
       this.editing = false
-      
-      console.log('emitting update-value:', { addressId: this.addressId, value: this.inputValue })
+
+      const clamped = Math.min(Math.max(this.inputValue, this.overallMin), this.overallMax)
+      this.inputValue = clamped
+
       this.$emit('update-value', {
         addressId: this.addressId,
-        value: this.inputValue
+        value: clamped
       })
-      
     },
     cancelEditing() {
       this.editing = false

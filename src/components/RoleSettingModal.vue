@@ -354,6 +354,7 @@ export default {
         this.editingId = null;
         this.form = { name: '', tab_permissions: defaultTab(), scope_permissions: defaultScope(), is_active: true };
       }
+      this.loading = false;
       this.showModal = true;
     },
 

@@ -96,27 +96,29 @@ export default {
       this.emailError = ''
       this.passwordError = ''
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      
+
       if (!this.email) {
         this.emailError = this.locale.t('Please enter your email')
       } else if (!emailRegex.test(this.email)) {
         this.emailError = this.locale.t('Please enter a valid email address')
       }
-      
-      if (!this.password) {
+
+      const pw = this.password ? this.password.trim() : ''
+      if (!pw) {
         this.passwordError = this.locale.t('Please enter your password')
-      } else if (this.password.length < 6) {
+      } else if (pw.length < 6) {
         this.passwordError = this.locale.t('Password must be at least 6 characters')
       }
-      
+
       return !this.emailError && !this.passwordError
     },
-    
+
     async onSubmit() {
+      if (this.isLoading) return
       this.errorMessage = ''
       if (!this.validate()) return
       this.isLoading = true
-      
+
       try {
         const res = await fetch(`${BASE_API}/api/auth/login`, {
           method: 'POST',
@@ -125,6 +127,10 @@ export default {
         })
         const data = await res.json()
         if (res.ok && data.success) {
+          if (!data.data || !data.data.token) {
+            this.errorMessage = this.locale.t('Invalid response from server')
+            return
+          }
           const u = data.data.user
           localStorage.setItem('token', data.data.token)
           localStorage.setItem('user', JSON.stringify(u))

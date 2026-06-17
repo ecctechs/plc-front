@@ -296,13 +296,15 @@ export default {
     },
     finishEditing() {
       if (!this.editable) return
-      
+
       this.editing = false
-      
-      // Emit the new value to parent
+
+      const clamped = Math.min(Math.max(this.inputValue, this.minValue), this.maxValue)
+      this.inputValue = clamped
+
       this.$emit('update-value', {
         addressId: this.addressId,
-        value: this.inputValue
+        value: clamped
       })
     },
     cancelEditing() {
