@@ -6,7 +6,8 @@ export default defineConfig({
   define: { __VUE_PROD_DEVTOOLS__: true },
   test: {
     environment: "jsdom",
-    globals: true,          // ใช้ describe/it/expect ได้โดยไม่ต้อง import
+    globals: true,
+    exclude: ["e2e/**", "node_modules/**"],
     server: {
       deps: {
         inline: [/@csstools/, /@asamuzakjp/],
