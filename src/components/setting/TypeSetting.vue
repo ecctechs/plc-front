@@ -175,13 +175,14 @@ export default {
           display_types: []
         };
       }
+      this.loading = false;
       this.showModal = true;
     },
     closeModal() {
       this.showModal = false;
     },
     async save() {
-      if (!this.form.name) {
+      if (!this.form.name || !this.form.name.trim()) {
         await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อประเภท' : 'Name is required', 'warning');
         return;
       }

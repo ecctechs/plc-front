@@ -167,6 +167,7 @@ export default {
         this.editingId = null;
         this.form = { employee_id: "", first_name: "", last_name: "", position: "", department: "", phone: "" };
       }
+      this.loading = false;
       this.showModal = true;
     },
 
@@ -175,7 +176,7 @@ export default {
     },
 
     async save() {
-      if (!this.form.employee_id) {
+      if (!this.form.employee_id || !this.form.employee_id.trim()) {
         await showAlert("Error", this.locale.current === 'th' ? 'กรุณากรอกรหัสพนักงาน' : "Employee ID is required", "warning");
         return;
       }

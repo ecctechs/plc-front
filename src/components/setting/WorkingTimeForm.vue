@@ -143,11 +143,12 @@ export default {
   },
   methods: {
     async load() {
+      this.loading = true;
       try {
         const res = await fetch(`${API}/api/working-time`, { headers: authH() });
         if (!res.ok) throw new Error("Load failed");
         const data = await res.json();
-        
+
         if (data?.schedule) {
           this.schedule = data.schedule;
           this.dayList.forEach(d => {
@@ -156,6 +157,8 @@ export default {
         }
       } catch (err) {
         console.error("Load error", err);
+      } finally {
+        this.loading = false;
       }
     },
     addSlot(dayId, type) {
@@ -181,7 +184,7 @@ export default {
       if (working_hours.length === 0) return `วัน ${dayId} ต้องระบุเวลาทำงานอย่างน้อย 1 ช่วง`;
       for (const w of working_hours) {
         if (!w.start || !w.end) return `กรุณากรอกเวลาทำงานให้ครบ (วัน ${dayId})`;
-        if (w.start >= w.end) return `เวลาเลิกงานต้องมากกว่าเวลาเริ่มงาน (วัน ${dayId})`;
+        if (w.start >= w.end && w.start < "22:00") return `เวลาเลิกงานต้องมากกว่าเวลาเริ่มงาน (วัน ${dayId})`;
       }
       return "";
     },

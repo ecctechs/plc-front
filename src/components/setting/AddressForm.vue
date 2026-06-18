@@ -85,7 +85,8 @@ export default {
     },
 
     emitAddress(num) {
-      const value = `${this.addressPrefix}${num}`;
+      const safe = num === "" || num === null || num === undefined ? 0 : num;
+      const value = `${this.addressPrefix}${safe}`;
       this.$emit("update:address", value);
     },
   },

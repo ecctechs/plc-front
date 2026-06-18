@@ -95,7 +95,7 @@ export default {
 
       try {
         const res = await fetch(
-          `${BASE_API}/api/plc/read?address=${this.address}`,
+          `${BASE_API}/api/plc/read?address=${encodeURIComponent(this.address)}`,
           { headers: authH() }
         );
 

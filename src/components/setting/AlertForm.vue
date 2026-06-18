@@ -140,7 +140,7 @@ export default {
       if (!this.modelValue || this.modelValue.length === 0) return;
       
       for (const alarm of this.modelValue) {
-        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
+        const res = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify({
@@ -149,6 +149,7 @@ export default {
             is_active: true
           })
         });
+        if (!res.ok) throw new Error(`Failed to save alarm "${alarm.name}"`);
       }
     },
     

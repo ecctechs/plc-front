@@ -128,8 +128,12 @@ export default {
       }
     },
     async save() {
-      if (!this.form.name) {
+      if (!this.form.name || !this.form.name.trim()) {
         await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อรุ่น' : 'Model Name is required', 'warning');
+        return;
+      }
+      if (this.form.cycle_time !== "" && Number(this.form.cycle_time) < 0) {
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'Cycle Time ต้องไม่ติดลบ' : 'Cycle Time must not be negative', 'warning');
         return;
       }
 

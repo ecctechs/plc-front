@@ -199,6 +199,7 @@ export default {
     },
     
     async open(device = null) {
+      this.deletedAlarmIds = [];
       await this.loadDeviceTypes();
       this.loadRooms();
 
@@ -304,7 +305,7 @@ export default {
 
     // --- Validation Logic ---
     validateBeforeSave() {
-      if (!this.form.name) throw new Error("กรุณาระบุชื่อ Device");
+      if (!this.form.name || !this.form.name.trim()) throw new Error("กรุณาระบุชื่อ Device");
       if (!this.form.device_type_id) throw new Error("กรุณาเลือก Device Type");
 
       for (const [idx, addr] of this.form.addresses.entries()) {

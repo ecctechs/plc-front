@@ -131,7 +131,8 @@ export default {
         roomName: ""
       },
       currentPage: 1,
-      itemsPerPage: 10
+      itemsPerPage: 10,
+      loading: false
     };
   },
   computed: {
@@ -182,10 +183,15 @@ export default {
   },
   methods: {
     async loadData() {
-      await Promise.all([
-        this.loadDevices(),
-        this.loadRooms()
-      ]);
+      this.loading = true;
+      try {
+        await Promise.all([
+          this.loadDevices(),
+          this.loadRooms()
+        ]);
+      } finally {
+        this.loading = false;
+      }
     },
     
     async loadDevices() {
