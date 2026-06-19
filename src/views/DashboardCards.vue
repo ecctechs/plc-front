@@ -33,7 +33,7 @@
             <h4 
               class="fw-bold mb-0 text-uppercase card-device-name"
               :style="{ paddingTop: editMode ? '20px' : '0', transition: 'padding-top 0.3s ease' }"
-            >{{ addr.device.name }}</h4>
+            >{{ addr.device?.name || addr.device_name || '-' }}</h4>
             <div class="card-label small mb-3 text-uppercase">{{ addr.label.toUpperCase() }}</div>
           </div>
 

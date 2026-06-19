@@ -98,11 +98,11 @@ export default {
       }
 
       if (this.filters.room) {
-        result = result.filter(d => d.device.room_name === this.filters.room);
+        result = result.filter(d => d.device?.room_name === this.filters.room);
       }
 
       if (this.filters.deviceType) {
-        result = result.filter(d => d.device.type === this.filters.deviceType);
+        result = result.filter(d => d.device?.type === this.filters.deviceType);
       }
 
       return result.sort((a, b) => (a.position || 0) - (b.position || 0));
