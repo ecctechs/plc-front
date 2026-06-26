@@ -2,22 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import DashboardCards from '../../views/DashboardCards.vue';
 
-// ─── Mocks ───────────────────────────────────────────────────────────────────
+// ─── Mocks (vi.hoisted ensures these exist before vi.mock() hoisting) ─────────
 
-const mockDraw = vi.fn().mockReturnThis();
-const mockUpdate = vi.fn();
-const MockRadialGauge = vi.fn().mockImplementation(() => ({
-  draw: mockDraw,
-  update: mockUpdate,
-  value: 0,
-}));
+const { mockDraw, mockUpdate, MockRadialGauge, mockShowConfirm } = vi.hoisted(() => {
+  const mockDraw = vi.fn().mockReturnThis();
+  const mockUpdate = vi.fn();
+  // Must use regular function (not arrow) so `new RadialGauge()` works as a constructor
+  const MockRadialGauge = vi.fn(function () {
+    return { draw: mockDraw, update: mockUpdate, value: 0 };
+  });
+  const mockShowConfirm = vi.fn();
+  return { mockDraw, mockUpdate, MockRadialGauge, mockShowConfirm };
+});
+
 vi.mock('canvas-gauges', () => ({ RadialGauge: MockRadialGauge }));
 
 vi.mock('../../views/Chart.vue', () => ({
   default: { name: 'Chart', props: ['device'], template: '<div class="chart-stub"></div>' },
 }));
 
-const mockShowConfirm = vi.fn();
 vi.mock('../../utils/swalHelper', () => ({ showConfirm: mockShowConfirm }));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -56,7 +59,7 @@ function mountComp(props = {}, locale = EN) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockShowConfirm.mockResolvedValue(false);
-  MockRadialGauge.mockImplementation(() => ({ draw: mockDraw, update: mockUpdate, value: 0 }));
+  MockRadialGauge.mockImplementation(function () { return { draw: mockDraw, update: mockUpdate, value: 0 }; });
 });
 
 // ─── data() / mounted() ───────────────────────────────────────────────────────
@@ -330,6 +333,9 @@ describe('checkCondition()', () => {
 
   it('LTE: returns true when value <= max', () => {
     expect(vm.checkCondition(50, { type: 'LTE', min: 30, max: 50 })).toBe(true);
+  });
+  it('LTE: uses min when max is null (nullish coalescing ?? branch)', () => {
+    expect(vm.checkCondition(49, { type: 'LTE', min: 50, max: null })).toBe(true);
   });
   it('LTE: returns false when value > boundary', () => {
     expect(vm.checkCondition(51, { type: 'LTE', min: 30, max: 50 })).toBe(false);
@@ -687,7 +693,8 @@ describe('template rendering', () => {
 
   it('shows device.name when available', () => {
     const wrapper = mountComp({ addresses: [makeAddr({ device: { name: 'My Device' } })] });
-    expect(wrapper.find('.card-device-name').text()).toBe('MY DEVICE');
+    // CSS text-transform:uppercase does not affect .text() — actual DOM content is original case
+    expect(wrapper.find('.card-device-name').text()).toBe('My Device');
   });
 
   it('falls back to device_name when device.name is absent', () => {
@@ -916,6 +923,26 @@ describe('template rendering', () => {
     wrapper.vm.expandedCards[305] = true;
     await wrapper.vm.$nextTick();
     expect(wrapper.find('.info-panel').text()).not.toContain('Level Settings');
+  });
+
+  it('sorts levelConfigs by level_index (covers sort comparator — needs 2+ items)', async () => {
+    // Sort comparator (a, b) => a.level_index - b.level_index requires 2+ items to invoke
+    const addr = makeAddr({
+      card_id: 306, address_id: 34, display_type: 'level',
+      levelConfigs: [
+        { id: 2, level_index: 1, label: 'High',   condition_type: 'MT',  min_value: 80, max_value: null },
+        { id: 1, level_index: 0, label: 'Normal',  condition_type: 'BTW', min_value: 20, max_value: 80  },
+        { id: 3, level_index: 2, label: 'Critical', condition_type: 'MT', min_value: 90, max_value: null },
+      ],
+    });
+    const wrapper = mountComp({ addresses: [addr] });
+    wrapper.vm.expandedCards[306] = true;
+    await wrapper.vm.$nextTick();
+    const text = wrapper.find('.info-panel').text();
+    // All 3 labels should appear
+    expect(text).toContain('High');
+    expect(text).toContain('Normal');
+    expect(text).toContain('Critical');
   });
 
   it('shows chart modal when showChart=true', async () => {
