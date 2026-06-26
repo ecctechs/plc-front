@@ -225,6 +225,9 @@ export default {
       this.mode = 'view';
       this.pwError = '';
       this.pwForm = { current: '', newPw: '', confirm: '' };
+      this.showCurrent = false;
+      this.showNew = false;
+      this.showConfirm = false;
     },
     async savePassword() {
       this.pwError = '';
@@ -233,6 +236,9 @@ export default {
       }
       if (this.pwForm.newPw.length < 6) {
         this.pwError = this.locale.current === 'th' ? 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' : 'Min 6 characters'; return;
+      }
+      if (this.pwForm.newPw === this.pwForm.current) {
+        this.pwError = this.locale.current === 'th' ? 'รหัสผ่านใหม่ต้องไม่เหมือนรหัสผ่านเดิม' : 'New password must be different'; return;
       }
       if (this.pwForm.newPw !== this.pwForm.confirm) {
         this.pwError = this.locale.t('Passwords do not match'); return;

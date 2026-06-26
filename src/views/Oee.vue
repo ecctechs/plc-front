@@ -671,9 +671,9 @@ export default {
         if (!res.ok) throw new Error('Failed to load product detail')
         const json = await res.json()
         const product = json.data || json
-        this.idealCycleTime = product.cycle_time || 0
-        this.targetOee    = product.target_oee    || 85
-        this.targetOutput = product.target_output || 0
+        this.idealCycleTime = product.cycle_time ?? 0
+        this.targetOee    = product.target_oee    ?? 85
+        this.targetOutput = product.target_output ?? 0
         this.plcAddresses = {
           plc_address_output: product.plc_address_output || null,
           plc_address_active: product.plc_address_active || null,
@@ -740,7 +740,7 @@ export default {
     },
 
     getProductNameById(id) {
-      if (!id) return '-'
+      if (id == null) return '-'
       const product = this.products.find(p => p.id === id)
       return product ? product.name : '-'
     },

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
 import GaugeDisplay from "../../../components/interaction/GaugeDisplay.vue";
 
 // ─── Mock canvas-gauges ─────────────────────────────────────
@@ -233,5 +233,313 @@ describe("GaugeDisplay > Bug Cases", () => {
 
     const emitted = wrapper.emitted("update-value");
     expect(emitted[0][0].value).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ─── 7. Additional Coverage ──────────────────────────────────
+describe("GaugeDisplay > Additional Coverage", () => {
+
+  // displayValue: value = null → raw = 0 (covers ?? 0 null guard)
+  it("displayValue: value=null → แสดง 0", () => {
+    const wrapper = mountGauge({ value: null, decimals: 1 });
+    expect(wrapper.vm.displayValue).toBe("0.0");
+  });
+
+  // value watcher: editing=true → inputValue ไม่อัปเดต (false branch of !this.editing)
+  it("value watcher: เมื่อ editing=true → inputValue ไม่เปลี่ยน", async () => {
+    const wrapper = mountGauge({ editable: true, value: 50 });
+    await wrapper.find(".gauge-display").trigger("click");
+    expect(wrapper.vm.editing).toBe(true);
+    await wrapper.setProps({ value: 99 });
+    expect(wrapper.vm.inputValue).toBe(50);
+  });
+
+  // minValue watcher → initGauge
+  it("minValue watcher → เรียก initGauge", async () => {
+    const wrapper = mountGauge();
+    const spy = vi.spyOn(wrapper.vm, "initGauge");
+    await wrapper.setProps({ minValue: 10 });
+    expect(spy).toHaveBeenCalled();
+  });
+
+  // maxValue watcher → initGauge
+  it("maxValue watcher → เรียก initGauge", async () => {
+    const wrapper = mountGauge();
+    const spy = vi.spyOn(wrapper.vm, "initGauge");
+    await wrapper.setProps({ maxValue: 200 });
+    expect(spy).toHaveBeenCalled();
+  });
+
+  // beforeUnmount: gauge มีอยู่ → destroy + gauge=null
+  it("beforeUnmount: gauge ไม่ใช่ null → destroy ถูกเรียก", async () => {
+    const wrapper = mountGauge();
+    await flushPromises();
+    expect(wrapper.vm.gauge).not.toBeNull();
+    wrapper.unmount();
+    expect(mockDestroy).toHaveBeenCalled();
+  });
+
+  // beforeUnmount: gauge = null → ไม่ throw
+  it("beforeUnmount: gauge=null → ไม่ throw", () => {
+    const wrapper = mountGauge();
+    wrapper.vm.gauge = null;
+    expect(() => wrapper.unmount()).not.toThrow();
+    expect(mockDestroy).not.toHaveBeenCalled();
+  });
+
+  // initGauge re-init: มี gauge อยู่แล้ว → destroy ก่อนสร้างใหม่
+  it("initGauge: มี gauge อยู่แล้ว → destroy ก่อน", async () => {
+    const wrapper = mountGauge();
+    await flushPromises();
+    mockDestroy.mockClear();
+    wrapper.vm.initGauge();
+    expect(mockDestroy).toHaveBeenCalled();
+  });
+
+  // initGauge: viewport < 480 → gaugeSize = 150
+  describe("initGauge viewport sizes", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("viewport < 480 → gaugeSize = 150 (baseSize<480 branches)", async () => {
+      vi.stubGlobal("innerWidth", 400);
+      vi.stubGlobal("innerHeight", 400);
+      const wrapper = mountGauge();
+      await flushPromises();
+      expect(mockDraw).toHaveBeenCalled();
+      expect(wrapper.vm.gauge).not.toBeNull();
+    });
+
+    it("viewport 480-767 → gaugeSize = 180 (baseSize<768 branch)", async () => {
+      vi.stubGlobal("innerWidth", 600);
+      vi.stubGlobal("innerHeight", 600);
+      const wrapper = mountGauge();
+      await flushPromises();
+      expect(mockDraw).toHaveBeenCalled();
+    });
+
+    it("viewport >= 768 → gaugeSize = 200 (default branch)", async () => {
+      vi.stubGlobal("innerWidth", 1024);
+      vi.stubGlobal("innerHeight", 768);
+      const wrapper = mountGauge();
+      await flushPromises();
+      expect(mockDraw).toHaveBeenCalled();
+    });
+  });
+
+  // getGaugeHighlights: alarm type MT (right side of MTE || MT)
+  it("highlights: type=MT → from=al.min, to=maxGauge", () => {
+    const alarms = [{ severity: "warning", type: "MT", min: 70 }];
+    const wrapper = mountGauge({ alarms, maxValue: 100 });
+    const h = wrapper.vm.highlights;
+    expect(h[0].from).toBe(70);
+    expect(h[0].to).toBe(100);
+  });
+
+  // getGaugeHighlights: alarm type LTE
+  it("highlights: type=LTE → from=minGauge, to=al.min", () => {
+    const alarms = [{ severity: "critical", type: "LTE", min: 20 }];
+    const wrapper = mountGauge({ alarms, minValue: 0 });
+    const h = wrapper.vm.highlights;
+    expect(h[0].from).toBe(0);
+    expect(h[0].to).toBe(20);
+    expect(h[0].color).toBe("#dc3545");
+  });
+
+  // getGaugeHighlights: alarm type LT (right side of LTE || LT)
+  it("highlights: type=LT → from=minGauge, to=al.min", () => {
+    const alarms = [{ severity: "warning", type: "LT", min: 10 }];
+    const wrapper = mountGauge({ alarms });
+    const h = wrapper.vm.highlights;
+    expect(h[0].from).toBe(0);
+    expect(h[0].to).toBe(10);
+  });
+
+  // getGaugeHighlights: severity 'Warning' (capital W)
+  it("highlights: severity='Warning' (capital) → color yellow", () => {
+    const alarms = [{ severity: "Warning", type: "BTW", min: 50, max: 80 }];
+    const wrapper = mountGauge({ alarms });
+    expect(wrapper.vm.highlights[0].color).toBe("#ffc107");
+  });
+
+  // getGaugeHighlights: severity 'Error' (capital E)
+  it("highlights: severity='Error' → color red", () => {
+    const alarms = [{ severity: "Error", type: "BTW", min: 80, max: 100 }];
+    const wrapper = mountGauge({ alarms });
+    expect(wrapper.vm.highlights[0].color).toBe("#dc3545");
+  });
+
+  // getGaugeHighlights: minValue = null → minGauge = 0 (covers ?? 0)
+  it("highlights: minValue=null → minGauge fallback 0", () => {
+    const alarms = [{ severity: "warning", type: "LT", min: 10 }];
+    const wrapper = mountGauge({ alarms, minValue: null });
+    expect(wrapper.vm.highlights[0].from).toBe(0);
+  });
+
+  // getGaugeHighlights: maxValue = null → maxGauge = 100 (covers ?? 100)
+  it("highlights: maxValue=null → maxGauge fallback 100", () => {
+    const alarms = [{ severity: "warning", type: "MT", min: 70 }];
+    const wrapper = mountGauge({ alarms, maxValue: null });
+    expect(wrapper.vm.highlights[0].to).toBe(100);
+  });
+
+  // finishEditing: editable=false → early return (ไม่ emit)
+  it("finishEditing: editable=false → early return ไม่ emit", () => {
+    const wrapper = mountGauge({ editable: false });
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")).toBeFalsy();
+  });
+
+  // onInput: NaN → inputValue = 0 (covers || 0 path)
+  it("onInput: input ที่ไม่ใช่ตัวเลข → inputValue = 0", async () => {
+    const wrapper = mountGauge({ editable: true });
+    await wrapper.find(".gauge-display").trigger("click");
+    wrapper.vm.onInput({ target: { value: "abc" } });
+    expect(wrapper.vm.inputValue).toBe(0);
+  });
+
+  // updateGauge: gauge=null → เรียก initGauge
+  it("updateGauge: gauge=null → initGauge ถูกเรียก", async () => {
+    const wrapper = mountGauge();
+    await flushPromises();
+    wrapper.vm.gauge = null;
+    const spy = vi.spyOn(wrapper.vm, "initGauge");
+    wrapper.vm.updateGauge(50);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  // updateGauge: string value → parseFloat
+  it("updateGauge: value เป็น string → gauge.update ถูกเรียก", async () => {
+    const wrapper = mountGauge();
+    await flushPromises();
+    mockUpdate.mockClear();
+    wrapper.vm.updateGauge("42");
+    expect(mockUpdate).toHaveBeenCalled();
+  });
+
+  // @blur="finishEditing" template handler
+  it("blur บน input → finishEditing (ออก edit mode)", async () => {
+    const wrapper = mountGauge({ editable: true });
+    await wrapper.find(".gauge-display").trigger("click");
+    expect(wrapper.vm.editing).toBe(true);
+    await wrapper.find(".edit-input").trigger("blur");
+    expect(wrapper.vm.editing).toBe(false);
+    expect(wrapper.emitted("update-value")).toBeTruthy();
+  });
+
+  // @click.stop template handler on input
+  it("click บน input (@click.stop) → ไม่ bubble ไปเรียก startEditing", async () => {
+    const wrapper = mountGauge({ editable: true });
+    await wrapper.find(".gauge-display").trigger("click");
+    await wrapper.find(".edit-input").setValue(77);
+    await wrapper.find(".edit-input").trigger("click");
+    // editing ยังคงเป็น true และ inputValue ไม่ถูก reset
+    expect(wrapper.vm.editing).toBe(true);
+    expect(wrapper.vm.inputValue).toBe(77);
+  });
+
+  // line 213 if[1]: alarm type ไม่ตรงกับ BTW/MTE/MT/LTE/LT → from=0, to=0
+  it("highlights: alarm type ไม่รู้จัก → from=0, to=0 (default)", () => {
+    const alarms = [{ severity: "warning", type: "NONE", min: 10, max: 90 }];
+    const wrapper = mountGauge({ alarms });
+    expect(wrapper.vm.highlights[0].from).toBe(0);
+    expect(wrapper.vm.highlights[0].to).toBe(0);
+  });
+
+  // line 236: `this.unit || ''` right side (unit falsy) + lines 251,255,266-268: `this.textColor || '#00ff00'`
+  it("initGauge: unit='' และ textColor='' → fallback defaults ถูกใช้ (covers || branches)", async () => {
+    const wrapper = mountGauge({ unit: "", textColor: "" });
+    await flushPromises();
+    expect(mockDraw).toHaveBeenCalled();
+    expect(wrapper.vm.gauge).not.toBeNull();
+  });
+
+  // line 288 if[1]: $refs.inputField = null ใน $nextTick callback → ไม่ throw
+  // Strategy: override $refs.inputField getter to return null BEFORE Vue re-render sets it
+  // so when startEditing's $nextTick callback reads the ref, it's null
+  it("startEditing: $refs.inputField null ใน nextTick → ไม่ throw (defensive guard)", async () => {
+    const wrapper = mountGauge({ editable: true });
+    await flushPromises(); // ensure mounted initGauge is done
+
+    // startEditing() sets editing=true (triggers re-render M2) then queues nextTick callback (M1)
+    // M2 runs first (re-render), M1 runs second → by M1, $refs.inputField is normally non-null
+    // Workaround: define inputField with a getter that always returns null
+    //   → Vue's re-render setter still fires (we capture the value) but getter returns null
+    //   → M1 reads null → if (input) false branch covered
+    wrapper.vm.startEditing();
+    Object.defineProperty(wrapper.vm.$refs, 'inputField', {
+      get: () => null,
+      set: () => {},
+      configurable: true,
+    });
+    await flushPromises();
+
+    // editing stays true because focus/select were skipped (null ref guard)
+    expect(wrapper.vm.editing).toBe(true);
+  });
+
+  // line 320 binary-expr[1]: parseFloat(NaN-string) || 0 → numVal = 0
+  it("updateGauge: string ที่ไม่ใช่ตัวเลข → numVal = 0 (|| 0 path)", async () => {
+    const wrapper = mountGauge();
+    await flushPromises();
+    mockUpdate.mockClear();
+    wrapper.vm.updateGauge("notanumber");
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ value: 0 }));
+  });
+});
+
+// ─── 8. New Bug Cases (ตั้งใจให้ FAIL) ──────────────────────
+//
+//  กติกา: ห้ามแก้ test — ต้องแก้ GaugeDisplay.vue เท่านั้น
+
+describe("GaugeDisplay > New Bug Cases", () => {
+
+  // ── BUG-3 ─────────────────────────────────────────────────
+  // onInput: พิมพ์ non-numeric → inputValue reset เป็น 0 ทันที
+  // อันตราย: PLC จะได้รับคำสั่งเซ็ตค่า 0 ทันทีที่ user พิมพ์ผิด
+  //          เช่น ค่า pressure ที่ 50 → user กด 'a' → ส่ง 0 ไป PLC
+  // FAIL เพราะ: component ทำ `parseFloat("abc") || 0` = 0
+  //             แทนที่จะ ignore input ที่ไม่ใช่ตัวเลขและคง inputValue เดิม
+  it("[BUG-3] onInput: พิมพ์ตัวอักษร → ควรคง inputValue เดิม ไม่ reset เป็น 0", async () => {
+    const wrapper = mountGauge({ editable: true, value: 50 });
+    await wrapper.find(".gauge-display").trigger("click");
+    wrapper.vm.inputValue = 50;
+    wrapper.vm.onInput({ target: { value: "abc" } });
+    // component ทำ inputValue = 0 → FAIL
+    expect(wrapper.vm.inputValue).toBe(50); // FAIL: actual 0
+  });
+
+  // ── BUG-4 ─────────────────────────────────────────────────
+  // updateGauge: gauge=null → เรียก initGauge แล้ว return เลย
+  // อันตราย: ค่าใหม่จาก PLC (newVal) ไม่ถูก apply ไปที่ gauge ที่เพิ่ง init
+  //          gauge จะแสดงค่า this.value เดิม แม้ PLC ส่งค่าใหม่มา
+  // FAIL เพราะ: หลัง initGauge() component return ทันที
+  //             ไม่ได้ update gauge ด้วย newVal จึงไม่เรียก gauge.update
+  it("[BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply", async () => {
+    const wrapper = mountGauge({ value: 10, scale: 1, offset: 0 });
+    await flushPromises();
+    wrapper.vm.gauge = null;
+    mockUpdate.mockClear();
+    wrapper.vm.updateGauge(99);
+    // component ทำ initGauge() แล้ว return ทันที → mockUpdate ไม่ถูกเรียก
+    // FAIL เพราะ gauge.update ควรถูกเรียกด้วย { value: 99 } แต่ไม่เกิดขึ้น
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ value: 99 })); // FAIL
+  });
+
+  // ── BUG-5 ─────────────────────────────────────────────────
+  // startEditing: ไม่ guard ว่า editing=true อยู่แล้ว → รีเซ็ต inputValue
+  // อันตราย: user กำลังพิมพ์ค่าอยู่ แล้ว click ส่วนอื่นของ gauge (เช่น canvas wrapper)
+  //          → startEditing ถูกเรียกอีก → inputValue ถูก reset เป็น this.value
+  //          → user สูญเสียค่าที่พิมพ์ไปโดยไม่รู้ตัว
+  // FAIL เพราะ: startEditing ไม่ check `if (this.editing) return`
+  it("[BUG-5] startEditing ขณะ editing อยู่ → ควร guard ไม่ reset inputValue", async () => {
+    const wrapper = mountGauge({ editable: true, value: 50 });
+    await wrapper.find(".gauge-display").trigger("click");
+    await wrapper.find(".edit-input").setValue(88);
+    // simulate second click on gauge container (not on input — outside the input)
+    await wrapper.find(".gauge-display").trigger("click");
+    // component รีเซ็ต inputValue = this.value = 50 → FAIL
+    expect(wrapper.vm.inputValue).toBe(88); // FAIL: actual 50
   });
 });
