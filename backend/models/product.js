@@ -1,0 +1,100 @@
+'use strict';
+
+const { Model } = require('sequelize');
+
+module.exports = (sequelize, DataTypes) => {
+  class Product extends Model {
+    static associate(models) {
+      Product.hasMany(models.ProductLog, { foreignKey: 'product_id', as: 'productLogs' });
+      Product.hasMany(models.OeeDailySnapshot, { foreignKey: 'product_id', as: 'oeSnapshots' });
+      Product.belongsTo(models.Company, { foreignKey: 'company_id', as: 'company' });
+    }
+  }
+
+  Product.init({
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+      allowNull: false
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    image_path: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    cycle_time: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      comment: 'Cycle time in seconds'
+    },
+    plc_address_output: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'PLC Address for count signal (ON/OFF)'
+    },
+    plc_address_active: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'PLC Address for running status signal'
+    },
+    total_output: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: 'Total output count'
+    },
+    plc_address_complete: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'PLC Address for complete signal'
+    },
+    plc_address_reject: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'PLC Address for reject signal'
+    },
+    reject_output: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      comment: 'Total reject count'
+    },
+    target_oee: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Target OEE percentage (0-100)'
+    },
+    target_output: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Target output count per shift/day'
+    },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    }
+  }, {
+    sequelize,
+    modelName: 'Product',
+    tableName: 'products',
+    timestamps: false
+  });
+
+  return Product;
+};

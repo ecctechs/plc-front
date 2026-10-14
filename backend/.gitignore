@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+.env
+dist/
+
+# Secrets: copy .env.example to .env.<NODE_ENV> locally
+.env.*
+!.env.example
+
+# User uploads
+uploads/*
+!uploads/.gitkeep

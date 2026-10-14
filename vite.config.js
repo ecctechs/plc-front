@@ -4,10 +4,13 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   plugins: [vue()],
   define: { __VUE_PROD_DEVTOOLS__: true },
+  server: {
+    watch: { ignored: ["**/backend/**"] },
+  },
   test: {
     environment: "jsdom",
     globals: true,
-    exclude: ["e2e/**", "node_modules/**", ".kilo/**"],
+    exclude: ["e2e/**", "node_modules/**", ".kilo/**", "backend/**"],
     server: {
       deps: {
         inline: [/@csstools/, /@asamuzakjp/],

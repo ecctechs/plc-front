@@ -1,0 +1,35 @@
+{
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.11",
+    "sequelize-cli": "^6.6.5"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsmodbus": "^4.0.10",
+    "jsonwebtoken": "^9.0.3",
+    "modbus-serial": "^8.0.23",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.12",
+    "nodes7": "^0.3.18",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
+  },
+  "scripts": {
+    "migrate:dev": "cross-env NODE_ENV=development sequelize-cli db:migrate",
+    "migrate:prod": "cross-env NODE_ENV=production sequelize-cli db:migrate",
+    "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "prod": "cross-env NODE_ENV=production node src/server.js",
+    "seed:dev": "cross-env NODE_ENV=development sequelize-cli db:seed:all",
+    "undo:dev": "cross-env NODE_ENV=development sequelize-cli db:migrate:undo",
+    "dev:dock": "cross-env NODE_ENV=dock nodemon src/server.js",
+    "migrate:dock": "cross-env NODE_ENV=dock sequelize-cli db:migrate",
+    "seed:dock": "cross-env NODE_ENV=dock sequelize-cli db:seed:all"
+  }
+}

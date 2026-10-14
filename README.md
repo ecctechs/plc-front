@@ -99,3 +99,21 @@
 
 ---
 *Developed for Industrial Automation and Smart Factory Solutions.*
+
+---
+
+## 🧑‍💻 Development
+
+โปรเจคนี้รวม frontend (root) และ backend (`backend/`) ไว้ใน repo เดียว
+
+1. ติดตั้ง PostgreSQL และเปิดให้ทำงานที่ `127.0.0.1`
+2. สร้างไฟล์ env ของ backend: คัดลอก `backend/.env.example` เป็น `backend/.env.development` แล้วใส่ค่า (ไฟล์ `.env.*` ไม่ถูก commit)
+3. `npm install` — ติดตั้ง dependencies ของทั้ง frontend และ backend (ผ่าน `postinstall`)
+4. `npm run migrate:dev` และ `npm run seed:dev` (ครั้งแรก)
+5. `npm run dev` — start backend (port 3001) และ Vite (port 5173) พร้อมกัน
+
+| คำสั่ง | ทำอะไร |
+| :--- | :--- |
+| `npm run dev` | backend + frontend |
+| `npm run dev:web` | frontend อย่างเดียว |
+| `npm run dev:api` | backend อย่างเดียว |
