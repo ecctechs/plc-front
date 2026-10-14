@@ -201,11 +201,11 @@
     </transition>
 
     <!-- ── EDIT MODAL ── -->
-    <div v-if="showEditModal" class="inner-backdrop" @click.self="showEditModal = false">
+    <div v-if="showEditModal" class="inner-backdrop" @click.self="closeEdit">
       <div class="inner-modal">
         <div class="inner-modal-header">
           <h6 class="fw-bold mb-0"><i class="fas fa-user-edit me-2 text-primary"></i>{{ locale.current === 'th' ? 'แก้ไขผู้ใช้' : 'Edit User' }}</h6>
-          <button class="btn-close-minimal" @click="showEditModal = false"><i class="fas fa-times"></i></button>
+          <button class="btn-close-minimal" @click="closeEdit"><i class="fas fa-times"></i></button>
         </div>
         <div class="inner-modal-body">
           <div class="mb-3">
@@ -266,7 +266,7 @@
           </div>
         </div>
         <div class="inner-modal-footer">
-          <button class="btn btn-sm btn-secondary" @click="showEditModal = false">{{ locale.t('Cancel') }}</button>
+          <button class="btn btn-sm btn-secondary" @click="closeEdit">{{ locale.t('Cancel') }}</button>
           <button class="btn btn-sm btn-primary" @click="saveEdit" :disabled="savingEdit">
             <span v-if="savingEdit" class="spinner-border spinner-border-sm me-1"></span>{{ locale.t('Update') }}
           </button>
@@ -337,6 +337,7 @@ export default {
       loadingRoles: false,
       // edit
       showEditModal: false,
+      editFormSnapshot: null,
       savingEdit: false,
       editingId: null,
       editForm: { email: '', role: '', is_active: true, rooms: [] },
@@ -396,7 +397,23 @@ export default {
         employee_id: user.employee_id ?? null,
         rooms:       user.roomAssignments ? user.roomAssignments.map(r => ({ room_id: r.room_id, scope: r.scope })) : []
       };
+      this.editFormSnapshot = JSON.stringify(this.editForm);
       this.showEditModal = true;
+    },
+
+    async closeEdit() {
+      const dirty = this.editFormSnapshot !== null && JSON.stringify(this.editForm) !== this.editFormSnapshot;
+      if (dirty) {
+        const ok = await showConfirm(
+          this.locale.current === 'th' ? 'ยังไม่ได้บันทึก' : 'Unsaved changes',
+          this.locale.current === 'th' ? 'ต้องการปิดโดยไม่บันทึกการแก้ไขหรือไม่?' : 'Close without saving your changes?',
+          this.locale.current === 'th' ? 'ปิด' : 'Close',
+          this.locale.current === 'th' ? 'กลับไปแก้ไข' : 'Keep editing'
+        );
+        if (!ok) return;
+      }
+      this.showEditModal = false;
+      this.editFormSnapshot = null;
     },
 
     onEditRoleChange() {

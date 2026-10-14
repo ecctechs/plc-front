@@ -177,8 +177,8 @@ export default {
       }
     },
     displayValue() {
-      const raw = this.value ?? 0
-      return Number(raw).toFixed(this.decimals)
+      const num = Number(this.value ?? 0)
+      return (Number.isFinite(num) ? num : 0).toFixed(this.decimals)
     },
     sortedLevels() {
       if (!this.levels || this.levels.length === 0) return []
@@ -296,7 +296,7 @@ export default {
     },
     startEditing() {
       console.log('startEditing called', { editable: this.editable, value: this.value })
-      if (!this.editable) return
+      if (!this.editable || this.editing) return
       
       this.editing = true
       this.inputValue = this.value
@@ -316,7 +316,9 @@ export default {
       })
     },
     onInput(event) {
-      this.inputValue = parseFloat(event.target.value) || 0
+      // ช่องว่างหรือค่าที่ไม่ใช่ตัวเลข → คงค่าเดิมไว้ ไม่ reset เป็น 0
+      const num = parseFloat(event.target.value)
+      if (Number.isFinite(num)) this.inputValue = num
     },
     finishEditing() {
       if (!this.editing || !this.editable) return

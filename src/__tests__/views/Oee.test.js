@@ -1058,17 +1058,18 @@ describe("Oee > Watch & method edge paths", () => {
     expect(wrapper.vm.trendLoading).toBe(false); // ไม่เคย set true เพราะ return ก่อน
   });
 
-  it("loadTrend: !res.ok → catch → trendData = [] (lines 711, 715–716)", async () => {
+  it("loadTrend: !res.ok หลังเปลี่ยนช่วงวัน → catch → trendData = [] (ไม่แสดงข้อมูลผิดช่วง)", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const wrapper = mountOee();
     await flushPromises();
 
-    // เรียก loadTrend() โดยตรง (ไม่ผ่าน watch) เพื่อ control mock ได้ชัดเจน
     mockFetch.mockImplementation((url) => {
       if (url.includes("/history")) return Promise.resolve({ ok: false });
       return createMockFetch()(url);
     });
-    await wrapper.vm.loadTrend(); // selectedProductId = 1 อยู่แล้ว
+    // เปลี่ยนจาก 7 เป็น 30 วัน แต่โหลดไม่สำเร็จ → ข้อมูล 7 วันเดิมต้องไม่ค้าง
+    wrapper.vm.trendDays = 30;
+    await flushPromises();
 
     expect(consoleSpy).toHaveBeenCalledWith("OEE trend error:", expect.any(Error));
     expect(wrapper.vm.trendData).toEqual([]);
@@ -1338,5 +1339,44 @@ describe("Oee > Bug Cases (FAIL)", () => {
     // Cleanup: resolve ทั้งหมดเพื่อไม่ให้ leak
     resolvers.forEach((r) => r({ ok: true, json: () => Promise.resolve({ data: [] }) }));
     await flushPromises();
+  });
+});
+
+// ─── 20. Regression: trend reload หลัง request ค้าง ──────────
+
+describe("Oee > Trend reload regression", () => {
+  it("เปลี่ยน trendDays ระหว่างโหลด → โหลดใหม่ด้วย days ล่าสุดหลัง request แรกเสร็จ", async () => {
+    const resolvers = [];
+    const urls = [];
+    mockFetch.mockImplementation((url) => {
+      if (url.includes("/history")) {
+        urls.push(url);
+        return new Promise((resolve) => { resolvers.push(resolve); });
+      }
+      return createMockFetch()(url);
+    });
+
+    const wrapper = mountOee();
+    await flushPromises();
+    wrapper.vm.trendDays = 30;
+    await wrapper.vm.$nextTick();
+    expect(urls).toHaveLength(1);
+
+    resolvers[0]({ ok: true, json: () => Promise.resolve({ data: [{ date: "7d" }] }) });
+    await flushPromises();
+    expect(urls).toHaveLength(2);
+    expect(urls[1]).toContain("days=30");
+
+    resolvers[1]({ ok: true, json: () => Promise.resolve({ data: [{ date: "30d" }] }) });
+    await flushPromises();
+    expect(wrapper.vm.trendData).toEqual([{ date: "30d" }]);
+    expect(wrapper.vm.trendLoading).toBe(false);
+  });
+
+  it("authH() ส่ง Bearer token เมื่อมี token", async () => {
+    store["token"] = "abc";
+    mountOee();
+    await flushPromises();
+    expect(mockFetch.mock.calls[0][1].headers["Authorization"]).toBe("Bearer abc");
   });
 });

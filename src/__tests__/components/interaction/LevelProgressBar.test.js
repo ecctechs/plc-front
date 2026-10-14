@@ -367,12 +367,12 @@ describe("LevelProgressBar > Additional Coverage", () => {
     expect(result.boxShadow).toBeDefined();
   });
 
-  // branch 33 side 1 line 319: onInput NaN → || 0 right side
-  it("onInput: พิมพ์ตัวอักษร → inputValue = 0 (|| 0 path)", async () => {
-    const wrapper = mountBar({ editable: true });
+  // onInput: ช่องว่าง (ลบเลขออกหมด) → คงค่าเดิม ไม่ reset เป็น 0
+  it("onInput: ช่องว่าง → inputValue คงค่าเดิม", async () => {
+    const wrapper = mountBar({ editable: true, value: 50 });
     await wrapper.find(".level-progress-bar").trigger("click");
-    wrapper.vm.onInput({ target: { value: "abc" } });
-    expect(wrapper.vm.inputValue).toBe(0);
+    wrapper.vm.onInput({ target: { value: "" } });
+    expect(wrapper.vm.inputValue).toBe(50);
   });
 
   // fn 33 line 46: @click.stop on input → ไม่ bubble
@@ -408,7 +408,8 @@ describe("LevelProgressBar > Additional Coverage", () => {
       set: () => {},
       configurable: true,
     });
-    // เรียก startEditing ซ้ำ → outer + inner nextTick จะอ่าน null จาก getter
+    // ออกจาก edit mode แล้วเรียก startEditing ใหม่ → outer + inner nextTick จะอ่าน null จาก getter
+    wrapper.vm.editing = false;
     wrapper.vm.startEditing();
     await flushPromises();
     expect(wrapper.vm.editing).toBe(true);

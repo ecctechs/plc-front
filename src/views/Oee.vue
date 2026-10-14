@@ -403,7 +403,10 @@
 import VueApexCharts from 'vue3-apexcharts'
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
+const authH = () => {
+  const token = localStorage.getItem('token')
+  return token ? { 'Authorization': `Bearer ${token}` } : {}
+}
 
 export default {
   name: 'Oee',
@@ -434,7 +437,9 @@ export default {
       hourlyPollTimer: null,
       trendDays: 7,
       trendData: [],
+      trendDataKey: null,
       trendLoading: false,
+      trendReloadPending: false,
       hourlyData: [],
       hourlyLoading: false,
     }
@@ -682,6 +687,13 @@ export default {
         }
       } catch (err) {
         console.error('Product detail error:', err)
+        // ไม่แสดง PLC address ของ product ก่อนหน้า
+        this.plcAddresses = {
+          plc_address_output: null,
+          plc_address_active: null,
+          plc_address_complete: null,
+          plc_address_reject: null,
+        }
       }
     },
 
@@ -705,17 +717,32 @@ export default {
 
     async loadTrend() {
       if (!this.selectedProductId) return
+      // มี request ค้างอยู่ → โหลดใหม่อีกรอบเมื่อเสร็จ เพื่อให้ได้ข้อมูลของตัวเลือกล่าสุด
+      if (this.trendLoading) {
+        this.trendReloadPending = true
+        return
+      }
+      const key = `${this.selectedProductId}-${this.trendDays}`
       this.trendLoading = true
       try {
         const res = await fetch(`${BASE_API}/api/oee/snapshot/${this.selectedProductId}/history?days=${this.trendDays}`, { headers: authH() })
         if (!res.ok) throw new Error('Failed to load trend')
         const json = await res.json()
         this.trendData = json.data || []
+        this.trendDataKey = key
       } catch (err) {
         console.error('OEE trend error:', err)
-        this.trendData = []
+        // คงข้อมูลเดิมไว้ถ้าเป็น product/ช่วงวันเดียวกัน ไม่งั้นล้างทิ้ง
+        if (this.trendDataKey !== key) {
+          this.trendData = []
+          this.trendDataKey = null
+        }
       } finally {
         this.trendLoading = false
+        if (this.trendReloadPending) {
+          this.trendReloadPending = false
+          this.loadTrend()
+        }
       }
     },
 
@@ -741,7 +768,7 @@ export default {
 
     getProductNameById(id) {
       if (id == null) return '-'
-      const product = this.products.find(p => p.id === id)
+      const product = this.products.find(p => Number(p.id) === Number(id))
       return product ? product.name : '-'
     },
   },

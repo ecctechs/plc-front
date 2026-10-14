@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import UserSettingModal from "../../components/UserSettingModal.vue";
 
 vi.mock("../../utils/swalHelper", () => ({
@@ -1414,7 +1414,7 @@ describe("UserSettingModal > Bug Cases", () => {
   // ── BUG-4 ─────────────────────────────────────────────────
   // ไม่มีการ confirm ก่อนปิด edit modal ขณะมีข้อมูลที่แก้ไขอยู่
   // อันตราย: admin แก้ role/permissions ค้างไว้ แล้วกด X → ข้อมูลหาย โดยไม่ถาม
-  it("🔴 [BUG-4] ปิด edit modal ขณะมีการแก้ไข → ควรมี confirm ก่อน (FAIL intentional)", async () => {
+  it("[BUG-4] ปิด edit modal ขณะมีการแก้ไข → ต้อง confirm ก่อน", async () => {
     const wrapper = mountModal();
     await waitFor(() => expect(wrapper.vm.users.length).toBeGreaterThan(0));
     wrapper.vm.openEdit(mockUsers[0]);
@@ -1428,12 +1428,11 @@ describe("UserSettingModal > Bug Cases", () => {
     expect(showConfirm).toHaveBeenCalled(); // FAIL: component ปิดทันทีโดยไม่ถาม
   });
 
-  // ── BUG-5 ─────────────────────────────────────────────────
-  // submitAdd() ส่ง password แบบ plain text ใน request body โดยไม่ hash
-  // (การ hash ควรทำฝั่ง backend — แต่ถ้า backend ไม่ hash ก็จะเก็บ plain text)
-  // อันตราย: ถ้า API leak → password ของ user ทุกคนถูกเปิดเผย
-  // Test นี้ verify ว่า password ถูกส่งไปใน body (ยืนยันว่า frontend ไม่ hash)
-  it("🔴 [BUG-5] submitAdd ส่ง password เป็น plain text → ควร hash ก่อนส่ง (FAIL intentional)", async () => {
+  // ── BUG-5 (ไม่ใช่บั๊ก) ─────────────────────────────────────
+  // submitAdd() ต้องส่ง password ตามที่ผู้ใช้พิมพ์ — backend hash ด้วย bcrypt
+  // (settings.user.service.js) ความปลอดภัยระหว่างทางใช้ HTTPS
+  // ถ้า frontend hash เอง backend จะ hash ซ้ำ แล้ว login ด้วยรหัสจริงไม่ได้
+  it("[BUG-5] submitAdd ส่ง password ตามที่พิมพ์ให้ backend เป็นคน hash", async () => {
     const wrapper = mountModal();
     await waitFor(() => expect(wrapper.vm.loadingList).toBe(false));
     wrapper.vm.form = {
@@ -1455,8 +1454,7 @@ describe("UserSettingModal > Bug Cases", () => {
     const postCall = mockFetch.mock.calls.find(([, opts]) => opts && opts.method === "POST");
     const body = JSON.parse(postCall[1].body);
 
-    // FAIL: password ไม่ควรอยู่ใน plain text — ควร hash แล้วถึงส่ง
-    expect(body.password).not.toBe("mysecret123"); // FAIL: body.password === "mysecret123"
+    expect(body.password).toBe("mysecret123");
   });
 });
 
@@ -1838,5 +1836,45 @@ describe("UserSettingModal > Edge Cases", () => {
     }));
     await wrapper.vm.submitAdd();
     store.user = storeBackup;
+  });
+});
+
+// ─── Regression: confirm ก่อนปิด edit modal ────────────────
+
+describe("UserSettingModal > Close edit confirm", () => {
+  it("openEdit แล้วไม่แก้อะไร → ปิดทันทีไม่ถาม", async () => {
+    const wrapper = mountModal();
+    await waitFor(() => expect(wrapper.vm.users.length).toBeGreaterThan(0));
+    showConfirm.mockClear();
+    wrapper.vm.openEdit(mockUsers[0]);
+    await wrapper.vm.$nextTick();
+    await wrapper.find(".inner-modal .btn-close-minimal").trigger("click");
+    expect(showConfirm).not.toHaveBeenCalled();
+    expect(wrapper.vm.showEditModal).toBe(false);
+  });
+
+  it("แก้ไขแล้วกด Cancel → confirm ตอบยกเลิก → modal ยังเปิดอยู่", async () => {
+    const wrapper = mountModal();
+    await waitFor(() => expect(wrapper.vm.users.length).toBeGreaterThan(0));
+    wrapper.vm.openEdit(mockUsers[0]);
+    wrapper.vm.editForm.is_active = !wrapper.vm.editForm.is_active;
+    await wrapper.vm.$nextTick();
+    showConfirm.mockResolvedValueOnce(false);
+    await wrapper.find(".inner-modal-footer .btn-secondary").trigger("click");
+    await flushPromises();
+    expect(showConfirm).toHaveBeenCalled();
+    expect(wrapper.vm.showEditModal).toBe(true);
+  });
+
+  it("แก้ไขแล้วคลิก backdrop → confirm ตอบตกลง → modal ปิด", async () => {
+    const wrapper = mountModal();
+    await waitFor(() => expect(wrapper.vm.users.length).toBeGreaterThan(0));
+    wrapper.vm.openEdit(mockUsers[0]);
+    wrapper.vm.editForm.rooms.push({ room_id: null, scope: "view" });
+    await wrapper.vm.$nextTick();
+    showConfirm.mockResolvedValueOnce(true);
+    await wrapper.find(".inner-backdrop").trigger("click");
+    await flushPromises();
+    expect(wrapper.vm.showEditModal).toBe(false);
   });
 });
