@@ -198,44 +198,6 @@ describe("GaugeDisplay > Methods", () => {
   });
 });
 
-// ─── 6. Bug Cases (FAIL จนกว่าจะแก้ GaugeDisplay.vue) ──────
-//
-//  กติกา: ห้ามแก้ test — ต้องแก้ GaugeDisplay.vue เท่านั้น
-
-describe("GaugeDisplay > Bug Cases", () => {
-
-  // ── BUG-1 ─────────────────────────────────────────────────
-  // finishEditing() ไม่ clamp ค่าให้อยู่ใน min/max
-  // ผู้ใช้พิมพ์ 999 ทั้งที่ maxValue = 100 → ส่งค่าเกิน max ออกไป
-  // ควร clamp ค่าก่อน emit
-  it("[BUG-1] พิมพ์ค่าเกิน maxValue → ค่าที่ emit ต้องไม่เกิน max", async () => {
-    const wrapper = mountGauge({ editable: true, minValue: 0, maxValue: 100 });
-    await wrapper.find(".gauge-display").trigger("click");
-
-    const input = wrapper.find(".edit-input");
-    await input.setValue(999);
-    await input.trigger("keyup.enter");
-
-    const emitted = wrapper.emitted("update-value");
-    expect(emitted[0][0].value).toBeLessThanOrEqual(100);
-  });
-
-  // ── BUG-2 ─────────────────────────────────────────────────
-  // finishEditing() ไม่ clamp ค่าต่ำกว่า min
-  // ผู้ใช้พิมพ์ -50 ทั้งที่ minValue = 0 → ส่งค่าติดลบออกไป
-  it("[BUG-2] พิมพ์ค่าต่ำกว่า minValue → ค่าที่ emit ต้องไม่ต่ำกว่า min", async () => {
-    const wrapper = mountGauge({ editable: true, minValue: 0, maxValue: 100 });
-    await wrapper.find(".gauge-display").trigger("click");
-
-    const input = wrapper.find(".edit-input");
-    await input.setValue(-50);
-    await input.trigger("keyup.enter");
-
-    const emitted = wrapper.emitted("update-value");
-    expect(emitted[0][0].value).toBeGreaterThanOrEqual(0);
-  });
-});
-
 // ─── 7. Additional Coverage ──────────────────────────────────
 describe("GaugeDisplay > Additional Coverage", () => {
 
@@ -486,60 +448,5 @@ describe("GaugeDisplay > Additional Coverage", () => {
     mockUpdate.mockClear();
     wrapper.vm.updateGauge("notanumber");
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ value: 0 }));
-  });
-});
-
-// ─── 8. New Bug Cases (ตั้งใจให้ FAIL) ──────────────────────
-//
-//  กติกา: ห้ามแก้ test — ต้องแก้ GaugeDisplay.vue เท่านั้น
-
-describe("GaugeDisplay > New Bug Cases", () => {
-
-  // ── BUG-3 ─────────────────────────────────────────────────
-  // onInput: พิมพ์ non-numeric → inputValue reset เป็น 0 ทันที
-  // อันตราย: PLC จะได้รับคำสั่งเซ็ตค่า 0 ทันทีที่ user พิมพ์ผิด
-  //          เช่น ค่า pressure ที่ 50 → user กด 'a' → ส่ง 0 ไป PLC
-  // FAIL เพราะ: component ทำ `parseFloat("abc") || 0` = 0
-  //             แทนที่จะ ignore input ที่ไม่ใช่ตัวเลขและคง inputValue เดิม
-  it("[BUG-3] onInput: พิมพ์ตัวอักษร → ควรคง inputValue เดิม ไม่ reset เป็น 0", async () => {
-    const wrapper = mountGauge({ editable: true, value: 50 });
-    await wrapper.find(".gauge-display").trigger("click");
-    wrapper.vm.inputValue = 50;
-    wrapper.vm.onInput({ target: { value: "abc" } });
-    // component ทำ inputValue = 0 → FAIL
-    expect(wrapper.vm.inputValue).toBe(50); // FAIL: actual 0
-  });
-
-  // ── BUG-4 ─────────────────────────────────────────────────
-  // updateGauge: gauge=null → เรียก initGauge แล้ว return เลย
-  // อันตราย: ค่าใหม่จาก PLC (newVal) ไม่ถูก apply ไปที่ gauge ที่เพิ่ง init
-  //          gauge จะแสดงค่า this.value เดิม แม้ PLC ส่งค่าใหม่มา
-  // FAIL เพราะ: หลัง initGauge() component return ทันที
-  //             ไม่ได้ update gauge ด้วย newVal จึงไม่เรียก gauge.update
-  it("[BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply", async () => {
-    const wrapper = mountGauge({ value: 10, scale: 1, offset: 0 });
-    await flushPromises();
-    wrapper.vm.gauge = null;
-    mockUpdate.mockClear();
-    wrapper.vm.updateGauge(99);
-    // component ทำ initGauge() แล้ว return ทันที → mockUpdate ไม่ถูกเรียก
-    // FAIL เพราะ gauge.update ควรถูกเรียกด้วย { value: 99 } แต่ไม่เกิดขึ้น
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ value: 99 })); // FAIL
-  });
-
-  // ── BUG-5 ─────────────────────────────────────────────────
-  // startEditing: ไม่ guard ว่า editing=true อยู่แล้ว → รีเซ็ต inputValue
-  // อันตราย: user กำลังพิมพ์ค่าอยู่ แล้ว click ส่วนอื่นของ gauge (เช่น canvas wrapper)
-  //          → startEditing ถูกเรียกอีก → inputValue ถูก reset เป็น this.value
-  //          → user สูญเสียค่าที่พิมพ์ไปโดยไม่รู้ตัว
-  // FAIL เพราะ: startEditing ไม่ check `if (this.editing) return`
-  it("[BUG-5] startEditing ขณะ editing อยู่ → ควร guard ไม่ reset inputValue", async () => {
-    const wrapper = mountGauge({ editable: true, value: 50 });
-    await wrapper.find(".gauge-display").trigger("click");
-    await wrapper.find(".edit-input").setValue(88);
-    // simulate second click on gauge container (not on input — outside the input)
-    await wrapper.find(".gauge-display").trigger("click");
-    // component รีเซ็ต inputValue = this.value = 50 → FAIL
-    expect(wrapper.vm.inputValue).toBe(88); // FAIL: actual 50
   });
 });

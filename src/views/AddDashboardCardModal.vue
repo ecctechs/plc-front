@@ -91,7 +91,10 @@
 import { showAlert, showConfirm } from "../utils/swalHelper";
 
 const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+const authH = () => {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 export default {
   name: "AddDashboardCardModal",
@@ -216,7 +219,8 @@ export default {
               selectedDeviceId: this.selectedDeviceId,
               selectedAddressId: this.selectedAddressId,
               selectedDisplayType: this.selectedDisplayType,
-              selectedPosition: this.selectedPosition
+              selectedPosition: this.selectedPosition,
+              room_id: this.form.room_id
             })
           });
 
@@ -247,7 +251,8 @@ export default {
             body: JSON.stringify({
               address_id: this.selectedAddressId,
               display_type: this.selectedDisplayType,
-              position: this.selectedPosition
+              position: this.selectedPosition,
+              room_id: this.form.room_id
             })
           });
 

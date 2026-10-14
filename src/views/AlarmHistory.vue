@@ -473,7 +473,7 @@ export default {
     fetchDowntimeSummary() {
       const now        = new Date()
       const triggers   = this.history.filter(e => e.event_type === 'TRIGGER')
-      const recoveries = this.history.filter(e => e.event_type === 'RECOVER')
+      const recoveries = this.history.filter(e => e.event_type === 'RECOVERY')
 
       // group by alarm_rule_id (ตรงกับ backend) ถ้าไม่มีให้ fallback address_id
       const getKey = e => e.alarm_rule_id ?? e.address_id

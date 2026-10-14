@@ -210,12 +210,12 @@ export default {
           addresses: d.addresses ? d.addresses.map(addr => ({
             ...addr,
             numberConfig: addr.number_config ? {
-              scale: addr.number_config.scale || 1,
-              offset: addr.number_config.offset || 0,
-              decimal_places: addr.number_config.decimal_places || 0,
-              unit: addr.number_config.unit || "",
-              min_value: addr.number_config.min_value || 0,
-              max_value: addr.number_config.max_value || 100
+              scale: addr.number_config.scale ?? 1,
+              offset: addr.number_config.offset ?? 0,
+              decimal_places: addr.number_config.decimal_places ?? 0,
+              unit: addr.number_config.unit ?? "",
+              min_value: addr.number_config.min_value ?? 0,
+              max_value: addr.number_config.max_value ?? 100
             } : { scale: 1, offset: 0, decimal_places: 0, unit: "", min_value: 0, max_value: 100 },
             levels: addr.level_config || [],
             alarms: d.alarms ? d.alarms.filter(a => a.address_id === addr.id).map(alarm => ({

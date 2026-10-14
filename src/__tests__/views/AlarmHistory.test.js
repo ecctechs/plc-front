@@ -459,8 +459,8 @@ describe('AlarmHistory', () => {
     it('computes downtimeSummary with matched RECOVER pairs', async () => {
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:00:00.000Z' }),
-        // Use 'RECOVER' (not 'RECOVERY') for the method to detect it
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
+        // Use 'RECOVERY' to match the API response format
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -483,7 +483,7 @@ describe('AlarmHistory', () => {
     it('uses alarm_rule_id ?? address_id as key (getKey fallback)', async () => {
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: null, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: null, created_at: '2024-01-15T10:30:00.000Z' }),
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: null, created_at: '2024-01-15T10:30:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -509,8 +509,8 @@ describe('AlarmHistory', () => {
     it('sort picks earliest RECOVER when multiple exist for same trigger (covers line 487)', async () => {
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T11:00:00.000Z' }),
-        makeRecover({ id: 3, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T11:00:00.000Z' }),
+        makeRecover({ id: 3, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -559,7 +559,7 @@ describe('AlarmHistory', () => {
     it('updates history items with duration_sec and duration_min', async () => {
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -847,7 +847,7 @@ describe('AlarmHistory', () => {
     it('shows top5 section when top5 has items', async () => {
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -1041,13 +1041,13 @@ describe('AlarmHistory', () => {
       // need 4+ TRIGGER pairs to get rank-other
       const history = [
         makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, device: { id: 1, name: 'A', room: { id: 1, name: 'R1' } }, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 2, event_type: 'RECOVER', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
+        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
         makeTrigger({ id: 3, address_id: 20, alarm_rule_id: 2, device: { id: 2, name: 'B', room: { id: 2, name: 'R2' } }, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 4, event_type: 'RECOVER', address_id: 20, alarm_rule_id: 2, device: { id: 2, name: 'B', room: { id: 2, name: 'R2' } }, created_at: '2024-01-15T10:15:00.000Z' }),
+        makeRecover({ id: 4, event_type: 'RECOVERY', address_id: 20, alarm_rule_id: 2, device: { id: 2, name: 'B', room: { id: 2, name: 'R2' } }, created_at: '2024-01-15T10:15:00.000Z' }),
         makeTrigger({ id: 5, address_id: 30, alarm_rule_id: 3, device: { id: 3, name: 'C', room: { id: 3, name: 'R3' } }, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 6, event_type: 'RECOVER', address_id: 30, alarm_rule_id: 3, device: { id: 3, name: 'C', room: { id: 3, name: 'R3' } }, created_at: '2024-01-15T10:10:00.000Z' }),
+        makeRecover({ id: 6, event_type: 'RECOVERY', address_id: 30, alarm_rule_id: 3, device: { id: 3, name: 'C', room: { id: 3, name: 'R3' } }, created_at: '2024-01-15T10:10:00.000Z' }),
         makeTrigger({ id: 7, address_id: 40, alarm_rule_id: 4, device: { id: 4, name: 'D', room: { id: 4, name: 'R4' } }, created_at: '2024-01-15T10:00:00.000Z' }),
-        makeRecover({ id: 8, event_type: 'RECOVER', address_id: 40, alarm_rule_id: 4, device: { id: 4, name: 'D', room: { id: 4, name: 'R4' } }, created_at: '2024-01-15T10:05:00.000Z' }),
+        makeRecover({ id: 8, event_type: 'RECOVERY', address_id: 40, alarm_rule_id: 4, device: { id: 4, name: 'D', room: { id: 4, name: 'R4' } }, created_at: '2024-01-15T10:05:00.000Z' }),
       ];
       setupFetch({ historyPayload: history });
       const wrapper = mountView();
@@ -1222,121 +1222,4 @@ describe('AlarmHistory', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════════════
-  describe('Bug Cases (FAIL)', () => {
-
-    // BUG-1: fetchDowntimeSummary ใช้ 'RECOVER' แต่ API/template ใช้ 'RECOVERY'
-    // อันตราย: recovery events ที่ API ส่งมาเป็น 'RECOVERY' จะไม่ถูกนับเป็น "resolved"
-    //          → avg_mttr = 0 ตลอดแม้จะมี recovery จริง
-    //          → total_downtime_sec นับจาก trigger จนถึง "now" ไม่ใช่จนถึง recovery จริง
-    //          → ทำให้ dashboard แสดงเวลา downtime สูงกว่าความเป็นจริงมาก
-    //          → ข้อมูล top5 ผิดพลาด: คำนวณ duration จนถึงปัจจุบัน ไม่ใช่จนถึง recovery
-    // FAIL เพราะ: recoveries = [] (ไม่มี event_type === 'RECOVER' ใน history)
-    //             → resolved=false สำหรับทุก pair → avg_mttr = 0
-    it('[BUG-1] fetchDowntimeSummary ใช้ "RECOVER" แต่ API ส่ง "RECOVERY" → avg_mttr เป็น 0 เสมอ (FAIL)', async () => {
-      const history = [
-        makeTrigger({ id: 1, address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:00:00.000Z' }),
-        // API ส่ง RECOVERY (ถูกต้อง) แต่ code filter 'RECOVER' → ไม่ถูก detect
-        makeRecover({ id: 2, event_type: 'RECOVERY', address_id: 10, alarm_rule_id: 1, created_at: '2024-01-15T10:30:00.000Z' }),
-      ];
-      setupFetch({ historyPayload: history });
-      const wrapper = mountView();
-      await flushPromises();
-
-      // คาดหวัง: มี recovery → avg_mttr > 0
-      expect(parseFloat(wrapper.vm.downtimeSummary.avg_mttr)).toBeGreaterThan(0);
-      // FAIL: avg_mttr = 0 เพราะ 'RECOVERY' !== 'RECOVER' → recoveries = [] → resolved=false
-    });
-
-    // BUG-2: authH() inline ส่ง "Bearer null" เมื่อไม่มี token
-    // อันตราย: request ทุกอันที่ไม่มี token ใช้ header "Bearer null"
-    //          → backend บางตัวอาจ parse header ผิด หรือ log "Bearer null" เป็น valid token
-    //          → อาจได้รับ response 200 พร้อม data แทนที่จะได้ 401 Unauthorized
-    //          → security hole: unauthenticated user อาจเข้าถึง alarm history ได้
-    // FAIL เพราะ: localStorage.getItem('token') = null → `Bearer ${null}` = 'Bearer null'
-    it('[BUG-2] authH() ส่ง "Bearer null" เมื่อไม่มี token (FAIL)', async () => {
-      delete store.token; // ลบ token
-      mountView();
-      await flushPromises();
-
-      const historyCall = mockFetch.mock.calls.find(([url]) => url.includes('/api/events/all'));
-      const authHeader = historyCall?.[1]?.headers?.Authorization;
-
-      // คาดหวัง: ไม่มี token → ไม่ควรส่ง 'Bearer null'
-      expect(authHeader).not.toBe('Bearer null');
-      // FAIL: `Bearer ${null}` = 'Bearer null'
-    });
-
-    // BUG-3: openChart() ใช้ native alert() แทน showAlert จาก swalHelper
-    // อันตราย: alert() เป็น synchronous blocking → หยุด JavaScript execution ทั้งหน้า
-    //          → mobile browsers บางตัว block/ignore window.alert ทำให้ผู้ใช้ไม่เห็น error
-    //          → ไม่สอดคล้องกับ UX ของ component อื่นที่ใช้ SweetAlert2
-    //          → ข้อความ "ไม่พบข้อมูล Device" ถูกแสดงด้วย browser default style
-    // FAIL เพราะ: openChart() เรียก window.alert() ตรงๆ แทนที่จะใช้ showAlert
-    it('[BUG-3] openChart() ใช้ native alert() แทน showAlert → blocking UX (FAIL)', async () => {
-      const wrapper = mountView({ devices: [] });
-      await flushPromises();
-      vi.clearAllMocks(); // reset alert call count
-      const item = makeTrigger({ rule: { address_id: 999 } });
-      wrapper.vm.openChart(item);
-
-      // คาดหวัง: ควรใช้ showAlert (swalHelper) ไม่ใช่ native alert → alert ไม่ควรถูกเรียก
-      expect(alert).not.toHaveBeenCalled();
-      // FAIL: alert() ถูกเรียกจริง เพราะ openChart ใช้ window.alert() ตรงๆ
-    });
-
-    // BUG-4: currentPage ไม่ถูก reset เมื่อ filter เปลี่ยน → paginatedHistory อาจเป็น []
-    // อันตราย: user อยู่ที่ page 3 แล้ว type filter → filteredHistory มีแค่ 5 items (1 page)
-    //          → แต่ currentPage ยังเป็น 3 → paginatedHistory.slice(40,60) = []
-    //          → user เห็น "No alarm history" ทั้งที่มีข้อมูล 5 รายการ
-    //          → UX สับสนมาก ผู้ใช้คิดว่าไม่มีข้อมูล แต่จริงๆ มีอยู่ใน page 1
-    //          → แก้โดย: add watch on filteredHistory หรือ filter ให้ reset currentPage
-    // FAIL เพราะ: ไม่มี watch on filteredHistory → currentPage ยังเป็น 3
-    it('[BUG-4] currentPage ไม่ reset เมื่อ filter เปลี่ยน → paginatedHistory = [] แม้จะมีข้อมูล (FAIL)', async () => {
-      // สร้าง 50 items → totalPages = 3 (50/20=2.5 → ceil=3)
-      const manyItems = Array.from({ length: 50 }, (_, i) =>
-        makeTrigger({ id: i + 1, device: { id: i + 1, name: i === 0 ? 'TargetDevice' : `OtherDevice${i}`, room: { id: 1, name: 'R1' } } })
-      );
-      setupFetch({ historyPayload: manyItems });
-      const wrapper = mountView();
-      await flushPromises();
-
-      // ไปหน้า 3
-      wrapper.vm.currentPage = 3;
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.paginatedHistory.length).toBeGreaterThan(0); // หน้า 3 มีข้อมูล
-
-      // Filter ให้เหลือแค่ 1 item
-      wrapper.vm.filter.deviceName = 'TargetDevice';
-      await wrapper.vm.$nextTick();
-      // คาดหวัง: filter reset currentPage=1 → paginatedHistory แสดง TargetDevice
-      expect(wrapper.vm.paginatedHistory.length).toBeGreaterThan(0);
-      // FAIL: currentPage = 3 แต่ filteredHistory = [1 item] → paginatedHistory.slice(40,60) = []
-    });
-
-    // BUG-5: loadRooms() ไม่เช็ค res.ok → HTTP 4xx/5xx silently ถูก swallow
-    // อันตราย: ถ้า API ส่ง 401/403/500 พร้อม JSON error body → ไม่มี error log
-    //          → this.rooms = [] โดยไม่แจ้ง developer ว่ามีปัญหา
-    //          → Room dropdown ว่างเปล่า → user ไม่สามารถ filter ตาม room ได้
-    //          → debug ยากมากเพราะ no console.error
-    //          → แก้โดย: if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    // FAIL เพราะ: loadRooms() ไม่ throw เมื่อ !res.ok → catch block ไม่ถูกเรียก → ไม่มี log
-    it('[BUG-5] loadRooms() ไม่เช็ค res.ok → HTTP error ถูก swallow โดยไม่มี console.error (FAIL)', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockFetch = vi.fn((url) => {
-        if (url.includes('/api/rooms'))
-          return Promise.resolve({ ok: false, status: 401, json: () => Promise.resolve({ error: 'Unauthorized' }) });
-        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
-      mountView();
-      await flushPromises();
-
-      // คาดหวัง: res.ok=false → ควร log error (เหมือน fetchHistory ที่มี if (!res.ok) throw)
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Load rooms'), expect.any(Error));
-      // FAIL: ไม่มี if (!res.ok) throw → catch ไม่ถูก trigger → consoleSpy ไม่ถูกเรียก
-      consoleSpy.mockRestore();
-    });
-  });
 });

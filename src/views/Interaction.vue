@@ -202,7 +202,8 @@ export default {
         if (!el.is_visible) return false
         if (this.allowedRoomIds === null) return true
         const roomId = this.getDeviceRoomId(el.address_id)
-        return roomId === null || this.allowedRoomIds.includes(roomId)
+        if (roomId === null) return this.allowedRoomIds.length > 0
+        return this.allowedRoomIds.includes(roomId)
       })
     }
   },
@@ -226,7 +227,7 @@ export default {
       return baseSize / 10
     },
     getValue(addressId) {
-      if (!addressId) return 0
+      if (addressId === null || addressId === undefined) return 0
       return this.plcValues[addressId] ?? 0
     },
     async fetchLayouts() {
@@ -320,7 +321,7 @@ export default {
       return device.levelConfigs || []
     },
     async writePlcValue(element) {
-      if (!element || !element.address_id) {
+      if (!element || (element.address_id === null || element.address_id === undefined)) {
         console.error('No address_id defined for this element')
         return
       }

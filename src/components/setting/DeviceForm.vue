@@ -470,7 +470,7 @@ export default {
 
   if (formAddr.data_type === "level") {
     await safeFetch(`${BASE_API}/api/addresses/${addressId}/levels`, {
-      method: "POST",
+      method: isNewAddress ? "POST" : "PUT",
       headers: jsonHeaders,
       body: JSON.stringify(formAddr.levels || [])
     });

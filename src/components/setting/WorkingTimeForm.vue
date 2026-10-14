@@ -150,9 +150,12 @@ export default {
         const data = await res.json();
 
         if (data?.schedule) {
-          this.schedule = data.schedule;
           this.dayList.forEach(d => {
-            d.active = (this.schedule[d.id].working_hours && this.schedule[d.id].working_hours.length > 0);
+            if (data.schedule[d.id]) {
+              this.schedule[d.id] = data.schedule[d.id];
+            }
+            const daySchedule = this.schedule[d.id];
+            d.active = (daySchedule.working_hours && daySchedule.working_hours.length > 0);
           });
         }
       } catch (err) {

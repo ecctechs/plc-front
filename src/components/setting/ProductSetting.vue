@@ -177,7 +177,7 @@ export default {
         const res = await fetch(`${BASE_API}/api/products`, { headers: authH() });
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
-        this.products = json.data || json;
+        this.products = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
       } catch (err) {
         console.error(err);
       }

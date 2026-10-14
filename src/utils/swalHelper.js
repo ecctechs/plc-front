@@ -16,8 +16,8 @@ export const showAlert = async (title, text, icon = 'success') => {
 
   return Swal.fire({
     icon: icon,
-    title: `<span style='color:${colors[icon]}; font-weight:600;'>${title}</span>`,
-    html: `<div style='font-size: 0.95rem;'>${text}</div>`,
+    title: title,
+    text: text,
     timer: icon === 'success' ? 1800 : 3000, // ถ้าสำเร็จให้ปิดเร็ว ถ้าพลาดให้แช่นานหน่อย
     timerProgressBar: true,
     showConfirmButton: icon !== 'success', // ถ้า error ให้มีปุ่มกดปิดเอง
@@ -47,10 +47,12 @@ export const showAlert = async (title, text, icon = 'success') => {
  * @returns {Promise<boolean>} true ถ้าผู้ใช้กด confirm, false ถ้ากด cancel
  */
 export const showConfirm = async (title, text, confirmText = 'ยืนยัน', cancelText = 'ยกเลิก') => {
-  const result = await Swal.fire({
+  let result;
+  try {
+    result = await Swal.fire({
     icon: 'warning',
-    title: `<span style='color:#ff9800; font-weight:600;'>${title}</span>`,
-    html: `<div style='font-size: 0.95rem;'>${text}</div>`,
+    title: title,
+    text: text,
     showCancelButton: true,
     confirmButtonColor: '#dc3545',
     cancelButtonColor: '#6c757d',
@@ -71,6 +73,9 @@ export const showConfirm = async (title, text, confirmText = 'ยืนยัน
       popup: 'animate__animated animate__fadeOutDown animate__faster'
     }
   });
+  } catch (e) {
+    return false;
+  }
 
   return result.isConfirmed;
 };

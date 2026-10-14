@@ -136,10 +136,11 @@ export default {
     }
   },
   methods: {
-    async saveAlarms(savedAddrId) {
-      if (!this.modelValue || this.modelValue.length === 0) return;
-      
-      for (const alarm of this.modelValue) {
+    async saveAlarms(savedAddrId, alarmsToSave) {
+      const alarms = alarmsToSave || this.modelValue;
+      if (!alarms || alarms.length === 0) return;
+
+      for (const alarm of alarms) {
         const res = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/alarms`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authH() },
@@ -165,11 +166,12 @@ export default {
     async saveAllConfigs(savedAddrId) {
       // 1. Save Number Config
       if (["number", "number_gauge"].includes(this.dataType) && this.numberConfig) {
-        await fetch(`${BASE_API}/api/addresses/${savedAddrId}/number-config`, {
+        const ncRes = await fetch(`${BASE_API}/api/addresses/${savedAddrId}/number-config`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authH() },
           body: JSON.stringify(this.numberConfig)
         });
+        if (!ncRes.ok) throw new Error('Failed to save number config');
       }
 
       // 2. Save Level Config
@@ -199,6 +201,8 @@ export default {
           });
           // Update modelValue with corrected level_index
           this.$emit('update:modelValue', updatedAlarms);
+          await this.saveAlarms(savedAddrId, updatedAlarms);
+          return;
         }
       }
 

@@ -223,6 +223,7 @@ export default {
     },
 
     async onSubmit() {
+      if (this.isLoading) return;
       this.errorMessage = '';
       if (!this.validate()) return;
 
@@ -242,13 +243,15 @@ export default {
         const data = await res.json();
 
         if (res.ok) {
-          await showAlert(
-            this.locale.current === 'th' ? 'ลงทะเบียนสำเร็จ!' : 'Registration Successful!',
-            this.locale.current === 'th'
-              ? `สร้างบัญชี ${this.form.email} เรียบร้อยแล้ว`
-              : `Account ${this.form.email} has been created`,
-            'success'
-          );
+          try {
+            await showAlert(
+              this.locale.current === 'th' ? 'ลงทะเบียนสำเร็จ!' : 'Registration Successful!',
+              this.locale.current === 'th'
+                ? `สร้างบัญชี ${this.form.email} เรียบร้อยแล้ว`
+                : `Account ${this.form.email} has been created`,
+              'success'
+            );
+          } catch {}
           this.$emit('show-login');
         } else {
           this.errorMessage = data.message || (this.locale.current === 'th' ? 'ลงทะเบียนไม่สำเร็จ' : 'Registration failed');

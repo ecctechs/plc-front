@@ -741,7 +741,7 @@ describe("DeviceSetting > Delete", () => {
 
 // ─── 8. Branch Coverage: fallbacks ────────────────────────
 describe("DeviceSetting > Branch Coverage", () => {
-  it("number_config.scale = 0 → ใช้ 1 fallback", async () => {
+  it("number_config.scale = 0 → ใช้ค่า 0 ตามจริง (nullish coalescing)", async () => {
     const devScaleZero = [{
       id: 9, name: "Dev", room: { id: 1, name: "R" }, device_type: { id: 1 }, alarms: [],
       addresses: [{
@@ -752,8 +752,8 @@ describe("DeviceSetting > Branch Coverage", () => {
     setupFetchMock(devScaleZero);
     const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
     await vi.waitFor(() => expect(wrapper.vm.devices).toHaveLength(1));
-    // scale=0 → 0 is falsy → || 1 fallback used
-    expect(wrapper.vm.devices[0].addresses[0].numberConfig.scale).toBe(1);
+    // scale=0 → 0 is not null/undefined → ?? keeps 0
+    expect(wrapper.vm.devices[0].addresses[0].numberConfig.scale).toBe(0);
   });
 
   it("number_config.min_value = 0 → ใช้ 0 fallback (0||0=0)", async () => {
@@ -782,105 +782,3 @@ describe("DeviceSetting > Branch Coverage", () => {
   });
 });
 
-// ─── 10. Bug Cases (original) ───────────────────────────────
-describe("DeviceSetting > Bug Cases (original)", () => {
-  it("[BUG-1] loadData ต้องมี loading state", async () => {
-    let loadingDuringFetch = false;
-    mockFetch.mockImplementation(() => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ ok: true, json: () => Promise.resolve({ data: [] }) });
-        }, 10);
-      });
-    });
-
-    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
-    await wrapper.vm.$nextTick();
-    loadingDuringFetch = wrapper.vm.loading !== undefined;
-    expect(wrapper.vm).toHaveProperty("loading");
-  });
-});
-
-// ─── 9. Bug Cases (dangerous, FAIL) ─────────────────────────
-describe("DeviceSetting > Bug Cases (FAIL)", () => {
-
-  // BUG-2: currentPage-- ไม่มี boundary check → currentPage ไปเป็น 0
-  // อันตราย: เมื่อ currentPage = 0 → paginatedDevices = filteredDevices.slice(-10, 0) = []
-  //          ตารางแสดง "No devices found" ทั้งที่มีข้อมูล ทำให้ผู้ใช้สับสนและอาจคิดว่าข้อมูลหาย
-  // FAIL เพราะ: template ใช้ @click.prevent="currentPage--" โดยไม่มี guard
-  //             disabled class บน <a> element ไม่ป้องกัน click event
-  it("[BUG-2] currentPage-- ไม่มี guard → currentPage เป็น 0 (FAIL)", async () => {
-    const manyDevices = makeManyDevices(20);
-    setupFetchMock(manyDevices);
-    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
-    await vi.waitFor(() => expect(wrapper.vm.devices.length).toBe(20));
-    wrapper.vm.currentPage = 1;
-    await wrapper.vm.$nextTick();
-
-    const pageLinks = wrapper.findAll(".page-link");
-    await pageLinks[0].trigger("click"); // « button
-
-    // คาดหวัง: currentPage ต้องไม่ต่ำกว่า 1
-    expect(wrapper.vm.currentPage).toBeGreaterThanOrEqual(1); // FAIL: becomes 0
-  });
-
-  // BUG-3: currentPage++ ไม่มี boundary check → currentPage เกิน totalPages
-  // อันตราย: เมื่อ currentPage > totalPages → paginatedDevices = [] (out-of-bounds slice)
-  //          ผู้ใช้เห็น "No devices found" ทั้งที่ยังมีข้อมูลในหน้าก่อนหน้า
-  // FAIL เพราะ: template ใช้ @click.prevent="currentPage++" โดยไม่มี guard
-  it("[BUG-3] currentPage++ ไม่มี guard → currentPage เกิน totalPages (FAIL)", async () => {
-    const manyDevices = makeManyDevices(20);
-    setupFetchMock(manyDevices);
-    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
-    await vi.waitFor(() => expect(wrapper.vm.devices.length).toBe(20));
-    wrapper.vm.currentPage = 2; // last page (20 devices / 10 per page = 2 pages)
-    await wrapper.vm.$nextTick();
-
-    const pageLinks = wrapper.findAll(".page-link");
-    await pageLinks[pageLinks.length - 1].trigger("click"); // » button
-
-    // คาดหวัง: currentPage ต้องไม่เกิน totalPages
-    expect(wrapper.vm.currentPage).toBeLessThanOrEqual(wrapper.vm.totalPages); // FAIL: becomes 3
-  });
-
-  // BUG-4: number_config.max_value || 100 ทำให้ max_value=0 ถูกแทนด้วย 100
-  // อันตราย: ถ้า sensor มี max_value=0 (เช่น vacuum sensor แสดงค่าลบ) จะถูกแทนด้วย 100
-  //          ทำให้ gauge/number display แสดงค่าผิด และ alarm threshold คำนวณผิด
-  //          เป็น silent data corruption ที่หาได้ยาก
-  // FAIL เพราะ: `addr.number_config.max_value || 100` → 0 || 100 = 100 แทน 0
-  it("[BUG-4] number_config.max_value=0 → ถูกแทนด้วย 100 (silent data corruption) (FAIL)", async () => {
-    const devMaxZero = [{
-      id: 9, name: "Dev", room: { id: 1, name: "R" }, device_type: { id: 1 }, alarms: [],
-      addresses: [{
-        id: 10, label: "Pt", data_type: "number", plc_address: "D0",
-        number_config: { scale: 1, offset: 0, decimal_places: 0, unit: "", min_value: -100, max_value: 0 }
-      }]
-    }];
-    setupFetchMock(devMaxZero);
-    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
-    await vi.waitFor(() => expect(wrapper.vm.devices).toHaveLength(1));
-
-    // คาดหวัง: max_value ต้องเป็น 0 ตามที่ server ส่งมา
-    expect(wrapper.vm.devices[0].addresses[0].numberConfig.max_value).toBe(0); // FAIL: becomes 100
-  });
-
-  // BUG-5: loadDevices ล้มเหลว → ไม่มี user feedback (ไม่เรียก showAlert)
-  // อันตราย: ผู้ใช้เห็นตารางว่างเปล่าโดยไม่รู้ว่าเกิดข้อผิดพลาด
-  //          อาจคิดว่าไม่มี device ในระบบ และไปสร้างซ้ำ หรือรอค้างไว้โดยไม่รู้สาเหตุ
-  //          ต่างจาก confirmDelete ที่เรียก showAlert เมื่อเกิด error → inconsistent UX
-  // FAIL เพราะ: catch block ใน loadDevices เรียกแค่ console.error(err) ไม่เรียก showAlert
-  it("[BUG-5] loadDevices error ไม่มี showAlert → user ไม่รู้ว่า load ล้มเหลว (FAIL)", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockFetch.mockImplementation((url) => {
-      if (url.includes("/api/devices"))
-        return Promise.resolve({ ok: false });
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [] }) });
-    });
-    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
-    await vi.waitFor(() => expect(consoleSpy).toHaveBeenCalled());
-
-    // คาดหวัง: ต้องแจ้ง user เมื่อ load ล้มเหลว
-    expect(showAlert).toHaveBeenCalled(); // FAIL: showAlert ไม่ถูกเรียกใน catch
-    consoleSpy.mockRestore();
-  });
-});

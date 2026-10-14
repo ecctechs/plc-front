@@ -171,7 +171,10 @@
 
 <script>
 const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+const authH = () => {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 export default {
   name: "AddElementModal",
@@ -266,7 +269,7 @@ export default {
       try {
         const res = await fetch(`${BASE_API}/api/devices`, { headers: authH() });
         const data = await res.json();
-        this.devices = data;
+        this.devices = data.data || data || [];
       } catch (err) {
         console.error('Failed to load devices:', err);
         this.devices = [];

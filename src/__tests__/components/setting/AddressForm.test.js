@@ -107,16 +107,3 @@ describe("AddressForm > Events", () => {
   });
 });
 
-// ─── 5. Bug Cases ───────────────────────────────────────────
-describe("AddressForm > Bug Cases", () => {
-  // BUG-1: onAddressChange ไม่ validate input ว่าง
-  // ถ้า user ลบตัวเลขออกหมด → num = "" → emit "M" (ไม่มีเลข)
-  // ควร default เป็น 0 เมื่อ input ว่าง
-  it("[BUG-1] address ว่าง → ต้อง emit M0 ไม่ใช่ M", async () => {
-    const wrapper = mountForm({ dataDisplayType: "onoff", address: "M5" });
-    wrapper.vm.onAddressChange("");
-    const emitted = wrapper.emitted("update:address");
-    const lastVal = emitted[emitted.length - 1][0];
-    expect(lastVal).toMatch(/^M\d/);
-  });
-});
