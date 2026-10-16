@@ -104,16 +104,21 @@
 
 ## 🧑‍💻 Development
 
-โปรเจคนี้รวม frontend (root) และ backend (`backend/`) ไว้ใน repo เดียว
+โปรเจคนี้รวม frontend (root) และ backend (`backend/`) ไว้ใน repo เดียว ใช้ **npm** และ **Node 20.19 ขึ้นไป** (`.nvmrc`)
 
 1. ติดตั้ง PostgreSQL และเปิดให้ทำงานที่ `127.0.0.1`
-2. สร้างไฟล์ env ของ backend: คัดลอก `backend/.env.example` เป็น `backend/.env.development` แล้วใส่ค่า (ไฟล์ `.env.*` ไม่ถูก commit)
-3. `npm install` — ติดตั้ง dependencies ของทั้ง frontend และ backend (ผ่าน `postinstall`)
-4. `npm run migrate:dev` และ `npm run seed:dev` (ครั้งแรก)
-5. `npm run dev` — start backend (port 3001) และ Vite (port 5173) พร้อมกัน
+2. `npm install` — ติดตั้ง dependencies ของทั้ง frontend และ backend
+3. `npm run dev:setup` — สร้าง `backend/.env.development` จาก `.env.example` (ถ้ายังไม่มี), ตรวจการเชื่อมต่อ DB แล้ว migrate
+4. `npm run seed:dev` — ใส่ข้อมูลเริ่มต้น (เฉพาะ DB ใหม่)
+5. `npm run dev` — start backend (port 3001) แล้วตามด้วย Vite (port 5173)
 
 | คำสั่ง | ทำอะไร |
 | :--- | :--- |
-| `npm run dev` | backend + frontend |
+| `npm run dev` | backend + frontend (frontend รอ backend พร้อมก่อน) |
 | `npm run dev:web` | frontend อย่างเดียว |
 | `npm run dev:api` | backend อย่างเดียว |
+| `npm run dev:setup` | ตรวจ env + DB แล้ว migrate |
+| `npm test` / `npm run test:e2e` | unit test / e2e |
+
+ตอน dev หน้าเว็บเรียก `/api/...` ผ่าน Vite proxy ไปที่ `http://localhost:3001` (เปลี่ยนได้ด้วย env `API_PROXY_TARGET`)
+ส่วน production ใช้ `VITE_API_BASE_URL` ใน `.env.production`

@@ -416,9 +416,9 @@ describe("LevelProgressBar > Additional Coverage", () => {
   });
 });
 
-// ─── 7. New Bug Cases (ตั้งใจให้ FAIL) ──────────────────────
+// ─── 7. Bug Cases — แก้ใน LevelProgressBar.vue แล้ว ──────────
 //
-//  กติกา: ห้ามแก้ test — ต้องแก้ LevelProgressBar.vue เท่านั้น
+//  เก็บไว้กันบั๊กกลับมา
 
 describe("LevelProgressBar > New Bug Cases", () => {
 
@@ -485,9 +485,9 @@ describe("LevelProgressBar > Dead Branch: ?? 0 on line 214", () => {
   });
 });
 
-// ─── 8. Bug Cases (FAIL จนกว่าจะแก้ LevelProgressBar.vue) ──
+// ─── 8. Bug Cases — ผ่านแล้ว เก็บไว้กันบั๊กกลับมา ──
 //
-//  กติกา: ห้ามแก้ test — ต้องแก้ LevelProgressBar.vue เท่านั้น
+//  เก็บไว้กันบั๊กกลับมา
 
 describe("LevelProgressBar > Bug Cases", () => {
 

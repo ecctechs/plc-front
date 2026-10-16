@@ -1354,7 +1354,7 @@ describe("UserSettingModal > Close", () => {
   });
 });
 
-// ─── 9. Bug Cases (FAIL จนกว่าจะแก้ UserSettingModal.vue) ──
+// ─── 9. Bug Cases — ผ่านแล้ว เก็บไว้กันบั๊กกลับมา ──
 describe("UserSettingModal > Bug Cases", () => {
 
   // ── BUG-1 ─────────────────────────────────────────────────

@@ -21,6 +21,8 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev:web",
+    // e2e mock API ด้วย page.route — เรียก backend ตรงแบบเดิม ไม่ผ่าน Vite proxy
+    env: { VITE_API_BASE_URL: "http://localhost:3001" },
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,

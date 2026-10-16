@@ -1193,9 +1193,9 @@ describe("Oee > Template branches (above target / reject ON)", () => {
   });
 });
 
-// ─── 19. Bug Cases (FAIL) — อันตราย ยังไม่แก้ component ──────
+// ─── 19. Bug Cases — แก้ใน Oee.vue แล้ว เก็บไว้กันบั๊กกลับมา ──────
 
-describe("Oee > Bug Cases (FAIL)", () => {
+describe("Oee > Bug Cases (แก้แล้ว)", () => {
 
   // BUG-A: getProductNameById ใช้ strict equality (===) → string ID ไม่ตรงกับ number product.id
   // อันตราย: PLC controller ส่ง plc_active_value เป็น string ("1") ไม่ใช่ number (1)
@@ -1205,7 +1205,7 @@ describe("Oee > Bug Cases (FAIL)", () => {
   //          → ถ้าแสดงผ่าน dashboard: active model = "-" ตลอด → สูญเสีย traceability
   //          → ควรใช้ == (loose equality) หรือ Number(id) === p.id
   // FAIL เพราะ: p.id = 1 (number) และ id = "1" (string) → strict === → false → return '-'
-  it("[BUG-A] getProductNameById('1') คืน '-' ทั้งที่ product id=1 มีอยู่ (FAIL)", async () => {
+  it("[BUG-A] getProductNameById('1') → หา product id=1 เจอ", async () => {
     const wrapper = mountOee();
     await flushPromises();
 
@@ -1225,7 +1225,7 @@ describe("Oee > Bug Cases (FAIL)", () => {
   //          → ควรคง trendData เดิมไว้เมื่อ error เกิดขึ้น (keep last known good data)
   //          → แก้ได้โดย: ลบ this.trendData = [] ออกจาก catch block
   // FAIL เพราะ: catch block ทำ this.trendData = [] → ลบข้อมูลเก่าดีๆ ทิ้ง
-  it("[BUG-B] transient trend error ล้าง trendData เก่า → chart ว่าง (FAIL)", async () => {
+  it("[BUG-B] trend error ชั่วคราว → คง trendData เดิมไว้", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const wrapper = mountOee();
     await flushPromises();
@@ -1258,7 +1258,7 @@ describe("Oee > Bug Cases (FAIL)", () => {
   //          → ยากต่อ debug: log แสดง "invalid token" ไม่ใช่ "missing token"
   //          → ควรเช็ค: const token = localStorage.getItem('token'); return token ? {Authorization: `Bearer ${token}`} : {}
   // FAIL เพราะ: `Bearer ${null}` = 'Bearer null' ไม่ใช่ undefined หรือ error
-  it("[BUG-C] authH() ส่ง 'Bearer null' เมื่อไม่มี token (FAIL)", async () => {
+  it("[BUG-C] ไม่มี token → ไม่ส่ง 'Bearer null'", async () => {
     delete store["token"]; // ลบ token → localStorage.getItem('token') = null
     const wrapper = mountOee();
     await flushPromises();
@@ -1280,7 +1280,7 @@ describe("Oee > Bug Cases (FAIL)", () => {
   //          → ใน production context: อาจทำให้ machine เสียหายหรือ product ของเสีย
   //          → ควร reset plcAddresses = { null, null, null, null } ก่อน try หรือใน catch
   // FAIL เพราะ: catch ไม่มี reset → plcAddresses ยังเป็นของ product เก่า
-  it("[BUG-D] loadProductDetail error → plcAddresses เก่าของ product ก่อนหน้ายังแสดง (FAIL)", async () => {
+  it("[BUG-D] loadProductDetail error → ล้าง plcAddresses ของ product ก่อนหน้า", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const wrapper = mountOee();
     await flushPromises();
@@ -1314,7 +1314,7 @@ describe("Oee > Bug Cases (FAIL)", () => {
   //          → chart แสดงข้อมูลผิด period โดยไม่มี error → operator ตัดสินใจบน wrong data
   //          → ควรเพิ่ม: if (this.trendLoading) return หรือใช้ AbortController cancel request เก่า
   // FAIL เพราะ: ไม่มี trendLoading guard → 2 requests fired พร้อมกัน
-  it("[BUG-E] rapid trendDays change → concurrent requests → race condition (FAIL)", async () => {
+  it("[BUG-E] เปลี่ยน trendDays เร็ว ๆ → มี request ค้างได้แค่ 1", async () => {
     const resolvers = [];
     mockFetch.mockImplementation((url) => {
       if (url.includes("/history")) {
