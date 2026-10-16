@@ -6,6 +6,10 @@ export default defineConfig({
   define: { __VUE_PROD_DEVTOOLS__: true },
   server: {
     watch: { ignored: ["**/backend/**"] },
+    // dev: เรียก /api ที่ Vite แล้วส่งต่อไป backend (ไม่ต้องใส่ URL เต็ม / ไม่ติด CORS)
+    proxy: {
+      "/api": process.env.API_PROXY_TARGET || "http://localhost:3001",
+    },
   },
   test: {
     environment: "jsdom",

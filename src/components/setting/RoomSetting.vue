@@ -70,10 +70,9 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../../utils/api';
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "RoomSetting",

@@ -260,16 +260,13 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../utils/api';
 // ส่วน Script โค้ดเดิม ไม่มีการเปลี่ยนแปลง
 import { showAlert, showConfirm } from '../utils/swalHelper';
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 function authHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
-  };
+  return { 'Content-Type': 'application/json', ...authH() };
 }
 
 function defaultTab() {

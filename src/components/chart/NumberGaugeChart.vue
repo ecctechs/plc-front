@@ -104,6 +104,7 @@
 </template>
 
 <script>
+import { BASE_API as baseUrl, authH } from '../../utils/api';
 import Chart from 'chart.js/auto'
 import 'chartjs-adapter-date-fns'
 import annotationPlugin from 'chartjs-plugin-annotation'
@@ -113,8 +114,6 @@ import { toUTC7 } from '../../utils/date-utils'
 // ลงทะเบียน Plugin สำหรับวาดเส้น Annotation (เส้นประ Alarm)
 Chart.register(annotationPlugin)
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'NumberGaugeChart',

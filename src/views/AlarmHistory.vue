@@ -303,6 +303,7 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../utils/api';
 import Chart from './Chart.vue'
 import AlarmHistoryChart from '../components/chart/AlarmHistoryChart.vue'
 
@@ -413,11 +414,10 @@ export default {
     async fetchHistory() {
       this.loading = true;
       this.currentPage = 1;
-      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
       try {
         const url = `${BASE_API}/api/events/all?start=${this.filter.startDate}&end=${this.filter.endDate}`;
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+        const res = await fetch(url, { headers: { ...authH() } });
         if (!res.ok) throw new Error('API Error');
         this.history = await res.json();
         this.fetchDowntimeSummary();
@@ -565,9 +565,8 @@ export default {
     },
 
     async loadRooms() {
-      const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       try {
-        const res = await fetch(`${BASE_API}/api/rooms`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+        const res = await fetch(`${BASE_API}/api/rooms`, { headers: { ...authH() } });
         const data = await res.json();
         const allRooms = data.data || [];
         this.rooms = this.allowedRoomIds !== null

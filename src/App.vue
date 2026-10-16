@@ -149,6 +149,7 @@
 </template>
 
 <script>
+import { BASE_API, authH } from './utils/api';
 import DashboardLayout from "./views/DashboardLayout.vue";
 import Setting from "./views/Setting.vue";
 import Oee from "./views/Oee.vue";
@@ -160,8 +161,6 @@ import ProfileModal from "./components/ProfileModal.vue";
 import RoleSettingModal from "./components/RoleSettingModal.vue";
 import UserSettingModal from "./components/UserSettingModal.vue";
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   name: "App",
@@ -249,9 +248,11 @@ export default {
   },
 
   async mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+    // ยังไม่ login → แสดงหน้า Login อย่างเดียว ไม่ต้อง poll
+    if (!this.isAuthenticated) return;
     await this.loadDevices();
     this.startPolling();
-    document.addEventListener('click', this.handleClickOutside);
   },
 
   beforeUnmount() {
@@ -282,7 +283,7 @@ export default {
 
   methods: {
     startPolling() {
-      if (!this.pollTimer) {
+      if (!this.pollTimer && this.isAuthenticated) {
         this.pollTimer = setInterval(() => this.loadDevices(), 2000);
       }
     },
@@ -295,6 +296,12 @@ export default {
     async loadDevices() {
       try {
         const res = await fetch(`${BASE_API}/api/dashboard/cards`, { headers: authH() });
+        // token หมดอายุ / ไม่ถูกต้อง → กลับไปหน้า Login
+        if (res.status === 401) {
+          this.stopPolling();
+          this.logout();
+          return;
+        }
         const data = await res.json();
 
         this.dashboard = data.map(newAddr => {

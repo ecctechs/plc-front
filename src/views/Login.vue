@@ -75,7 +75,7 @@
 </template>
 
 <script>
-const BASE_API = import.meta.env.VITE_API_BASE_URL
+import { BASE_API } from '../utils/api';
 
 export default {
   name: 'Login',

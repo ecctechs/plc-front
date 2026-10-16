@@ -306,13 +306,13 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../utils/api';
 import { showAlert, showConfirm } from '../utils/swalHelper';
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
 const JSON_H = { 'Content-Type': 'application/json' };
 
 function authHeader() {
-  return { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+  return authH();
 }
 
 function blankForm() {

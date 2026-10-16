@@ -119,14 +119,13 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../../utils/api';
 import AddressForm from "./AddressForm.vue";
 import DisplayNumber from "./DisplayNumber.vue";
 import DisplayLevel from "./DisplayLevel.vue";
 import AlertForm from "./AlertForm.vue";
 import { showAlert } from "../../utils/swalHelper";
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   components: { AddressForm, DisplayNumber, DisplayLevel, AlertForm },

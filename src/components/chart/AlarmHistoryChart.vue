@@ -34,10 +34,9 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../../utils/api';
 import VueApexCharts from 'vue3-apexcharts'
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'AlarmHistoryChart',

@@ -133,6 +133,7 @@
 </template>
 
 <script>
+import { BASE_API as API_BASE_URL, authH } from '../utils/api';
 import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
@@ -140,8 +141,6 @@ import ControlButton from '../components/interaction/ControlButton.vue'
 import LevelProgressBar from '../components/interaction/LevelProgressBar.vue'
 import AddElementModal from './AddElementModal.vue'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` })
 
 export default {
   name: 'Interaction',

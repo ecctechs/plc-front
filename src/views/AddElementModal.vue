@@ -170,11 +170,7 @@
 </template>
 
 <script>
-const BASE_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-const authH = () => {
-  const token = localStorage.getItem('token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-};
+import { BASE_API, authH } from '../utils/api';
 
 export default {
   name: "AddElementModal",

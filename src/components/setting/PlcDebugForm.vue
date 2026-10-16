@@ -67,8 +67,7 @@
 </template>
 
 <script>
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
+import { BASE_API, authH } from '../../utils/api';
 
 export default {
   name: "PlcDebugForm",

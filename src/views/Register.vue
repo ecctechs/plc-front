@@ -139,9 +139,9 @@
 </template>
 
 <script>
+import { BASE_API } from '../utils/api';
 import { showAlert } from '../utils/swalHelper';
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 export default {
   name: 'Register',

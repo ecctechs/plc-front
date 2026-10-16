@@ -1,16 +1,64 @@
-method,path,description,source
-GET,/api/dashboard/cards,List dashboard cards (polling),src/App.vue
-DELETE,/api/dashboard/cards/{card_id},Delete a dashboard card,src/views/DashboardLayout.vue
-POST,/api/dashboard/cards,Add dashboard card,src/views/AddDashboardCardModal.vue
-GET,/api/devices,List devices + addresses,src/views/AddDashboardCardModal.vue
-POST,/api/devices,Create device with addresses,src/components/setting/DeviceForm.vue
-GET,"/api/devices/chart?address_id={id}&start={}&end={}",Time-series chart data (numbers/onoff),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
-GET,"/api/devices/chart-by-alarm?address_id={id}&alarm_time={}&expand={}",Chart data by alarm time (expand ±20% for numbers/onoff/level),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue;src/components/chart/LevelChart.vue
-GET,"/devices/chart?start={}&end={}&address_id={}",Time-series chart data (numbers/onoff/level),src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue;src/components/chart/LevelChart.vue
-POST,/api/addresses/{addressId}/number-config,Save numeric display config,src/components/setting/DeviceForm.vue
-POST,/api/addresses/{addressId}/levels,Save level ranges,src/components/setting/DeviceForm.vue
-POST,/api/addresses/{addressId}/alarms,Create alarms for an address,src/components/setting/DeviceForm.vue
-GET,"/api/events/all?start={}&end={}",Alarm/history listing,src/views/AlarmHistory.vue
-GET,"/api/plc/read?address={address}",PLC debug read,src/components/setting/PlcDebugForm.vue
-GET,/api/working-time,Load global working time,src/components/setting/WorkingTimeForm.vue
-PUT,/api/working-time,Update global working time,src/components/setting/WorkingTimeForm.vue
+method,path,source
+GET,/api/addresses/{x}/alarms,src/components/setting/DeviceForm.vue
+POST,/api/addresses/{x}/alarms,src/components/setting/AlertForm.vue
+GET,/api/addresses/{x}/levels,src/components/setting/AlertForm.vue;src/components/setting/DeviceForm.vue
+POST,/api/addresses/{x}/levels,src/components/setting/AlertForm.vue;src/components/setting/DeviceForm.vue
+PUT,/api/addresses/{x}/levels,src/components/setting/DeviceForm.vue
+POST,/api/addresses/{x}/number-config,src/components/setting/AlertForm.vue;src/components/setting/DeviceForm.vue
+PUT,/api/addresses/{x}/number-config,src/components/setting/DeviceForm.vue
+GET,/api/alarms/events/history,src/components/chart/AlarmHistoryChart.vue
+DELETE,/api/alarms/{x},src/components/setting/DeviceForm.vue
+PUT,/api/alarms/{x},src/components/setting/DeviceForm.vue
+PUT,/api/auth/change-password,src/components/ProfileModal.vue
+POST,/api/auth/login,src/views/Login.vue
+GET,/api/dashboard/cards,src/App.vue
+POST,/api/dashboard/cards,src/views/AddDashboardCardModal.vue
+DELETE,/api/dashboard/cards/{x},src/views/DashboardLayout.vue
+PUT,/api/dashboard/cards/{x},src/views/AddDashboardCardModal.vue
+GET,/api/device-types,src/components/setting/DeviceForm.vue;src/components/setting/TypeSetting.vue;src/views/DashboardLayout.vue
+POST,/api/device-types,src/components/setting/TypeSetting.vue
+DELETE,/api/device-types/{x},src/components/setting/TypeSetting.vue
+PUT,/api/device-types/{x},src/components/setting/TypeSetting.vue
+GET,/api/devices,src/components/setting/DeviceSetting.vue;src/views/AddDashboardCardModal.vue;src/views/AddElementModal.vue
+POST,/api/devices,src/components/setting/DeviceForm.vue
+GET,/api/devices/chart,src/components/chart/LevelChart.vue;src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
+GET,/api/devices/chart-by-alarm,src/components/chart/LevelChart.vue;src/components/chart/NumberChart.vue;src/components/chart/NumberGaugeChart.vue;src/components/chart/OnOffChart.vue
+DELETE,/api/devices/{x},src/components/setting/DeviceSetting.vue
+PUT,/api/devices/{x},src/components/setting/DeviceForm.vue
+GET,/api/employees,src/components/UserSettingModal.vue;src/components/setting/EmployeeSetting.vue
+POST,/api/employees,src/components/setting/EmployeeSetting.vue
+DELETE,/api/employees/{x},src/components/setting/EmployeeSetting.vue
+PUT,/api/employees/{x},src/components/setting/EmployeeSetting.vue
+GET,/api/events/all,src/views/AlarmHistory.vue
+POST,/api/interaction/elements,src/views/AddElementModal.vue
+PUT,/api/interaction/elements/{x},src/views/AddElementModal.vue
+GET,/api/interaction/layouts,src/views/Interaction.vue
+GET,/api/interaction/layouts/{x},src/views/Interaction.vue
+GET,/api/oee/hourly-snapshot/{x}/intraday,src/views/Oee.vue
+POST,/api/oee/snapshot,src/views/Oee.vue
+GET,/api/oee/snapshot/{x}/history,src/views/Oee.vue
+GET,/api/plc/read,src/components/setting/PlcDebugForm.vue
+POST,/api/plc/write,src/views/Interaction.vue
+GET,/api/products,src/components/setting/ProductSetting.vue
+POST,/api/products,src/components/setting/ProductForm.vue
+GET,/api/products/latest-log,src/views/Oee.vue
+GET,/api/products/plc-addresses,src/components/setting/ProductSetting.vue
+PUT,/api/products/plc-addresses,src/components/setting/ProductSetting.vue
+DELETE,/api/products/{x},src/components/setting/ProductSetting.vue
+GET,/api/products/{x},src/views/Oee.vue
+PUT,/api/products/{x},src/components/setting/ProductForm.vue
+GET,/api/rooms,src/components/UserSettingModal.vue;src/components/setting/DeviceForm.vue;src/components/setting/DeviceSetting.vue;src/components/setting/RoomSetting.vue;src/views/AddDashboardCardModal.vue;src/views/AlarmHistory.vue;src/views/DashboardLayout.vue;src/views/Register.vue
+POST,/api/rooms,src/components/setting/RoomSetting.vue
+DELETE,/api/rooms/{x},src/components/setting/RoomSetting.vue
+PUT,/api/rooms/{x},src/components/setting/RoomSetting.vue
+GET,/api/settings/roles,src/components/RoleSettingModal.vue;src/components/UserSettingModal.vue
+POST,/api/settings/roles,src/components/RoleSettingModal.vue
+DELETE,/api/settings/roles/{x},src/components/RoleSettingModal.vue
+PUT,/api/settings/roles/{x},src/components/RoleSettingModal.vue
+GET,/api/settings/users,src/components/UserSettingModal.vue
+POST,/api/settings/users,src/components/UserSettingModal.vue
+PUT,/api/settings/users/{x},src/components/UserSettingModal.vue
+PATCH,/api/settings/users/{x}/reset-password,src/components/UserSettingModal.vue
+GET,/api/working-time,src/components/setting/WorkingTimeForm.vue
+PUT,/api/working-time,src/components/setting/WorkingTimeForm.vue
+POST,/users,src/views/Register.vue

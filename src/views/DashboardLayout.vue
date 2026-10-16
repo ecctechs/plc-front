@@ -55,10 +55,9 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../utils/api';
 import Dashboard from './DashboardCards.vue';
 import AddDashboardCard from './AddDashboardCardModal.vue';
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
-const authH = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token')}` });
 
 export default {
   components: { Dashboard, AddDashboardCard },

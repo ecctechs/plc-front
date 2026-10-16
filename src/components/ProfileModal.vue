@@ -169,9 +169,9 @@
 </template>
 
 <script>
+import { BASE_API, authH } from '../utils/api';
 import { showAlert } from '../utils/swalHelper';
 
-const BASE_API = import.meta.env.VITE_API_BASE_URL;
 
 const SCOPE_META = [
   { key: 'view',    icon: 'fa-eye',           th: 'ดูข้อมูล',  en: 'View'    },
@@ -247,7 +247,7 @@ export default {
       try {
         const res = await fetch(`${BASE_API}/api/auth/change-password`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          headers: { 'Content-Type': 'application/json', ...authH() },
           body: JSON.stringify({ current_password: this.pwForm.current, new_password: this.pwForm.newPw })
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Failed'); }
