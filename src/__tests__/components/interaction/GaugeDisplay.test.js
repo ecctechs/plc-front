@@ -353,12 +353,13 @@ describe("GaugeDisplay > Additional Coverage", () => {
     expect(wrapper.emitted("update-value")).toBeFalsy();
   });
 
-  // onInput: NaN → inputValue = 0 (covers || 0 path)
-  it("onInput: input ที่ไม่ใช่ตัวเลข → inputValue = 0", async () => {
+  // onInput: ช่องว่าง / ไม่ใช่ตัวเลข → คงค่าเดิม ไม่ reset เป็น 0
+  it("onInput: input ที่ไม่ใช่ตัวเลข → inputValue คงค่าเดิม", async () => {
     const wrapper = mountGauge({ editable: true });
     await wrapper.find(".gauge-display").trigger("click");
-    wrapper.vm.onInput({ target: { value: "abc" } });
-    expect(wrapper.vm.inputValue).toBe(0);
+    const before = wrapper.vm.inputValue;
+    wrapper.vm.onInput({ target: { value: "" } });
+    expect(wrapper.vm.inputValue).toBe(before);
   });
 
   // updateGauge: gauge=null → เรียก initGauge
@@ -448,5 +449,29 @@ describe("GaugeDisplay > Additional Coverage", () => {
     mockUpdate.mockClear();
     wrapper.vm.updateGauge("notanumber");
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ value: 0 }));
+  });
+});
+
+// ─── Regression 27/10/69: ส่งค่าไป PLC ────────────────────────
+describe("GaugeDisplay > PLC write regression", () => {
+  it("กด Enter แล้ว blur ตามมา → ส่งค่าไป PLC ครั้งเดียว", async () => {
+    const wrapper = mountGauge({ editable: true, value: 50 });
+    await wrapper.find(".gauge-display").trigger("click");
+    wrapper.vm.finishEditing();
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")).toHaveLength(1);
+  });
+
+  it("กด Escape แล้ว blur ตามมา → ไม่ส่งค่าไป PLC", async () => {
+    const wrapper = mountGauge({ editable: true, value: 50 });
+    await wrapper.find(".gauge-display").trigger("click");
+    wrapper.vm.cancelEditing();
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")).toBeUndefined();
+  });
+
+  it("value = NaN → แสดง 0 ไม่ใช่ NaN", () => {
+    const wrapper = mountGauge({ value: NaN });
+    expect(wrapper.vm.displayValue).not.toContain("NaN");
   });
 });

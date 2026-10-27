@@ -205,3 +205,62 @@ describe("NumberDisplay > finishEditing", () => {
   });
 });
 
+
+// ─── Regression 27/10/69: ส่งค่าไป PLC ────────────────────────
+describe("NumberDisplay > PLC write regression", () => {
+  const mountEditable = (props = {}) =>
+    mount(NumberDisplay, { props: { ...defaultProps, editable: true, value: 50, addressId: 1, ...props } });
+
+  it("ลบเลขจนช่องว่าง → ค่าเดิมยังอยู่ ไม่เด้งเป็น 0", async () => {
+    const wrapper = mountEditable();
+    await wrapper.find(".number-display").trigger("click");
+    wrapper.vm.onInput({ target: { value: "" } });
+    expect(wrapper.vm.inputValue).toBe(50);
+  });
+
+  it("value = NaN → แสดง 0 ไม่ใช่ NaN", () => {
+    const wrapper = mount(NumberDisplay, { props: { ...defaultProps, value: NaN } });
+    expect(wrapper.vm.displayValue).not.toContain("NaN");
+  });
+
+  it("กด Enter แล้ว blur ตามมา → ส่งค่าไป PLC ครั้งเดียว", async () => {
+    const wrapper = mountEditable();
+    await wrapper.find(".number-display").trigger("click");
+    await wrapper.find("input").setValue(70);
+    wrapper.vm.finishEditing(); // Enter
+    wrapper.vm.finishEditing(); // blur ตอน input ถูกเอาออก
+    expect(wrapper.emitted("update-value")).toHaveLength(1);
+  });
+
+  it("กด Escape แล้ว blur ตามมา → ไม่ส่งค่าไป PLC", async () => {
+    const wrapper = mountEditable();
+    await wrapper.find(".number-display").trigger("click");
+    wrapper.vm.cancelEditing();
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")).toBeUndefined();
+  });
+
+  it("คลิกซ้ำระหว่างพิมพ์ → ค่าที่พิมพ์ไม่หาย", async () => {
+    const wrapper = mountEditable();
+    await wrapper.find(".number-display").trigger("click");
+    await wrapper.find("input").setValue(88);
+    await wrapper.find(".number-display").trigger("click");
+    expect(wrapper.vm.inputValue).toBe(88);
+  });
+
+  it("มี maxValue → ตัดค่าที่เกินก่อนส่ง", async () => {
+    const wrapper = mountEditable({ minValue: 0, maxValue: 100 });
+    await wrapper.find(".number-display").trigger("click");
+    wrapper.vm.onInput({ target: { value: "9999" } });
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")[0][0].value).toBe(100);
+  });
+
+  it("ไม่กำหนด min/max (แบบที่หน้า Interaction ใช้) → ส่งค่าตามที่พิมพ์ รวมค่าติดลบ", async () => {
+    const wrapper = mountEditable();
+    await wrapper.find(".number-display").trigger("click");
+    wrapper.vm.onInput({ target: { value: "-25" } });
+    wrapper.vm.finishEditing();
+    expect(wrapper.emitted("update-value")[0][0].value).toBe(-25);
+  });
+});

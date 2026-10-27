@@ -69,6 +69,8 @@
 <script>
 import { BASE_API, authH } from '../../utils/api';
 
+const MIN_INTERVAL = 500;
+
 export default {
   name: "PlcDebugForm",
 
@@ -89,6 +91,8 @@ export default {
 
   methods: {
     async readOnce() {
+      // request ก่อนหน้ายังไม่กลับ (PLC ตอบช้ากว่า interval) → ข้ามรอบนี้ ไม่ยิงซ้อน
+      if (this.loading) return;
       this.error = "";
       this.loading = true;
 
@@ -98,7 +102,8 @@ export default {
           { headers: authH() }
         );
 
-        const data = await res.json();
+        // error บางแบบไม่ได้ส่ง JSON กลับมา → อย่าให้ขึ้น SyntaxError
+        const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
           throw new Error(data.message || "Read failed");
@@ -120,8 +125,12 @@ export default {
     },
 
     startPolling() {
+      // ไม่ให้มี timer ค้างซ้อน และไม่ให้ interval ต่ำกว่า 500ms
+      this.stopPolling();
+      const ms = Math.max(MIN_INTERVAL, Number(this.interval) || 1000);
+      this.interval = ms;
       this.readOnce();
-      this.timer = setInterval(this.readOnce, this.interval);
+      this.timer = setInterval(this.readOnce, ms);
     },
 
     stopPolling() {

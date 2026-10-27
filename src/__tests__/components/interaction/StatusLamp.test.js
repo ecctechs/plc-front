@@ -165,3 +165,20 @@ describe("StatusLamp > lightStyle fallbacks", () => {
   });
 });
 
+
+// ─── Regression 27/10/69: กดรัว ────────────────────────────────
+describe("StatusLamp > rapid click regression", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("กดรัว 3 ครั้งภายใน 300ms → emit toggle ครั้งเดียว", async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(StatusLamp, { props: { ...defaultProps } });
+    await wrapper.find(".status-lamp").trigger("click");
+    await wrapper.find(".status-lamp").trigger("click");
+    await wrapper.find(".status-lamp").trigger("click");
+    expect(wrapper.emitted("toggle")).toHaveLength(1);
+    vi.advanceTimersByTime(300);
+    await wrapper.find(".status-lamp").trigger("click");
+    expect(wrapper.emitted("toggle")).toHaveLength(2);
+  });
+});

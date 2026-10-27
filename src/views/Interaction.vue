@@ -172,7 +172,9 @@ export default {
       backgroundImage: null,
       layouts: [],
       selectedLayoutId: 3,
-      showAddElementModal: false
+      showAddElementModal: false,
+      // address ที่กำลังส่งค่าไป PLC อยู่ — กันกดรัวแล้วยิงซ้ำ
+      writingAddresses: new Set()
     }
   },
   watch: {
@@ -293,13 +295,13 @@ export default {
       console.log('Updated PLC values:', this.plcValues)
     },
     getPlcAddress(addressId) {
-      if (!addressId || !this.devices) return null
+      if (addressId == null || !this.devices) return null
       
       const device = this.devices.find(d => d.address_id === addressId)
       return device ? device.plc_address : null
     },
     getDeviceMinMax(addressId) {
-      if (!addressId || !this.devices) return { min: 0, max: 100, alarms: [] }
+      if (addressId == null || !this.devices) return { min: 0, max: 100, alarms: [] }
       
       const device = this.devices.find(d => d.address_id === addressId)
       if (!device || !device.numberConfig) return { min: 0, max: 100, alarms: [] }
@@ -311,7 +313,7 @@ export default {
       }
     },
     getDeviceLevels(addressId) {
-      if (!addressId || !this.devices) return []
+      if (addressId == null || !this.devices) return []
       
       const device = this.devices.find(d => d.address_id === addressId)
       console.log('Device for levels:', device)
@@ -331,6 +333,9 @@ export default {
         return
       }
 
+      // ยังส่งค่าเดิมไม่เสร็จ → ไม่ส่งซ้ำ
+      if (this.writingAddresses.has(element.address_id)) return
+
       // Toggle the value (0 -> 1 or 1 -> 0)
       const currentValue = this.getValue(element.address_id)
       const newValue = currentValue === 0 ? 1 : 0
@@ -343,6 +348,7 @@ export default {
         return
       }
 
+      this.writingAddresses.add(element.address_id)
       try {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
@@ -371,6 +377,8 @@ export default {
       } catch (error) {
         console.error('Failed to write to PLC:', error)
         alert('Failed to write to PLC: ' + error.message)
+      } finally {
+        this.writingAddresses.delete(element.address_id)
       }
     },
     async handleNumberUpdate({ addressId, value }) {
@@ -392,6 +400,8 @@ export default {
         return
       }
 
+      if (this.writingAddresses.has(addressId)) return
+      this.writingAddresses.add(addressId)
       try {
         const response = await fetch(`${API_BASE_URL}/api/plc/write`, {
           method: 'POST',
@@ -420,6 +430,8 @@ export default {
       } catch (error) {
         console.error('Failed to write to PLC:', error)
         alert('Failed to write to PLC: ' + error.message)
+      } finally {
+        this.writingAddresses.delete(addressId)
       }
     },
     async handleLampToggle(element, newValue) {

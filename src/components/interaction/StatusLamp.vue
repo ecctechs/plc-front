@@ -55,10 +55,6 @@ export default {
     name: {
       type: String,
       default: ''
-    },
-    addressId: {
-      type: Number,
-      default: null
     }
   },
   emits: ['toggle'],
@@ -88,6 +84,8 @@ export default {
   },
   methods: {
     toggleLamp() {
+      // กดรัวระหว่าง 300ms → ไม่ส่งซ้ำ
+      if (this.isClicking) return
       this.isClicking = true
       this.$emit('toggle', !this.isOn)
       setTimeout(() => {

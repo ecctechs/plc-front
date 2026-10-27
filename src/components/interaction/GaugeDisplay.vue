@@ -144,8 +144,9 @@ export default {
     },
     displayValue() {
       const raw = this.value ?? 0
-      const scaled = (raw * this.scale) + this.offset
-      return Number(scaled).toFixed(this.decimals)
+      const scaled = Number((raw * this.scale) + this.offset)
+      // NaN / Infinity จาก PLC → แสดง 0
+      return (Number.isFinite(scaled) ? scaled : 0).toFixed(this.decimals)
     },
     highlights() {
       return this.getGaugeHighlights()
@@ -278,7 +279,7 @@ export default {
       this.gauge.draw()
     },
     startEditing() {
-      if (!this.editable) return
+      if (!this.editable || this.editing) return
       
       this.editing = true
       this.inputValue = this.value
@@ -292,10 +293,13 @@ export default {
       })
     },
     onInput(event) {
-      this.inputValue = parseFloat(event.target.value) || 0
+      // ช่องว่างหรือค่าที่ไม่ใช่ตัวเลข → คงค่าเดิมไว้ ไม่ reset เป็น 0
+      const num = parseFloat(event.target.value)
+      if (Number.isFinite(num)) this.inputValue = num
     },
     finishEditing() {
-      if (!this.editable) return
+      // ไม่ได้อยู่ใน edit mode (เช่น blur หลัง Enter / Escape) → ไม่ส่งค่าซ้ำไป PLC
+      if (!this.editable || !this.editing) return
 
       this.editing = false
 

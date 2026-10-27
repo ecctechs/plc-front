@@ -1072,3 +1072,43 @@ describe('props defaults', () => {
   });
 });
 
+
+// ─── Regression 27/10/69: ส่งค่าไป PLC ────────────────────────
+describe("PLC write regression", () => {
+  it("กดปุ่มรัวระหว่างรอ PLC → ส่ง /api/plc/write ครั้งเดียว", async () => {
+    setupFetch();
+    const wrapper = mountComp({ devices: [makeDevice({ address_id: 1, plc_address: "M0" })] });
+    await flushPromises();
+    let resolveWrite;
+    mockFetch.mockReset();
+    mockFetch.mockReturnValue(new Promise((r) => { resolveWrite = r; }));
+    const elem = makeElement("control_button", { address_id: 1 });
+    wrapper.vm.writePlcValue(elem);
+    wrapper.vm.writePlcValue(elem);
+    wrapper.vm.writePlcValue(elem);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    resolveWrite(okJson({ success: true }));
+    await flushPromises();
+    // ส่งเสร็จแล้ว → กดใหม่ได้
+    mockFetch.mockResolvedValue(okJson({ success: true }));
+    await wrapper.vm.writePlcValue(elem);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("แก้ค่าตัวเลขซ้ำระหว่างรอ PLC → ส่งครั้งเดียว", async () => {
+    setupFetch();
+    const wrapper = mountComp({ devices: [makeDevice({ address_id: 1, plc_address: "D100" })] });
+    await flushPromises();
+    mockFetch.mockReset();
+    mockFetch.mockReturnValue(new Promise(() => {}));
+    wrapper.vm.handleNumberUpdate({ addressId: 1, value: 10 });
+    wrapper.vm.handleNumberUpdate({ addressId: 1, value: 10 });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("address_id = 0 → หา PLC address เจอ", () => {
+    setupFetch();
+    const wrapper = mountComp({ devices: [makeDevice({ address_id: 0, plc_address: "M0" })] });
+    expect(wrapper.vm.getPlcAddress(0)).toBe("M0");
+  });
+});

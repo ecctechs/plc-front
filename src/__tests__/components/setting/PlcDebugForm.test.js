@@ -287,6 +287,8 @@ describe("PlcDebugForm > Polling", () => {
     const wrapper = mountForm();
     wrapper.vm.startPolling();
     expect(mockFetch).toHaveBeenCalledTimes(1);
+    // ให้ request แรกเสร็จก่อน (รอบที่ยังค้างจะถูกข้าม)
+    for (let i = 0; i < 10; i++) await Promise.resolve();
 
     vi.advanceTimersByTime(1000);
     await Promise.resolve(); // flush microtasks
@@ -364,5 +366,51 @@ describe("PlcDebugForm > Lifecycle", () => {
     const wrapper = mountForm();
     expect(wrapper.vm.timer).toBeNull();
     expect(() => wrapper.unmount()).not.toThrow();
+  });
+});
+
+// ─── Regression 27/10/69: polling ──────────────────────────────
+describe("PlcDebugForm > polling regression", () => {
+  it("กด Poll ซ้ำ (startPolling 2 ครั้ง) → เหลือ timer เดียว", () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ value: 1 }) });
+    const wrapper = mountForm();
+    const clearSpy = vi.spyOn(globalThis, "clearInterval");
+    wrapper.vm.startPolling();
+    const first = wrapper.vm.timer;
+    wrapper.vm.startPolling();
+    expect(clearSpy).toHaveBeenCalledWith(first);
+    expect(wrapper.vm.timer).not.toBe(first);
+    wrapper.vm.stopPolling();
+  });
+
+  it("interval ต่ำกว่า 500 หรือว่าง → ใช้อย่างน้อย 500ms", () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ value: 1 }) });
+    const wrapper = mountForm();
+    const setSpy = vi.spyOn(globalThis, "setInterval");
+    wrapper.vm.interval = 1;
+    wrapper.vm.startPolling();
+    expect(setSpy).toHaveBeenLastCalledWith(expect.any(Function), 500);
+    wrapper.vm.stopPolling();
+    wrapper.vm.interval = "";
+    wrapper.vm.startPolling();
+    expect(setSpy).toHaveBeenLastCalledWith(expect.any(Function), 1000);
+    wrapper.vm.stopPolling();
+  });
+
+  it("PLC ตอบช้ากว่า interval → ไม่ยิง request ซ้อน", () => {
+    mockFetch.mockReturnValue(new Promise(() => {})); // ไม่ตอบ
+    const wrapper = mountForm();
+    wrapper.vm.interval = 500;
+    wrapper.vm.startPolling();
+    vi.advanceTimersByTime(2000);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    wrapper.vm.stopPolling();
+  });
+
+  it("error ที่ไม่ใช่ JSON → แสดง 'Read failed' ไม่ใช่ SyntaxError", async () => {
+    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.reject(new SyntaxError("Unexpected token <")) });
+    const wrapper = mountForm();
+    await wrapper.vm.readOnce();
+    expect(wrapper.vm.error).toBe("Read failed");
   });
 });

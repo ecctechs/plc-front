@@ -69,13 +69,14 @@ export default {
       type: Boolean,
       default: false
     },
+    // null = ไม่จำกัด (ไม่ clamp)
     minValue: {
       type: Number,
-      default: 0
+      default: null
     },
     maxValue: {
       type: Number,
-      default: 9999
+      default: null
     },
     step: {
       type: Number,
@@ -104,7 +105,8 @@ export default {
   computed: {
     displayValue() {
       if (typeof this.value === 'number') {
-        return this.value.toFixed(this.decimals)
+        // NaN / Infinity จาก PLC → แสดง 0
+        return (Number.isFinite(this.value) ? this.value : 0).toFixed(this.decimals)
       }
       return this.value
     },
@@ -140,7 +142,7 @@ export default {
   },
   methods: {
     startEditing() {
-      if (!this.editable) return
+      if (!this.editable || this.editing) return
       
       this.editing = true
       this.inputValue = this.value
@@ -154,17 +156,25 @@ export default {
       })
     },
     onInput(event) {
-      this.inputValue = parseFloat(event.target.value) || 0
+      // ช่องว่างหรือค่าที่ไม่ใช่ตัวเลข → คงค่าเดิมไว้ ไม่ reset เป็น 0
+      const num = parseFloat(event.target.value)
+      if (Number.isFinite(num)) this.inputValue = num
     },
     finishEditing() {
-      if (!this.editable) return
+      // ไม่ได้อยู่ใน edit mode (เช่น blur หลัง Enter / Escape) → ไม่ส่งค่าซ้ำไป PLC
+      if (!this.editable || !this.editing) return
       
       this.editing = false
+
+      let value = this.inputValue
+      if (this.minValue !== null) value = Math.max(value, this.minValue)
+      if (this.maxValue !== null) value = Math.min(value, this.maxValue)
+      this.inputValue = value
       
       // Emit the new value to parent
       this.$emit('update-value', {
         addressId: this.addressId,
-        value: this.inputValue
+        value
       })
     },
     cancelEditing() {
