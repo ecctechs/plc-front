@@ -142,12 +142,12 @@ export default {
         const res = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json", ...authH() },
-          body: JSON.stringify(this.form)
+          body: JSON.stringify({ ...this.form, name: this.form.name.trim() })
         });
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || "Save failed");
+          throw new Error(err.message || (this.locale.current === 'th' ? 'บันทึกข้อมูลไม่สำเร็จ' : 'Save failed'));
         }
 
         await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกข้อมูลห้องสำเร็จ' : 'Room saved successfully', 'success');
@@ -156,7 +156,7 @@ export default {
         this.$emit('room-updated');
       } catch (err) {
         console.error(err);
-        await showAlert("Error", err.message, "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, "error");
       } finally {
         this.loading = false;
       }
@@ -178,7 +178,7 @@ export default {
           
          if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || "Delete failed");
+          throw new Error(err.message || (this.locale.current === 'th' ? 'ลบข้อมูลไม่สำเร็จ' : 'Delete failed'));
         }
           
           await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบห้องสำเร็จ' : 'Room deleted successfully', 'success');
@@ -186,7 +186,7 @@ export default {
           this.$emit('room-updated');
         } catch (err) {
           console.error(err);
-          await showAlert("Error",  err.message, "error");
+          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, "error");
         }
       }
     }

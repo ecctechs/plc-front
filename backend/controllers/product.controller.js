@@ -14,7 +14,15 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+const fileFilter = (req, file, cb) => {
+  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) return cb(null, true);
+  req.fileValidationError = 'Only JPG, PNG, WEBP or GIF images are allowed';
+  cb(null, false);
+};
+
+const upload = multer({ storage, fileFilter });
 
 exports.upload = upload;
 
@@ -29,6 +37,10 @@ exports.getProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
+    if (req.fileValidationError) {
+      return res.status(400).json({ message: req.fileValidationError });
+    }
+
     let imageUrl = null;
 
     if (req.file) {
@@ -60,6 +72,10 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
+    if (req.fileValidationError) {
+      return res.status(400).json({ message: req.fileValidationError });
+    }
+
     const { id } = req.params;
 
     let updateData = { ...req.body };

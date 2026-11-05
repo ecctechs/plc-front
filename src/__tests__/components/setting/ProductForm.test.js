@@ -556,3 +556,32 @@ describe("ProductForm > Save", () => {
   });
 });
 
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("ProductForm > upload + trim regression", () => {
+  it("เลือกไฟล์ที่ไม่ใช่รูป → ไม่รับไฟล์ แจ้งเตือน และล้างช่องเลือกไฟล์", () => {
+    const wrapper = mountForm();
+    wrapper.vm.open();
+    const target = { files: [new File(["x"], "evil.js", { type: "text/javascript" })], value: "evil.js" };
+    wrapper.vm.handleImageUpload({ target });
+    expect(wrapper.vm.selectedFile).toBeNull();
+    expect(target.value).toBe("");
+    expect(showAlert).toHaveBeenCalled();
+  });
+
+  it("SVG → ไม่รับ (ฝังสคริปต์ได้)", () => {
+    const wrapper = mountForm();
+    wrapper.vm.open();
+    wrapper.vm.handleImageUpload({ target: { files: [new File(["<svg/>"], "a.svg", { type: "image/svg+xml" })], value: "a.svg" } });
+    expect(wrapper.vm.selectedFile).toBeNull();
+  });
+
+  it("save → ตัดช่องว่างชื่อก่อนส่ง", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    const wrapper = mountForm();
+    wrapper.vm.open();
+    wrapper.vm.form.name = "  Model A  ";
+    await wrapper.vm.save();
+    expect(mockFetch.mock.calls[0][1].body.get("name")).toBe("Model A");
+  });
+});

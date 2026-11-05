@@ -117,6 +117,8 @@ export default {
     return {
       loading: false,
       savingDay: null,
+      // ค่าล่าสุดที่บันทึกแล้ว — ใช้ตอนบันทึกทีละวัน ไม่ให้ค่าที่แก้ค้างของวันอื่นถูกส่งไปด้วย
+      savedSchedule: null,
       dayList: [
         { id: "monday", active: true },
         { id: "tuesday", active: true },
@@ -156,6 +158,7 @@ export default {
             const daySchedule = this.schedule[d.id];
             d.active = (daySchedule.working_hours && daySchedule.working_hours.length > 0);
           });
+          this.savedSchedule = JSON.parse(JSON.stringify(this.buildPayload().schedule));
         }
       } catch (err) {
         console.error("Load error", err);
@@ -179,6 +182,15 @@ export default {
       });
       return payload;
     },
+    // backend เขียนทับ schedule ทั้งก้อน จึงต้องส่งครบ 7 วัน: วันนี้ใช้ค่าใหม่ วันอื่นใช้ค่าที่บันทึกแล้ว
+    buildDayPayload(dayId) {
+      const current = this.buildPayload();
+      if (!this.savedSchedule) return current;
+      return { schedule: { ...JSON.parse(JSON.stringify(this.savedSchedule)), [dayId]: current.schedule[dayId] } };
+    },
+    tr(th, en) {
+      return this.locale.current === 'th' ? th : en;
+    },
     validateDay(dayId) {
       const dayObj = this.dayList.find(d => d.id === dayId);
       if (!dayObj.active) return "";
@@ -186,6 +198,7 @@ export default {
       if (working_hours.length === 0) return `วัน ${dayId} ต้องระบุเวลาทำงานอย่างน้อย 1 ช่วง`;
       for (const w of working_hours) {
         if (!w.start || !w.end) return `กรุณากรอกเวลาทำงานให้ครบ (วัน ${dayId})`;
+        if (w.start === w.end) return `เวลาเลิกงานต้องไม่เท่ากับเวลาเริ่มงาน (วัน ${dayId})`;
         if (w.start >= w.end && w.start < "22:00") return `เวลาเลิกงานต้องมากกว่าเวลาเริ่มงาน (วัน ${dayId})`;
       }
       return "";
@@ -195,15 +208,17 @@ export default {
       if (errorMsg) return Swal.fire("ข้อมูลไม่ถูกต้อง", errorMsg, "warning");
       try {
         this.savingDay = dayId;
+        const payload = this.buildDayPayload(dayId);
         const res = await fetch(`${API}/api/working-time`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...authH() },
-          body: JSON.stringify(this.buildPayload())
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error("Save failed");
-        Swal.fire({ title: "สำเร็จ", text: `บันทึกวัน ${dayId} แล้ว`, icon: "success", timer: 1000, showConfirmButton: false });
+        this.savedSchedule = JSON.parse(JSON.stringify(payload.schedule));
+        Swal.fire({ title: this.tr("สำเร็จ", "Success"), text: this.tr(`บันทึกวัน ${dayId} แล้ว`, `Saved ${dayId}`), icon: "success", timer: 1000, showConfirmButton: false });
       } catch (err) {
-        Swal.fire("Error", "ไม่สามารถบันทึกได้", "error");
+        Swal.fire(this.tr("ข้อผิดพลาด", "Error"), this.tr("ไม่สามารถบันทึกได้", "Save failed"), "error");
       } finally {
         this.savingDay = null;
       }
@@ -215,15 +230,17 @@ export default {
       }
       try {
         this.loading = true;
+        const payload = this.buildPayload();
         const res = await fetch(`${API}/api/working-time`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...authH() },
-          body: JSON.stringify(this.buildPayload())
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error("Save failed");
-        Swal.fire({ title: "สำเร็จ", text: "บันทึกทั้งหมดเรียบร้อยแล้ว", icon: "success", timer: 1500, showConfirmButton: false });
+        this.savedSchedule = JSON.parse(JSON.stringify(payload.schedule));
+        Swal.fire({ title: this.tr("สำเร็จ", "Success"), text: this.tr("บันทึกทั้งหมดเรียบร้อยแล้ว", "All changes saved"), icon: "success", timer: 1500, showConfirmButton: false });
       } catch (err) {
-        Swal.fire("Error", "เกิดข้อผิดพลาด", "error");
+        Swal.fire(this.tr("ข้อผิดพลาด", "Error"), this.tr("เกิดข้อผิดพลาด", "Save failed"), "error");
       } finally {
         this.loading = false;
       }

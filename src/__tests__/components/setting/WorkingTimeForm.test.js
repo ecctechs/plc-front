@@ -276,7 +276,7 @@ describe("WorkingTimeForm > Save Day", () => {
     mockFetch.mockResolvedValue({ ok: false });
     await wrapper.vm.saveDay("monday");
 
-    expect(Swal.fire).toHaveBeenCalledWith("Error", "ไม่สามารถบันทึกได้", "error");
+    expect(Swal.fire).toHaveBeenCalledWith("Error", "Save failed", "error");
   });
 
   it("saveDay → ตั้ง savingDay ระหว่าง save", async () => {
@@ -336,7 +336,7 @@ describe("WorkingTimeForm > Save All", () => {
     }
     mockFetch.mockResolvedValue({ ok: false });
     await wrapper.vm.saveAll();
-    expect(Swal.fire).toHaveBeenCalledWith("Error", "เกิดข้อผิดพลาด", "error");
+    expect(Swal.fire).toHaveBeenCalledWith("Error", "Save failed", "error");
     expect(wrapper.vm.loading).toBe(false);
   });
 
@@ -551,3 +551,64 @@ describe("WorkingTimeForm > DOM Interactions", () => {
   });
 });
 
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("WorkingTimeForm > save one day regression", () => {
+  const saved = { start: "08:00", end: "17:00" };
+  const loadSchedule = () => ({
+    schedule: {
+      monday: { working_hours: [saved], break_times: [] },
+      tuesday: { working_hours: [saved], break_times: [] },
+      wednesday: { working_hours: [], break_times: [] },
+      thursday: { working_hours: [], break_times: [] },
+      friday: { working_hours: [], break_times: [] },
+      saturday: { working_hours: [], break_times: [] },
+      sunday: { working_hours: [], break_times: [] },
+    },
+  });
+
+  async function mountLoaded() {
+    const wrapper = mountForm();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve(loadSchedule()) });
+    await wrapper.vm.load();
+    mockFetch.mockClear();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+    return wrapper;
+  }
+
+  it("saveDay → ส่งครบ 7 วัน (backend เขียนทับทั้งก้อน) แต่ค่าที่แก้ค้างของวันอื่นไม่ถูกส่ง", async () => {
+    const wrapper = await mountLoaded();
+    wrapper.vm.schedule.monday.working_hours = [{ start: "07:00", end: "16:00" }];
+    wrapper.vm.schedule.tuesday.working_hours = [{ start: "10:00", end: "11:00" }]; // แก้ค้าง ยังไม่กดบันทึก
+    await wrapper.vm.saveDay("monday");
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(Object.keys(body.schedule)).toHaveLength(7);
+    expect(body.schedule.monday.working_hours).toEqual([{ start: "07:00", end: "16:00" }]);
+    expect(body.schedule.tuesday.working_hours).toEqual([saved]);
+  });
+
+  it("saveDay หลายวันติดกัน → วันที่บันทึกไปแล้วไม่หาย", async () => {
+    const wrapper = await mountLoaded();
+    wrapper.vm.schedule.monday.working_hours = [{ start: "07:00", end: "16:00" }];
+    await wrapper.vm.saveDay("monday");
+    wrapper.vm.schedule.tuesday.working_hours = [{ start: "09:00", end: "18:00" }];
+    await wrapper.vm.saveDay("tuesday");
+
+    const body = JSON.parse(mockFetch.mock.calls[1][1].body);
+    expect(body.schedule.monday.working_hours).toEqual([{ start: "07:00", end: "16:00" }]);
+    expect(body.schedule.tuesday.working_hours).toEqual([{ start: "09:00", end: "18:00" }]);
+  });
+
+  it("เวลาเริ่มเท่ากับเวลาเลิก → error รวมถึงช่วงกะดึก", () => {
+    const wrapper = mountForm();
+    wrapper.vm.schedule.monday.working_hours = [{ start: "22:00", end: "22:00" }];
+    expect(wrapper.vm.validateDay("monday")).toContain("ไม่เท่ากับ");
+  });
+
+  it("กะดึกข้ามเที่ยงคืน 22:00-06:00 → ยังบันทึกได้", () => {
+    const wrapper = mountForm();
+    wrapper.vm.schedule.monday.working_hours = [{ start: "22:00", end: "06:00" }];
+    expect(wrapper.vm.validateDay("monday")).toBe("");
+  });
+});

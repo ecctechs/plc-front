@@ -389,7 +389,7 @@ describe("EmployeeSetting > Save", () => {
     wrapper.vm.openModal();
     wrapper.vm.form.employee_id = "";
     await wrapper.vm.save();
-    expect(showAlert).toHaveBeenCalledWith("Error", "กรุณากรอกรหัสพนักงาน", "warning");
+    expect(showAlert).toHaveBeenCalledWith("ข้อผิดพลาด", "กรุณากรอกรหัสพนักงาน", "warning");
   });
 
   it("first_name ว่าง → warning EN", async () => {
@@ -407,7 +407,7 @@ describe("EmployeeSetting > Save", () => {
     wrapper.vm.form.employee_id = "EMP003";
     wrapper.vm.form.first_name = "";
     await wrapper.vm.save();
-    expect(showAlert).toHaveBeenCalledWith("Error", "กรุณากรอกชื่อ", "warning");
+    expect(showAlert).toHaveBeenCalledWith("ข้อผิดพลาด", "กรุณากรอกชื่อ", "warning");
   });
 
   it("save สำเร็จ (Add) → fetch POST + showAlert success EN", async () => {
@@ -441,7 +441,7 @@ describe("EmployeeSetting > Save", () => {
     await wrapper.vm.save();
 
     await vi.waitFor(() => {
-      expect(showAlert).toHaveBeenCalledWith("Success", "บันทึกข้อมูลพนักงานสำเร็จ", "success");
+      expect(showAlert).toHaveBeenCalledWith("สำเร็จ", "บันทึกข้อมูลพนักงานสำเร็จ", "success");
     });
   });
 
@@ -618,7 +618,7 @@ describe("EmployeeSetting > Delete", () => {
     await wrapper.vm.confirmDelete(mockEmployees[0]);
 
     await vi.waitFor(() => {
-      expect(showAlert).toHaveBeenCalledWith("Success", "ลบพนักงานสำเร็จ", "success");
+      expect(showAlert).toHaveBeenCalledWith("สำเร็จ", "ลบพนักงานสำเร็จ", "success");
     });
   });
 
@@ -675,3 +675,26 @@ describe("EmployeeSetting > Delete", () => {
   });
 });
 
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("EmployeeSetting > trim regression", () => {
+  it("save → ตัดช่องว่างทุกช่องข้อความก่อนส่ง", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    const wrapper = mountComp();
+    wrapper.vm.form = { employee_id: " E01 ", first_name: " Som ", last_name: " Chai ", position: "", department: "", phone: " 081 " };
+    mockFetch.mockClear();
+    await wrapper.vm.save();
+    const call = mockFetch.mock.calls.find(([, opts]) => opts?.method === "POST");
+    expect(JSON.parse(call[1].body)).toMatchObject({ employee_id: "E01", first_name: "Som", last_name: "Chai", phone: "081" });
+  });
+
+  it("ชื่อเป็นช่องว่างล้วน → ไม่ส่ง API", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    const wrapper = mountComp();
+    wrapper.vm.form.employee_id = "E01";
+    wrapper.vm.form.first_name = "   ";
+    mockFetch.mockClear();
+    await wrapper.vm.save();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+});

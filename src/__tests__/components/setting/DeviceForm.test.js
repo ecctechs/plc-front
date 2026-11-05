@@ -1570,3 +1570,43 @@ describe("DeviceForm > saveDevice formAddr skip", () => {
     expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), "success");
   });
 });
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("DeviceForm > alarm regression", () => {
+  const alarm = { id: 7, name: "High", notify_email: true, email_recipients: ["a@b.com"], condition_type: "MT" };
+  const okFetch = () => mockFetch.mockImplementation(() =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [] }), text: () => Promise.resolve("") }));
+
+  it("Device 2 Address ลบ Alarm → DELETE ครั้งเดียว", async () => {
+    const wrapper = mountForm();
+    okFetch();
+    mockFetch.mockClear();
+    wrapper.vm.deletedAlarmIds = [5, 5];
+    const formAddr = { data_type: "onoff", numberConfig: {}, levels: [], alarms: [] };
+    await Promise.all([
+      wrapper.vm.saveChildConfigs(100, 100, formAddr, false),
+      wrapper.vm.saveChildConfigs(101, 101, formAddr, false),
+    ]);
+    const deletes = mockFetch.mock.calls.filter(([url, opts]) => url.includes("/api/alarms/5") && opts?.method === "DELETE");
+    expect(deletes).toHaveLength(1);
+    expect(wrapper.vm.deletedAlarmIds).toEqual([]);
+  });
+
+  it("บันทึก Alarm → ส่ง email_recipients ไปด้วย", async () => {
+    const wrapper = mountForm();
+    okFetch();
+    mockFetch.mockClear();
+    await wrapper.vm.saveChildConfigs(1, 1, { data_type: "onoff", alarms: [alarm] }, false);
+    const put = mockFetch.mock.calls.find(([url, opts]) => url.includes("/api/alarms/7") && opts?.method === "PUT");
+    expect(JSON.parse(put[1].body).email_recipients).toEqual(["a@b.com"]);
+  });
+
+  it("ติ๊กส่งอีเมลแต่ไม่ใส่อีเมล → บันทึก Device ไม่ได้", () => {
+    const wrapper = mountForm();
+    wrapper.vm.form = {
+      name: "D1", device_type_id: 1,
+      addresses: [{ label: "P1", data_type: "onoff", alarms: [{ ...alarm, email_recipients: [] }] }],
+    };
+    expect(() => wrapper.vm.validateBeforeSave()).toThrow("อย่างน้อย 1");
+  });
+});

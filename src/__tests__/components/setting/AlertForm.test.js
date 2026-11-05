@@ -708,3 +708,22 @@ describe("AlertForm > New Bug Cases", () => {
   });
 
 });
+
+// ─── Regression 30/10/69: อีเมลผู้รับ ─────────────────────────
+describe("AlertForm > email recipients regression", () => {
+  it("ติ๊กส่งอีเมลแต่ไม่ใส่อีเมล → validate ไม่ผ่าน", () => {
+    const wrapper = mountForm({ modelValue: [{ ...baseAlarm, notify_email: true, email_recipients: [] }] });
+    expect(wrapper.vm.validateAlarms()).toBe(false);
+    expect(wrapper.vm.hasError(0, "email")).toBe(true);
+  });
+
+  it("อีเมลผิดรูปแบบ → validate ไม่ผ่าน", () => {
+    const wrapper = mountForm({ modelValue: [{ ...baseAlarm, notify_email: true, email_recipients: ["bad@"] }] });
+    expect(wrapper.vm.validateAlarms()).toBe(false);
+  });
+
+  it("อีเมลถูกต้อง → ผ่าน", () => {
+    const wrapper = mountForm({ modelValue: [{ ...baseAlarm, notify_email: true, email_recipients: ["a@b.com"] }] });
+    expect(wrapper.vm.validateAlarms()).toBe(true);
+  });
+});

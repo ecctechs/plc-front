@@ -16,7 +16,7 @@
                  </div>
                  <div class="mb-3">
                    <label class="form-label fw-bold">{{ locale.t('Image') }}</label>
-                   <input type="file" class="form-control" accept="image/*" @change="handleImageUpload" />
+                   <input type="file" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" @change="handleImageUpload" />
                    <div v-if="imagePreview" class="mt-2">
                      <img :src="imagePreview" alt="Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;" />
                    </div>
@@ -56,6 +56,8 @@
 import { BASE_API, authH } from '../../utils/api';
 import { showAlert } from "../../utils/swalHelper";
 
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export default {
   name: "ProductForm",
@@ -117,6 +119,16 @@ export default {
     },
     handleImageUpload(event) {
       const file = event.target.files[0];
+      if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        event.target.value = "";
+        this.selectedFile = null;
+        showAlert(
+          this.locale.current === 'th' ? 'ไฟล์ไม่ถูกต้อง' : 'Invalid file',
+          this.locale.current === 'th' ? 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP หรือ GIF' : 'Only JPG, PNG, WEBP or GIF images are allowed',
+          'warning'
+        );
+        return;
+      }
       if (file) {
         this.selectedFile = file;
         const reader = new FileReader();
@@ -144,7 +156,7 @@ export default {
         const method = this.isEdit ? "PUT" : "POST";
 
         const formData = new FormData();
-        formData.append("name", this.form.name);
+        formData.append("name", this.form.name.trim());
         if (this.form.cycle_time !== "") {
           formData.append("cycle_time", this.form.cycle_time);
         }
@@ -166,7 +178,7 @@ export default {
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || "Save failed");
+          throw new Error(err.message || (this.locale.current === 'th' ? 'บันทึกข้อมูลไม่สำเร็จ' : 'Save failed'));
         }
 
         await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกผลิตภัณฑ์สำเร็จ' : 'Product saved successfully', 'success');

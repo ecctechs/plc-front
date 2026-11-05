@@ -545,3 +545,28 @@ describe("RoomSetting > Delete", () => {
   });
 });
 
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("RoomSetting > trim + Thai error regression", () => {
+  it("save → ตัดช่องว่างชื่อก่อนส่ง", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    const wrapper = mountComp();
+    wrapper.vm.form.name = "  Room A  ";
+    
+    mockFetch.mockClear();
+    await wrapper.vm.save();
+    const call = mockFetch.mock.calls.find(([, opts]) => opts?.method === "POST");
+    expect(JSON.parse(call[1].body).name).toBe("Room A");
+  });
+
+  it("save error ภาษาไทย → หัวข้อเป็น ข้อผิดพลาด", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    const wrapper = mountComp({ current: "th", t: (key) => key });
+    wrapper.vm.form.name = "Room A";
+    
+    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.resolve({ message: "boom" }) });
+    await wrapper.vm.save();
+    expect(showAlert).toHaveBeenCalledWith("ข้อผิดพลาด", "boom", "error");
+  });
+});

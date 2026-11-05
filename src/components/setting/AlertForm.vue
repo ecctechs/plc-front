@@ -118,6 +118,7 @@
 </template>
 
 <script>
+import { getAlarmEmailError } from '../../utils/validators';
 import { BASE_API, authH } from '../../utils/api';
 
 export default {
@@ -237,6 +238,12 @@ export default {
         // 2. ตรวจสอบชื่อซ้ำ
         else if (duplicateNames.has(currentName)) {
           this.errors.push({ index: i, field: 'name', message: `ชื่อ "${currentName}" ซ้ำกับ Alarm อื่น` });
+        }
+
+        // ตรวจสอบอีเมลผู้รับ
+        const emailError = getAlarmEmailError(a);
+        if (emailError) {
+          this.errors.push({ index: i, field: 'email', message: emailError });
         }
 
         // 3. ตรวจสอบการเหลื่อมกัน (Overlap)

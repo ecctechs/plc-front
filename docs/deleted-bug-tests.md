@@ -1,33 +1,9 @@
-# เคส BUG ที่ถูกลบออกจากเทสต์ (commit 107b8ef)
+# เคส BUG ที่ยังเหลือจากเทสต์ที่ถูกลบ (commit 107b8ef)
 
-เทสต์ชุดนี้ถูกลบออกใน commit `107b8ef` แต่เมื่อนำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน
-ยัง **ไม่ผ่าน 105 ข้อ** — แปลว่าบั๊กเหล่านี้ยังไม่ได้แก้ (หรือเทสต์คาดหวังผิด ต้องตรวจทีละข้อ)
+อัปเดต 5/11/69: นำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน เหลือ **56 ข้อ** ที่ยังต้องตรวจ
+แต่ละข้อต้องดูโค้ดยืนยันก่อนแก้ เพราะบางข้อเทสต์คาดหวังผิด
 
 ดูเทสต์เดิมได้ด้วย `git show 7ff76db:<path ของไฟล์เทสต์>`
-
-## swalHelper (11)
-
-- เรียก Swal.fire ด้วย icon และ title ที่ระบุ
-- ใช้สี icon ถูกต้องตามประเภท (error → #dc3545)
-- ใช้สี warning → #ffc107
-- ใช้สี info → #17a2b8
-- ใช้สี success → #28a745
-- แสดง dialog ยืนยันพร้อมข้อความที่ระบุ
-- title มี inline style สีส้ม #ff9800
-- [BUG-3] XSS injection ผ่าน title → title ไม่ถูก escape (FAIL)
-- [BUG-4] XSS injection ผ่าน text parameter → html ไม่ถูก escape (FAIL)
-- [BUG-5] unknown icon → colors[icon] = undefined → confirmButtonColor undefined (FAIL)
-- [BUG-6] null text → html แสดง 'null' ตรงๆ (FAIL)
-
-## AlarmHistory (7)
-
-- computes downtimeSummary with matched RECOVER pairs
-- uses alarm_rule_id ?? address_id as key (getKey fallback)
-- sort picks earliest RECOVER when multiple exist for same trigger (covers line 487)
-- updates history items with duration_sec and duration_min
-- [BUG-3] openChart() ใช้ native alert() แทน showAlert → blocking UX (FAIL)
-- [BUG-4] currentPage ไม่ reset เมื่อ filter เปลี่ยน → paginatedHistory = [] แม้จะมีข้อมูล (FAIL)
-- [BUG-5] loadRooms() ไม่เช็ค res.ok → HTTP error ถูก swallow โดยไม่มี console.error (FAIL)
 
 ## Chart (5)
 
@@ -53,22 +29,6 @@
 - [BUG-4] reloadDevices prop crashes after Setting is unmounted (dangling ref)
 - [BUG-5] openDeviceForm: no error handling when $refs.deviceFormModal.open() throws
 
-## NumberDisplay (5)
-
-- [BUG-1] blur หลัง Escape → ไม่ควร emit (finishEditing ต้องตรวจ editing state)
-- [BUG-2] onInput ตัวอักษร → ควรคง inputValue เดิม ไม่ reset เป็น 0
-- [BUG-3] value=NaN → displayValue ควรแสดง '0' ไม่ใช่ 'NaN'
-- [BUG-4] startEditing ซ้ำขณะ editing → inputValue ไม่ควร reset
-- [BUG-5] finishEditing ไม่ clamp ค่า → ส่งค่าเกิน maxValue ไปยัง PLC
-
-## StatusLamp (5)
-
-- [BUG-1] คลิกเร็ว ๆ ระหว่าง isClicking=true → ควร block emit ซ้ำ
-- [BUG-2] inactiveColor='' → ควรใช้สี default '#6b7280' ไม่ใช่ '#FF0000'
-- [BUG-3] addressId define สองครั้งใน props → ควรมี warn แต่ไม่มี
-- [BUG-4] bgColor='' ขณะ isOn=true → ควรใช้ prop default '#22c55e' (บังเอิญถูก)
-- [BUG-5] emit 'toggle' ควรรวม addressId เพื่อให้ parent รู้ว่า lamp ไหนถูก toggle
-
 ## date-utils (4)
 
 - [BUG-3] formatThaiYear('not-a-date') ควรคืน '' ไม่ใช่ NaN string (FAIL)
@@ -90,26 +50,12 @@
 - [BUG-4] loadFilters does not check res.ok — silently processes error responses
 - [BUG-5] type mismatch: string allowedRoomIds fails to match numeric room_id
 
-## Login (4)
+## StatusLamp (4)
 
-- [BUG-5] email 'a@b..com' (double dot) ควรแสดง error แต่ regex ผ่าน (FAIL)
-- [BUG-6] server ส่ง token แต่ไม่มี user → ควรแสดง 'Invalid response' ไม่ใช่ 'Connection error' (FAIL)
-- [BUG-7] password '  123456  ' ส่ง API แบบไม่ trim (FAIL)
-- [BUG-8] email 'Admin@Mail.COM' ส่ง API โดยไม่ lowercase (FAIL)
-
-## DeviceSetting (4)
-
-- number_config.scale = 0 → ใช้ 1 fallback
-- [BUG-2] currentPage-- ไม่มี guard → currentPage เป็น 0 (FAIL)
-- [BUG-3] currentPage++ ไม่มี guard → currentPage เกิน totalPages (FAIL)
-- [BUG-5] loadDevices error ไม่มี showAlert → user ไม่รู้ว่า load ล้มเหลว (FAIL)
-
-## PlcDebugForm (4)
-
-- [BUG-2] readOnce res.ok=false + non-JSON body → error ควรเป็น 'Read failed' ไม่ใช่ SyntaxError (FAIL)
-- [BUG-3] startPolling() เรียก 2 ครั้ง → interval เดิม leak ยังทำงานอยู่ (FAIL)
-- [BUG-4] interval=1 → setInterval ด้วย 1ms → API flooding (FAIL)
-- [BUG-5] readOnce ไม่มี guard → loading=true ยัง fetch ได้ (race condition) (FAIL)
+- [BUG-2] inactiveColor='' → ควรใช้สี default '#6b7280' ไม่ใช่ '#FF0000'
+- [BUG-3] addressId define สองครั้งใน props → ควรมี warn แต่ไม่มี
+- [BUG-4] bgColor='' ขณะ isOn=true → ควรใช้ prop default '#22c55e' (บังเอิญถูก)
+- [BUG-5] emit 'toggle' ควรรวม addressId เพื่อให้ parent รู้ว่า lamp ไหนถูก toggle
 
 ## AddDashboardCardModal (3)
 
@@ -123,11 +69,11 @@
 - [BUG-4] submit error ใช้ native alert() แทน showAlert → inconsistent UX (FAIL)
 - [BUG-5] canSubmit=false แต่ Submit button ไม่ถูก disabled (canSubmit ไม่ได้ใช้ใน template) (FAIL)
 
-## Interaction (3)
+## AlarmHistory (3)
 
-- [BUG-2] writePlcValue with address_id=0 returns early without writing to PLC
-- [BUG-4] calculateSize returns 5 for size_width=0 due to || fallback (should be 0)
-- [BUG-5] fetchLayouts failure is silently swallowed — no error shown to user
+- [BUG-3] openChart() ใช้ native alert() แทน showAlert → blocking UX (FAIL)
+- [BUG-4] currentPage ไม่ reset เมื่อ filter เปลี่ยน → paginatedHistory = [] แม้จะมีข้อมูล (FAIL)
+- [BUG-5] loadRooms() ไม่เช็ค res.ok → HTTP error ถูก swallow โดยไม่มี console.error (FAIL)
 
 ## Register (3)
 
@@ -135,58 +81,66 @@
 - [BUG-3] validate: confirmPassword empty message bypasses locale.t()
 - [BUG-4] validate: email with leading/trailing spaces fails valid-format check
 
-## GaugeDisplay (3)
+## DeviceSetting (3)
 
-- [BUG-3] onInput: พิมพ์ตัวอักษร → ควรคง inputValue เดิม ไม่ reset เป็น 0
-- [BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply
-- [BUG-5] startEditing ขณะ editing อยู่ → ควร guard ไม่ reset inputValue
-
-## EmployeeSetting (3)
-
-- [BUG-3] confirmDelete emp.first_name=null → dialog แสดง 'null null' ไม่ใช่ employee_id (FAIL)
-- [BUG-4] save() ส่ง employee_id ที่ไม่ถูก trim ไปยัง API (FAIL)
-- [BUG-5] save() catch ไม่มี locale switch → Thai mode แสดง English error (FAIL)
-
-## ProductForm (3)
-
-- [BUG-3] open(product) cycle_time=0 → form.cycle_time ควรเป็น 0 ไม่ใช่ '' (FAIL)
-- [BUG-4] handleImageUpload รับ .js file โดยไม่มี type validation (FAIL)
-- [BUG-5] save() ส่ง form.name ที่มี spaces ไปยัง API โดยไม่ trim (FAIL)
-
-## RoomSetting (3)
-
-- [BUG-3] save() catch TH → title ควรเป็น 'ข้อผิดพลาด' ไม่ใช่ 'Error' (FAIL)
-- [BUG-4] confirmDelete() catch TH → title ควรเป็น 'ข้อผิดพลาด' ไม่ใช่ 'Error' (FAIL)
-- [BUG-5] save() ส่ง form.name ที่มี spaces โดยไม่ trim ก่อน POST (FAIL)
-
-## TypeSetting (3)
-
-- [BUG-3] save() catch TH → title ควรเป็น 'ข้อผิดพลาด' ไม่ใช่ 'Error' (FAIL)
-- [BUG-4] confirmDelete() catch TH → title ควรเป็น 'ข้อผิดพลาด' ไม่ใช่ 'Error' (FAIL)
-- [BUG-5] save() ส่ง form.name ที่มี spaces โดยไม่ trim ก่อน POST (FAIL)
-
-## WorkingTimeForm (3)
-
-- [BUG-3] saveAll success Swal title ควรเป็น 'Success' ใน EN mode (FAIL)
-- [BUG-5] validateDay: start = end = '22:00' ควรให้ error (zero-duration) (FAIL)
-- [BUG-6] saveDay('monday') ส่ง payload ทุกวัน ไม่ใช่แค่ monday (FAIL)
+- [BUG-2] currentPage-- ไม่มี guard → currentPage เป็น 0 (FAIL)
+- [BUG-3] currentPage++ ไม่มี guard → currentPage เกิน totalPages (FAIL)
+- [BUG-5] loadDevices error ไม่มี showAlert → user ไม่รู้ว่า load ล้มเหลว (FAIL)
 
 ## RoleSettingModal (2)
 
 - 🔴 [BUG-3] double-click Delete → fetch DELETE ถูกเรียก 2 ครั้ง
 - 🔴 [BUG-4] ปิด outer modal ขณะมีข้อมูลใน form → ควรมี confirm ก่อน
 
-## AlertForm (2)
+## Interaction (2)
 
-- [BUG-3] notify_email=true แต่ email_recipients=[] → ควร validate error
-- [BUG-5] email รูปแบบผิด → validateAlarms ควร error
+- [BUG-4] calculateSize returns 5 for size_width=0 due to || fallback (should be 0)
+- [BUG-5] fetchLayouts failure is silently swallowed — no error shown to user
 
-## DeviceForm (2)
+## Login (1)
+
+- [BUG-6] server ส่ง token แต่ไม่มี user → ควรแสดง 'Invalid response' ไม่ใช่ 'Connection error' (FAIL)
+
+## GaugeDisplay (1)
+
+- [BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply
+
+## DeviceForm (1)
 
 - [BUG-4] form.addresses ว่าง → validateBeforeSave ต้อง throw (FAIL - ไม่มี check)
-- [BUG-5] deletedAlarmIds cleared ใน saveChildConfigs → กับ 2 addresses ลบ alarm ซ้ำ (FAIL)
 
-## ProductSetting (2)
+## EmployeeSetting (1)
 
-- [BUG-3] savePlcAddresses catch TH → title ควรเป็น 'ข้อผิดพลาด' ไม่ใช่ 'Error' (FAIL)
+- [BUG-3] confirmDelete emp.first_name=null → dialog แสดง 'null null' ไม่ใช่ employee_id (FAIL)
+
+## ProductForm (1)
+
+- [BUG-3] open(product) cycle_time=0 → form.cycle_time ควรเป็น 0 ไม่ใช่ '' (FAIL)
+
+## ProductSetting (1)
+
 - [BUG-4] confirmDelete DELETE fail → showAlert ควรแสดง API message ไม่ใช่ generic (FAIL)
+
+## ตัดออกแล้ว: ไม่ต้องแก้
+
+| ไฟล์ | เทสต์ | เหตุผล |
+| :--- | :--- | :--- |
+| swalHelper | ทั้ง 11 ข้อ | เปลี่ยนเป็นข้อความธรรมดาเพื่อกัน XSS แล้ว เทสต์ยังคาดหวังหัวข้อแบบ HTML เดิม |
+| AlarmHistory | computes downtimeSummary with matched RECOVER pairs | backend ส่ง event_type เป็น RECOVERY เทสต์เก่ายังใช้ RECOVER |
+| AlarmHistory | uses alarm_rule_id ?? address_id as key (getKey fallback) | เหตุผลเดียวกับข้อบน |
+| AlarmHistory | sort picks earliest RECOVER when multiple exist for same trigger (covers line 487) | เหตุผลเดียวกับข้อบน |
+| AlarmHistory | updates history items with duration_sec and duration_min | เหตุผลเดียวกับข้อบน |
+| Login | [BUG-7] password '  123456  ' ส่ง API แบบไม่ trim (FAIL) | ไม่ตัดช่องว่างรหัสผ่าน: backend เทียบตรงตัว บัญชีที่รหัสมีช่องว่างจะ login ไม่ได้ |
+| Login | [BUG-8] email 'Admin@Mail.COM' ส่ง API โดยไม่ lowercase (FAIL) | ไม่แปลงเป็นตัวเล็ก: backend เทียบตรงตัว บัญชีที่สมัครด้วยตัวใหญ่จะ login ไม่ได้ |
+| GaugeDisplay | onInput: input ที่ไม่ใช่ตัวเลข → inputValue = 0 | เปลี่ยนเป็นคงค่าเดิมแล้ว |
+| NumberDisplay | [BUG-1] blur หลัง Escape → ไม่ควร emit (finishEditing ต้องตรวจ editing state) | แก้แล้ว เทสต์เก่าเขียนผิดเอง (input ถูกเอาออกแล้วจึง trigger ไม่ได้) |
+| DeviceSetting | number_config.scale = 0 → ใช้ 1 fallback | เปลี่ยนเป็น ?? แล้ว scale 0 จึงคงเป็น 0 |
+| EmployeeSetting | employee_id ว่าง → warning TH | เปลี่ยนหัวข้อเป็นภาษาไทยแล้ว |
+| EmployeeSetting | first_name ว่าง → warning TH | เปลี่ยนหัวข้อเป็นภาษาไทยแล้ว |
+| EmployeeSetting | save สำเร็จ (Add) → showAlert success TH | เปลี่ยนหัวข้อเป็นภาษาไทยแล้ว |
+| EmployeeSetting | delete สำเร็จ → showAlert success TH | เปลี่ยนหัวข้อเป็นภาษาไทยแล้ว |
+| EmployeeSetting | [BUG-5] save() catch ไม่มี locale switch → Thai mode แสดง English error (FAIL) | แก้แล้ว หัวข้อใช้คำว่า ข้อผิดพลาด ต่างจากคำที่เทสต์เก่าคาด |
+| PlcDebugForm | startPolling → interval timer ทำงานหลังผ่านเวลา | เทสต์ใหม่รอ request แรกเสร็จก่อน |
+| WorkingTimeForm | saveDay API fail → Swal error | แก้ให้ขึ้นตามภาษาแล้ว |
+| WorkingTimeForm | saveAll API fail → Swal error + loading = false (line 224) | แก้ให้ขึ้นตามภาษาแล้ว |
+| WorkingTimeForm | [BUG-6] saveDay('monday') ส่ง payload ทุกวัน ไม่ใช่แค่ monday (FAIL) | backend เขียนทับทั้งก้อน ถ้าส่งวันเดียววันอื่นจะหาย จึงต้องส่งครบ 7 วัน |

@@ -109,6 +109,11 @@ import { BASE_API, authH } from '../../utils/api';
 import { showAlert, showConfirm } from "../../utils/swalHelper";
 
 
+// ตัดช่องว่างหน้า-หลังทุกช่องที่เป็นข้อความก่อนบันทึก
+const trimFields = (form) => Object.fromEntries(
+  Object.entries(form).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
+);
+
 export default {
   name: "EmployeeSetting",
 
@@ -176,11 +181,11 @@ export default {
 
     async save() {
       if (!this.form.employee_id || !this.form.employee_id.trim()) {
-        await showAlert("Error", this.locale.current === 'th' ? 'กรุณากรอกรหัสพนักงาน' : "Employee ID is required", "warning");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกรหัสพนักงาน' : "Employee ID is required", "warning");
         return;
       }
-      if (!this.form.first_name) {
-        await showAlert("Error", this.locale.current === 'th' ? 'กรุณากรอกชื่อ' : "First name is required", "warning");
+      if (!this.form.first_name || !this.form.first_name.trim()) {
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อ' : "First name is required", "warning");
         return;
       }
 
@@ -194,20 +199,20 @@ export default {
         const res = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json", ...authH() },
-          body: JSON.stringify(this.form)
+          body: JSON.stringify(trimFields(this.form))
         });
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || "Save failed");
+          throw new Error(err.message || (this.locale.current === 'th' ? 'บันทึกข้อมูลไม่สำเร็จ' : 'Save failed'));
         }
 
-        await showAlert("Success", this.locale.current === 'th' ? 'บันทึกข้อมูลพนักงานสำเร็จ' : "Employee saved successfully", "success");
+        await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกข้อมูลพนักงานสำเร็จ' : "Employee saved successfully", "success");
         this.closeModal();
         this.loadEmployees();
       } catch (err) {
         console.error(err);
-        await showAlert("Error", err.message, "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, "error");
       } finally {
         this.loading = false;
       }
@@ -231,14 +236,14 @@ export default {
 
           if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || "Delete failed");
+            throw new Error(err.message || (this.locale.current === 'th' ? 'ลบข้อมูลไม่สำเร็จ' : 'Delete failed'));
           }
 
-          await showAlert("Success", this.locale.current === 'th' ? 'ลบพนักงานสำเร็จ' : "Employee deleted successfully", "success");
+          await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบพนักงานสำเร็จ' : "Employee deleted successfully", "success");
           this.loadEmployees();
         } catch (err) {
           console.error(err);
-          await showAlert("Error", err.message, "error");
+          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, "error");
         }
       }
     }

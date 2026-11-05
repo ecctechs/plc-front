@@ -218,7 +218,7 @@ export default {
         await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'บันทึกที่อยู่ PLC สำเร็จ' : (json.message || 'PLC addresses saved successfully'), 'success');
       } catch (err) {
         console.error(err);
-        await showAlert("Error", err.message, "error");
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, "error");
       } finally {
         this.savingPlc = false;
       }

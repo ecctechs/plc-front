@@ -465,3 +465,35 @@ describe("Login > Bug Cases (PASS)", () => {
     expect(store["token"]).not.toBe("undefined");
   });
 });
+
+// ─── Regression 30/10/69 ───────────────────────────────────────
+describe("Login > email / password regression", () => {
+  it("อีเมลมีช่องว่างหน้า-หลัง → ตัดออกแล้ว login ได้", async () => {
+    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.resolve({ success: false, message: "x" }) });
+    const wrapper = mountLogin();
+    wrapper.vm.email = "  admin@mail.com  ";
+    wrapper.vm.password = "secret123";
+    await wrapper.vm.onSubmit();
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body).email).toBe("admin@mail.com");
+  });
+
+  it("อีเมลจุดติดกัน → error ไม่เรียก API", async () => {
+    const wrapper = mountLogin();
+    wrapper.vm.email = "a@b..com";
+    wrapper.vm.password = "secret123";
+    await wrapper.vm.onSubmit();
+    expect(wrapper.vm.emailError).toBeTruthy();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("ตัวพิมพ์ใหญ่ในอีเมลและช่องว่างในรหัสผ่านส่งตามที่พิมพ์ (backend เทียบตรงตัว)", async () => {
+    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.resolve({ success: false, message: "x" }) });
+    const wrapper = mountLogin();
+    wrapper.vm.email = "Admin@Mail.COM";
+    wrapper.vm.password = " secret123 ";
+    await wrapper.vm.onSubmit();
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.email).toBe("Admin@Mail.COM");
+    expect(body.password).toBe(" secret123 ");
+  });
+});

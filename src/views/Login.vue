@@ -75,6 +75,7 @@
 </template>
 
 <script>
+import { isValidEmail } from '../utils/validators';
 import { BASE_API } from '../utils/api';
 
 export default {
@@ -95,11 +96,11 @@ export default {
     validate() {
       this.emailError = ''
       this.passwordError = ''
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      this.email = (this.email || '').trim()
 
       if (!this.email) {
         this.emailError = this.locale.t('Please enter your email')
-      } else if (!emailRegex.test(this.email)) {
+      } else if (!isValidEmail(this.email)) {
         this.emailError = this.locale.t('Please enter a valid email address')
       }
 

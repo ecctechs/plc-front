@@ -119,6 +119,7 @@
 </template>
 
 <script>
+import { getAlarmEmailError } from '../../utils/validators';
 import { BASE_API, authH } from '../../utils/api';
 import AddressForm from "./AddressForm.vue";
 import DisplayNumber from "./DisplayNumber.vue";
@@ -317,6 +318,14 @@ export default {
           }
         }
 
+        // Validate อีเมลผู้รับ Alarm
+        for (const alarm of addr.alarms || []) {
+          const emailError = getAlarmEmailError(alarm);
+          if (emailError) {
+            throw new Error(`[${pointLabel}] ${alarm.name || 'Alarm'}: ${emailError}`);
+          }
+        }
+
         // Validate Level
         if (addr.data_type === "level") {
           if (!addr.levels || addr.levels.length === 0) {
@@ -506,6 +515,7 @@ export default {
       duration_sec: alarm.duration_sec || 0,
       repeat_interval_sec: alarm.repeat_interval_sec || 900,
       severity: alarm.severity || "Warning",
+      email_recipients: alarm.email_recipients || [],
       notify_email: alarm.notify_email || false,    
       is_active: true
     };
@@ -530,14 +540,16 @@ export default {
   // =========================
   // แทนที่จะดึงจาก Server มาเทียบ ให้ลบเฉพาะ ID ที่เราสั่ง Remove ใน UI
   if (this.deletedAlarmIds.length > 0) {
-    for (const id of this.deletedAlarmIds) {
+    // saveChildConfigs รันพร้อมกันหลาย address → ดึง id ออกจากคิวก่อน await ไม่ให้ลบซ้ำ
+    const idsToDelete = [...new Set(this.deletedAlarmIds)];
+    this.deletedAlarmIds = [];
+    for (const id of idsToDelete) {
       try {
         await fetch(`${BASE_API}/api/alarms/${id}`, { method: "DELETE", headers: authH() });
       } catch (e) {
         console.warn(`Could not delete alarm ${id}`, e);
       }
     }
-    this.deletedAlarmIds = []; // ล้างค่าทิ้งเมื่อลบเสร็จ
   }
 }
   }
