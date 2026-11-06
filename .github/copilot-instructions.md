@@ -65,4 +65,5 @@ Device {id, name, device_type, room, addresses[]}
 
 ## Tests
 - One test file per component under `src/__tests__/` mirroring `src/`.
+- E2E specs import `test` from `e2e/fixtures.js`, which serves the CDN files locally so runs do not depend on the network.
 - Bug-case tests are named `[BUG-x]`; fix the component, and only change a test when its expectation is wrong (explain why in the test comment).

@@ -662,7 +662,7 @@ describe("DeviceSetting > Delete", () => {
   it("delete ล้มเหลว → showAlert error EN", async () => {
     mockFetch.mockImplementation((url, opts) => {
       if (opts && opts.method === "DELETE")
-        return Promise.resolve({ ok: false });
+        return Promise.resolve({ ok: false, json: () => Promise.reject(new SyntaxError('not json')) });
       if (url.includes("/api/devices"))
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: mockDevices }) });
       if (url.includes("/api/rooms"))
@@ -722,7 +722,7 @@ describe("DeviceSetting > Delete", () => {
   it("delete ล้มเหลว Thai locale → showAlert TH error", async () => {
     mockFetch.mockImplementation((url, opts) => {
       if (opts && opts.method === "DELETE")
-        return Promise.resolve({ ok: false });
+        return Promise.resolve({ ok: false, json: () => Promise.reject(new SyntaxError('not json')) });
       if (url.includes("/api/devices"))
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: mockDevices }) });
       if (url.includes("/api/rooms"))
@@ -782,3 +782,34 @@ describe("DeviceSetting > Branch Coverage", () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe("DeviceSetting > pagination regression", () => {
+  const manyDevices = Array.from({ length: 20 }, (_, i) => ({ id: i + 1, name: `D${i}`, addresses: [] }));
+
+  it("กดปุ่มก่อนหน้าที่หน้า 1 / ถัดไปที่หน้าสุดท้าย → ไม่ออกนอกช่วง", async () => {
+    mockFetch.mockImplementation((url) => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ data: url.includes("/api/devices") ? manyDevices : [] }),
+    }));
+    const wrapper = mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
+    await vi.waitFor(() => expect(wrapper.vm.devices.length).toBe(20));
+    await wrapper.vm.$nextTick();
+    const links = wrapper.findAll(".page-link");
+    wrapper.vm.currentPage = 1;
+    await links[0].trigger("click");
+    expect(wrapper.vm.currentPage).toBe(1);
+    wrapper.vm.currentPage = wrapper.vm.totalPages;
+    await wrapper.vm.$nextTick();
+    await wrapper.findAll(".page-link").at(-1).trigger("click");
+    expect(wrapper.vm.currentPage).toBe(wrapper.vm.totalPages);
+  });
+
+  it("โหลด Device ไม่สำเร็จ → แจ้งผู้ใช้", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.resolve({}) });
+    showAlert.mockClear();
+    mount(DeviceSetting, { global: { provide: { locale: mockLocale } } });
+    await vi.waitFor(() => expect(showAlert).toHaveBeenCalledWith("Error", "Failed to load devices", "error"));
+  });
+});

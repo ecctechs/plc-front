@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { showAlert } from '../../utils/swalHelper';
+
+vi.mock('../../utils/swalHelper', () => ({ showAlert: vi.fn(() => Promise.resolve()) }));
 import Chart from '../../views/Chart.vue';
 
 vi.mock('../../components/chart/OnOffChart.vue', () => ({
@@ -584,3 +587,35 @@ describe('template rendering', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('date validation regression', () => {
+  it('initialStart ผิดรูปแบบ → ใช้ค่าเริ่มต้น ไม่เป็น NaN', () => {
+    const wrapper = mountChart({ initialStart: 'not-a-date' });
+    expect(wrapper.vm.startH).not.toContain('NaN');
+  });
+
+  it('วันที่ผิด → แสดงว่าง ไม่ใช่ NaN/NaN/NaN', () => {
+    const wrapper = mountChart();
+    expect(wrapper.vm.formatThaiDateOnly('not-a-date')).toBe('');
+  });
+
+  it('วันเริ่มหลังวันสิ้นสุด → แจ้งเตือนและไม่ apply', () => {
+    showAlert.mockClear();
+    const wrapper = mountChart();
+    wrapper.vm.startDateOnly = new Date('2026-06-20T00:00:00');
+    wrapper.vm.endDateOnly = new Date('2026-06-10T00:00:00');
+    wrapper.vm.applyFilter();
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'warning');
+    expect(wrapper.vm.filterApplied).toBe(0);
+    expect(wrapper.emitted('filter-changed')).toBeUndefined();
+  });
+
+  it('วันเริ่มก่อนวันสิ้นสุด → apply ปกติ', () => {
+    const wrapper = mountChart();
+    wrapper.vm.startDateOnly = new Date('2026-06-10T00:00:00');
+    wrapper.vm.endDateOnly = new Date('2026-06-20T00:00:00');
+    wrapper.vm.applyFilter();
+    expect(wrapper.vm.filterApplied).toBe(1);
+  });
+});

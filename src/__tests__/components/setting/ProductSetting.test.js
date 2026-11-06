@@ -510,7 +510,7 @@ describe("ProductSetting > Confirm Delete", () => {
     showConfirm.mockResolvedValue(true);
     const wrapper = setupDeleteMock(false, mockLocale);
     await wrapper.vm.confirmDelete(mockProducts[0]);
-    expect(showAlert).toHaveBeenCalledWith("Error", "Cannot delete product", "error");
+    expect(showAlert).toHaveBeenCalledWith("Error", "FK constraint violation", "error");
     consoleSpy.mockRestore();
   });
 
@@ -519,7 +519,7 @@ describe("ProductSetting > Confirm Delete", () => {
     showConfirm.mockResolvedValue(true);
     const wrapper = setupDeleteMock(false, mockLocale_th);
     await wrapper.vm.confirmDelete(mockProducts[0]);
-    expect(showAlert).toHaveBeenCalledWith("ข้อผิดพลาด", "ไม่สามารถลบผลิตภัณฑ์ได้", "error");
+    expect(showAlert).toHaveBeenCalledWith("ข้อผิดพลาด", "FK constraint violation", "error");
     consoleSpy.mockRestore();
   });
 });

@@ -130,6 +130,9 @@ import NumberChart from '../components/chart/NumberChart.vue'
 import NumberGaugeChart from '../components/chart/NumberGaugeChart.vue'
 import LevelChart from '../components/chart/LevelChart.vue'
 import { formatISO } from '../utils/date-utils'
+import { showAlert } from '../utils/swalHelper'
+
+const isValidDate = (d) => !Number.isNaN(new Date(d).getTime())
 
 export default {
   name: "Chart",
@@ -155,11 +158,11 @@ export default {
     end.setHours(23,59,59)
 
     // 🔥 ถ้ามี initialStart ส่งมา → ใช้ค่านั้น
-    if (this.initialStart) {
+    if (this.initialStart && isValidDate(this.initialStart)) {
       start = new Date(this.initialStart)
     }
 
-    if (this.initialEnd) {
+    if (this.initialEnd && isValidDate(this.initialEnd)) {
       end = new Date(this.initialEnd)
     }
 
@@ -239,7 +242,7 @@ export default {
   methods: {
 
     formatThaiDateOnly(date) {
-      if (!date) return ''
+      if (!date || !isValidDate(date)) return ''
       const d = new Date(date)
       const day = String(d.getDate()).padStart(2, '0')
       const month = String(d.getMonth() + 1).padStart(2, '0')
@@ -268,6 +271,14 @@ export default {
     },
 
     applyFilter() {
+      if (this.startDate && this.endDate && this.startDate > this.endDate) {
+        showAlert(
+          this.locale.current === 'th' ? 'ช่วงเวลาไม่ถูกต้อง' : 'Invalid range',
+          this.locale.current === 'th' ? 'วันเวลาเริ่มต้องไม่อยู่หลังวันเวลาสิ้นสุด' : 'Start must not be after end',
+          'warning'
+        )
+        return
+      }
       this.appliedStartDate = this.startDate
       this.appliedEndDate = this.endDate
       this.filterApplied++ // เพิ่ม counter เพื่อบอก chart ว่าผู้ใช้กด apply

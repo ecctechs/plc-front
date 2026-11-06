@@ -1,25 +1,9 @@
 # เคส BUG ที่ยังเหลือจากเทสต์ที่ถูกลบ (commit 107b8ef)
 
-อัปเดต 5/11/69: นำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน เหลือ **56 ข้อ** ที่ยังต้องตรวจ
-แต่ละข้อต้องดูโค้ดยืนยันก่อนแก้ เพราะบางข้อเทสต์คาดหวังผิด
+อัปเดต 6/11/69: นำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน เหลือ **32 ข้อ** ที่ยังไม่ได้แก้
+ส่วนใหญ่เป็นเรื่องเล็กหรือเกิดเฉพาะค่าผิดปกติ แต่ละข้อต้องดูโค้ดยืนยันก่อนแก้ เพราะบางข้อเทสต์คาดหวังผิด
 
 ดูเทสต์เดิมได้ด้วย `git show 7ff76db:<path ของไฟล์เทสต์>`
-
-## Chart (5)
-
-- [BUG-1] unknown display_type renders blank chart area with no error message - should fallback
-- [BUG-2] invalid initialStart causes NaN in time fields - should validate input
-- [BUG-3] applyFilter emits inverted date range without validation
-- [BUG-4] filterApplied increments on every click even when filter unchanged
-- [BUG-5] formatThaiDateOnly with Invalid Date returns "NaN/NaN/NaN" instead of ""
-
-## Demo (5)
-
-- [BUG-1] isAuto() crashes when autoTimers is plain Object (not a Map)
-- [BUG-2] formatTime(0) returns "-" because 0 is falsy — misses Unix epoch timestamp
-- [BUG-3] onInputChange with string "false" sets onoff to ON (1) instead of OFF (0)
-- [BUG-4] inverted range (min > max) causes all values to clamp to 0 silently
-- [BUG-5] clearing number input (value="") immediately emits min value without user confirmation
 
 ## Setting (5)
 
@@ -36,44 +20,23 @@
 - [BUG-5] formatISO(new Date('invalid')) ควรคืน null (object truthy bypass guard) (FAIL)
 - [BUG-6] toUTC7(null) ควรคืน null หรือ Invalid Date ไม่ใช่ epoch+7h (FAIL)
 
-## DashboardCards (4)
+## Demo (3)
 
-- [BUG-2] last_value="ERR" string causes getDisplayValue to return "NaN"
-- [BUG-3] Thai locale without .current property always shows English text
-- [BUG-4] severity "Critical" (capital C) falls through to green instead of red
-- [BUG-5] generateTicks(0, 0) produces all-identical ticks (no min=max validation)
+- [BUG-1] isAuto() crashes when autoTimers is plain Object (not a Map)
+- [BUG-2] formatTime(0) returns "-" because 0 is falsy — misses Unix epoch timestamp
+- [BUG-5] clearing number input (value="") immediately emits min value without user confirmation
 
-## DashboardLayout (4)
+## DashboardLayout (3)
 
 - [BUG-1] dashboardAddresses computed crashes because this.dashboardCards is undefined
-- [BUG-3] deleteCard emits "delete-card" even when API returns failure (no res.ok check)
 - [BUG-4] loadFilters does not check res.ok — silently processes error responses
 - [BUG-5] type mismatch: string allowedRoomIds fails to match numeric room_id
 
-## StatusLamp (4)
+## StatusLamp (3)
 
 - [BUG-2] inactiveColor='' → ควรใช้สี default '#6b7280' ไม่ใช่ '#FF0000'
-- [BUG-3] addressId define สองครั้งใน props → ควรมี warn แต่ไม่มี
 - [BUG-4] bgColor='' ขณะ isOn=true → ควรใช้ prop default '#22c55e' (บังเอิญถูก)
 - [BUG-5] emit 'toggle' ควรรวม addressId เพื่อให้ parent รู้ว่า lamp ไหนถูก toggle
-
-## AddDashboardCardModal (3)
-
-- [BUG-1] double-click submit → ยิง 2 POST calls ไม่มี isLoading guard (FAIL)
-- [BUG-2] editingCard.position=0 → || 1 falsy trap → selectedPosition เปลี่ยนเป็น 1 (FAIL)
-- [BUG-4] non-JSON error response → SyntaxError message โชว์ถึง user แทน friendly msg (FAIL)
-
-## AddElementModal (3)
-
-- [BUG-1] double-click submit → ยิง 2 POST calls ไม่มี submitting guard (FAIL)
-- [BUG-4] submit error ใช้ native alert() แทน showAlert → inconsistent UX (FAIL)
-- [BUG-5] canSubmit=false แต่ Submit button ไม่ถูก disabled (canSubmit ไม่ได้ใช้ใน template) (FAIL)
-
-## AlarmHistory (3)
-
-- [BUG-3] openChart() ใช้ native alert() แทน showAlert → blocking UX (FAIL)
-- [BUG-4] currentPage ไม่ reset เมื่อ filter เปลี่ยน → paginatedHistory = [] แม้จะมีข้อมูล (FAIL)
-- [BUG-5] loadRooms() ไม่เช็ค res.ok → HTTP error ถูก swallow โดยไม่มี console.error (FAIL)
 
 ## Register (3)
 
@@ -81,21 +44,31 @@
 - [BUG-3] validate: confirmPassword empty message bypasses locale.t()
 - [BUG-4] validate: email with leading/trailing spaces fails valid-format check
 
-## DeviceSetting (3)
+## Chart (2)
 
-- [BUG-2] currentPage-- ไม่มี guard → currentPage เป็น 0 (FAIL)
-- [BUG-3] currentPage++ ไม่มี guard → currentPage เกิน totalPages (FAIL)
-- [BUG-5] loadDevices error ไม่มี showAlert → user ไม่รู้ว่า load ล้มเหลว (FAIL)
+- [BUG-1] unknown display_type renders blank chart area with no error message - should fallback
+- [BUG-4] filterApplied increments on every click even when filter unchanged
 
-## RoleSettingModal (2)
+## DashboardCards (2)
 
-- 🔴 [BUG-3] double-click Delete → fetch DELETE ถูกเรียก 2 ครั้ง
+- [BUG-3] Thai locale without .current property always shows English text
+- [BUG-5] generateTicks(0, 0) produces all-identical ticks (no min=max validation)
+
+## AddDashboardCardModal (1)
+
+- [BUG-2] editingCard.position=0 → || 1 falsy trap → selectedPosition เปลี่ยนเป็น 1 (FAIL)
+
+## AddElementModal (1)
+
+- [BUG-5] canSubmit=false แต่ Submit button ไม่ถูก disabled (canSubmit ไม่ได้ใช้ใน template) (FAIL)
+
+## RoleSettingModal (1)
+
 - 🔴 [BUG-4] ปิด outer modal ขณะมีข้อมูลใน form → ควรมี confirm ก่อน
 
-## Interaction (2)
+## Interaction (1)
 
 - [BUG-4] calculateSize returns 5 for size_width=0 due to || fallback (should be 0)
-- [BUG-5] fetchLayouts failure is silently swallowed — no error shown to user
 
 ## Login (1)
 
@@ -108,18 +81,6 @@
 ## DeviceForm (1)
 
 - [BUG-4] form.addresses ว่าง → validateBeforeSave ต้อง throw (FAIL - ไม่มี check)
-
-## EmployeeSetting (1)
-
-- [BUG-3] confirmDelete emp.first_name=null → dialog แสดง 'null null' ไม่ใช่ employee_id (FAIL)
-
-## ProductForm (1)
-
-- [BUG-3] open(product) cycle_time=0 → form.cycle_time ควรเป็น 0 ไม่ใช่ '' (FAIL)
-
-## ProductSetting (1)
-
-- [BUG-4] confirmDelete DELETE fail → showAlert ควรแสดง API message ไม่ใช่ generic (FAIL)
 
 ## ตัดออกแล้ว: ไม่ต้องแก้
 
@@ -144,3 +105,8 @@
 | WorkingTimeForm | saveDay API fail → Swal error | แก้ให้ขึ้นตามภาษาแล้ว |
 | WorkingTimeForm | saveAll API fail → Swal error + loading = false (line 224) | แก้ให้ขึ้นตามภาษาแล้ว |
 | WorkingTimeForm | [BUG-6] saveDay('monday') ส่ง payload ทุกวัน ไม่ใช่แค่ monday (FAIL) | backend เขียนทับทั้งก้อน ถ้าส่งวันเดียววันอื่นจะหาย จึงต้องส่งครบ 7 วัน |
+| Chart | [BUG-3] applyFilter emits inverted date range without validation | แก้แล้ว: แจ้งเตือนและไม่ apply เทสต์เก่าคาดว่าจะ emit ค่าที่สลับให้ |
+| StatusLamp | [BUG-3] addressId define สองครั้งใน props → ควรมี warn แต่ไม่มี | แก้แล้ว: ลบ prop ที่ประกาศซ้ำออก |
+| AddDashboardCardModal | [BUG-4] non-JSON error response → SyntaxError message โชว์ถึง user แทน friendly msg (FAIL) | แก้แล้ว: ใช้ข้อความ fallback เทสต์เก่าคาดข้อความอื่น |
+| AddElementModal | [BUG-4] submit error ใช้ native alert() แทน showAlert → inconsistent UX (FAIL) | แก้แล้ว: ใช้ showAlert แทน alert |
+| Interaction | [BUG-5] fetchLayouts failure is silently swallowed — no error shown to user | แก้แล้ว: แจ้งด้วย showAlert เทสต์เก่าคาดให้ตั้งค่า error ซึ่งจะทำให้ทั้งหน้าหาย |

@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import AddElementModal from '../../views/AddElementModal.vue';
+import { showAlert } from '../../utils/swalHelper';
+
+vi.mock('../../utils/swalHelper', () => ({
+  showAlert: vi.fn(() => Promise.resolve()),
+  showConfirm: vi.fn(() => Promise.resolve(true)),
+}));
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -543,7 +549,7 @@ describe('AddElementModal > submit(): Add Mode', () => {
     logSpy.mockRestore();
   });
 
-  it('POST !response.ok → throw Error → catch → alert()', async () => {
+  it('POST !response.ok → throw Error → catch → showAlert', async () => {
     setupFetch({ elementResponse: { ok: false, status: 500, json: () => Promise.resolve({}) } });
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const wrapper = mountModal({}, EN);
@@ -551,11 +557,11 @@ describe('AddElementModal > submit(): Add Mode', () => {
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
     expect(spy).toHaveBeenCalledWith('Failed to save element:', expect.any(Error));
-    expect(alert).toHaveBeenCalledWith(expect.stringContaining('Failed to save element'));
+    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('HTTP error'), 'error');
     spy.mockRestore();
   });
 
-  it('fetch throw (network) → catch → alert()', async () => {
+  it('fetch throw (network) → catch → showAlert', async () => {
     mockFetch = vi.fn((url) => {
       if (url.includes('/api/devices')) return Promise.resolve({ ok: true, json: () => Promise.resolve(MOCK_DEVICES) });
       if (url.includes('/interaction/elements')) return Promise.reject(new Error('Connection refused'));
@@ -567,7 +573,7 @@ describe('AddElementModal > submit(): Add Mode', () => {
     await flushPromises();
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
-    expect(alert).toHaveBeenCalledWith('Failed to save element: Connection refused');
+    expect(showAlert).toHaveBeenCalledWith('Error', 'Connection refused', 'error');
     spy.mockRestore();
   });
 });
@@ -597,14 +603,14 @@ describe('AddElementModal > submit(): Edit Mode', () => {
     expect(wrapper.emitted('saved')).toBeTruthy();
   });
 
-  it('PUT !response.ok → catch → alert()', async () => {
+  it('PUT !response.ok → catch → showAlert', async () => {
     setupFetch({ elementResponse: { ok: false, status: 404, json: () => Promise.resolve({}) } });
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const wrapper = mountModal({ editData: baseEdit }, EN);
     await flushPromises();
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
-    expect(alert).toHaveBeenCalledWith(expect.stringContaining('Failed to save element'));
+    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('HTTP error'), 'error');
     spy.mockRestore();
   });
 
@@ -615,7 +621,7 @@ describe('AddElementModal > submit(): Edit Mode', () => {
     await flushPromises();
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
-    expect(alert).toHaveBeenCalledWith(expect.stringContaining('404'));
+    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('404'), 'error');
     spy.mockRestore();
   });
 });
@@ -915,3 +921,20 @@ describe('AddElementModal > Additional DOM v-model coverage', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('double submit regression', () => {
+  it('กดบันทึก 2 ครั้งติดกัน → ส่งครั้งเดียว และปุ่มกดไม่ได้ระหว่างบันทึก', async () => {
+    setupFetch();
+    const wrapper = mountModal({}, EN);
+    await flushPromises();
+    setValidForm(wrapper.vm);
+    mockFetch.mockClear();
+    mockFetch.mockReturnValue(new Promise(() => {}));
+    wrapper.vm.submit();
+    wrapper.vm.submit();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.modal-footer .btn-primary, .btn-primary.px-4').attributes('disabled')).toBeDefined();
+  });
+});

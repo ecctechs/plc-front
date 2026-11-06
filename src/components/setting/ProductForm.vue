@@ -94,7 +94,7 @@ export default {
         this.editingId = product.id;
         this.form = {
           name: product.name || "",
-          cycle_time: product.cycle_time || "",
+          cycle_time: product.cycle_time ?? "",
           target_oee: product.target_oee ?? "",
           target_output: product.target_output ?? ""
         };

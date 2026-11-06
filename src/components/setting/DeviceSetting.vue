@@ -95,13 +95,13 @@
           <nav v-if="totalPages > 1">
             <ul class="pagination pagination-sm mb-0">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage--">&laquo;</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = Math.max(1, currentPage - 1)">&laquo;</a>
               </li>
               <li class="page-item" v-for="page in visiblePages" :key="page" :class="{ active: currentPage === page }">
                 <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage++">&raquo;</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = Math.min(totalPages, currentPage + 1)">&raquo;</a>
               </li>
             </ul>
           </nav>
@@ -199,7 +199,6 @@ export default {
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
         const devices = json.data || json;
-        console.log("Loaded devices:", devices);
         this.devices = devices.map(d => ({
           ...d,
           device_type_id: d.device_type?.id || d.device_type_id,
@@ -236,6 +235,7 @@ export default {
         }));
       } catch (err) {
         console.error(err);
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'โหลดรายการ Device ไม่สำเร็จ' : 'Failed to load devices', 'error');
       }
     },
     
@@ -293,13 +293,16 @@ export default {
             headers: authH()
           });
           
-          if (!res.ok) throw new Error("Delete failed");
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถลบ Device ได้' : 'Cannot delete device'));
+          }
           
           await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบ Device สำเร็จ' : 'Device deleted successfully', 'success');
           this.loadDevices();
         } catch (err) {
           console.error(err);
-          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'ไม่สามารถลบ Device ได้' : 'Cannot delete device', 'error');
+          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
         }
       }
     }

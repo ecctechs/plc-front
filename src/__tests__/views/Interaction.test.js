@@ -1112,3 +1112,18 @@ describe("PLC write regression", () => {
     expect(wrapper.vm.getPlcAddress(0)).toBe("M0");
   });
 });
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('fetchLayouts error regression', () => {
+  it('โหลด Layout ไม่สำเร็จ → แจ้งผู้ใช้', async () => {
+    const { showAlert } = await import('../../utils/swalHelper');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    setupFetch();
+    const wrapper = mountComp();
+    await flushPromises();
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+    await wrapper.vm.fetchLayouts();
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'error');
+  });
+});

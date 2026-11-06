@@ -245,7 +245,7 @@
           </li>
 
           <li class="page-item" :class="{ disabled: currentPage === 1 }">
-            <button class="page-link" @click="currentPage--"><i class="bi bi-chevron-left"></i></button>
+            <button class="page-link" @click="currentPage = Math.max(1, currentPage - 1)"><i class="bi bi-chevron-left"></i></button>
           </li>
 
           <li v-if="visiblePages[0] > 1" class="page-item disabled">
@@ -261,7 +261,7 @@
           </li>
 
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-            <button class="page-link" @click="currentPage++"><i class="bi bi-chevron-right"></i></button>
+            <button class="page-link" @click="currentPage = Math.min(totalPages, currentPage + 1)"><i class="bi bi-chevron-right"></i></button>
           </li>
 
           <li class="page-item" :class="{ disabled: currentPage === totalPages }">
@@ -304,6 +304,7 @@
 
 <script>
 import { BASE_API, authH } from '../utils/api';
+import { showAlert } from '../utils/swalHelper'
 import Chart from './Chart.vue'
 import AlarmHistoryChart from '../components/chart/AlarmHistoryChart.vue'
 
@@ -405,6 +406,13 @@ export default {
     }
   },
 
+  watch: {
+    // เปลี่ยน Filter แล้วผลลัพธ์น้อยลง → กลับไปหน้า 1 ไม่ให้ตารางว่าง
+    filteredHistory() {
+      this.currentPage = 1;
+    }
+  },
+
   mounted() {
     this.fetchHistory()
     this.loadRooms()
@@ -436,7 +444,11 @@ export default {
       });
 
       if (!foundAddress) {
-        alert("ไม่พบข้อมูล Device ในระบบปัจจุบัน");
+        showAlert(
+          this.locale.current === 'th' ? 'ไม่พบข้อมูล' : 'Not found',
+          this.locale.current === 'th' ? 'ไม่พบข้อมูล Device ในระบบปัจจุบัน' : 'This device is no longer in the system',
+          'warning'
+        );
         return;
       }
 
@@ -567,6 +579,7 @@ export default {
     async loadRooms() {
       try {
         const res = await fetch(`${BASE_API}/api/rooms`, { headers: { ...authH() } });
+        if (!res.ok) throw new Error('Failed to load rooms');
         const data = await res.json();
         const allRooms = data.data || [];
         this.rooms = this.allowedRoomIds !== null
@@ -574,6 +587,11 @@ export default {
           : allRooms;
       } catch (err) {
         console.error("Load rooms error:", err);
+        await showAlert(
+          this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error',
+          this.locale.current === 'th' ? 'โหลดรายชื่อห้องไม่สำเร็จ' : 'Failed to load rooms',
+          'error'
+        );
       }
     }
   }

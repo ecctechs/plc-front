@@ -134,6 +134,7 @@
 
 <script>
 import { BASE_API as API_BASE_URL, authH } from '../utils/api';
+import { showAlert } from '../utils/swalHelper';
 import StatusLamp from '../components/interaction/StatusLamp.vue'
 import NumberDisplay from '../components/interaction/NumberDisplay.vue'
 import GaugeDisplay from '../components/interaction/GaugeDisplay.vue'
@@ -242,6 +243,11 @@ export default {
         this.layouts = await response.json()
       } catch (error) {
         console.error('Failed to fetch layouts:', error)
+        await showAlert(
+          this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error',
+          this.locale.current === 'th' ? 'โหลดรายการ Layout ไม่สำเร็จ' : 'Failed to load layouts',
+          'error'
+        )
       }
     },
     onLayoutChange() {

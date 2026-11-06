@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import AlarmHistory from '../../views/AlarmHistory.vue';
+import { showAlert } from '../../utils/swalHelper';
+
+vi.mock('../../utils/swalHelper', () => ({
+  showAlert: vi.fn(() => Promise.resolve()),
+  showConfirm: vi.fn(() => Promise.resolve(true)),
+}));
 
 // ─── Stub child components ─────────────────────────────────────────────────
 vi.mock('../../views/Chart.vue', () => ({
@@ -600,12 +606,12 @@ describe('AlarmHistory', () => {
       expect(wrapper.vm.showChart).toBe(true);
     });
 
-    it('calls alert() and returns when device not found', async () => {
+    it('calls showAlert and returns when device not found', async () => {
       const wrapper = mountView({ devices: [] });
       await flushPromises();
       const item = makeTrigger({ rule: { address_id: 99 } });
       wrapper.vm.openChart(item);
-      expect(alert).toHaveBeenCalledWith('ไม่พบข้อมูล Device ในระบบปัจจุบัน');
+      expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'warning');
       expect(wrapper.vm.showChart).toBe(false);
     });
 
@@ -1222,4 +1228,29 @@ describe('AlarmHistory', () => {
     });
   });
 
+});
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('filter + rooms regression', () => {
+  it('อยู่หน้า 3 แล้วพิมพ์ Filter → กลับหน้า 1 และตารางไม่ว่าง', async () => {
+    const wrapper = mountView();
+    await flushPromises();
+    wrapper.vm.history = Array.from({ length: 60 }, (_, i) => makeTrigger({ id: i + 1, device: { name: i === 0 ? 'TargetDevice' : `D${i}` } }));
+    await flushPromises();
+    wrapper.vm.currentPage = 3;
+    wrapper.vm.filter.deviceName = 'TargetDevice';
+    await flushPromises();
+    expect(wrapper.vm.currentPage).toBe(1);
+    expect(wrapper.vm.paginatedHistory.length).toBeGreaterThan(0);
+  });
+
+  it('โหลดห้องไม่สำเร็จ → แจ้งผู้ใช้', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const wrapper = mountView();
+    await flushPromises();
+    showAlert.mockClear();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, json: () => Promise.resolve({}) })));
+    await wrapper.vm.loadRooms();
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'error');
+  });
 });

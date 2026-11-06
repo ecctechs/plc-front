@@ -157,10 +157,13 @@ export default {
 
       let val;
       if (device.data_type === 'onoff') {
-        val = newValue ? 1 : 0;
+        val = newValue && newValue !== 'false' && newValue !== '0' ? 1 : 0;
       } else {
         val = parseFloat(newValue) || 0;
-        val = Math.min(device.max, Math.max(device.min, val));
+        // ตั้ง Min มากกว่า Max มา → สลับให้ถูกก่อนตัดค่า
+        const low = Math.min(device.min, device.max);
+        const high = Math.max(device.min, device.max);
+        val = Math.min(high, Math.max(low, val));
       }
 
       this.$emit('update-device', {

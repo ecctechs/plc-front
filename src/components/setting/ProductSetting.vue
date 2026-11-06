@@ -211,7 +211,7 @@ export default {
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || "Save failed");
+          throw new Error(err.message || (this.locale.current === 'th' ? 'บันทึกข้อมูลไม่สำเร็จ' : 'Save failed'));
         }
 
         const json = await res.json();
@@ -243,13 +243,16 @@ export default {
             headers: authH()
           });
           
-          if (!res.ok) throw new Error("Delete failed");
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถลบผลิตภัณฑ์ได้' : 'Cannot delete product'));
+          }
           
           await showAlert(this.locale.current === 'th' ? 'สำเร็จ' : 'Success', this.locale.current === 'th' ? 'ลบผลิตภัณฑ์สำเร็จ' : 'Product deleted successfully', 'success');
           this.loadProducts();
         } catch (err) {
           console.error(err);
-          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', this.locale.current === 'th' ? 'ไม่สามารถลบผลิตภัณฑ์ได้' : 'Cannot delete product', 'error');
+          await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
         }
       }
     }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import RoleSettingModal from "../../components/RoleSettingModal.vue";
 
 // ─── Mock swalHelper ────────────────────────────────────────
@@ -731,3 +731,21 @@ describe("RoleSettingModal > Close", () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe("RoleSettingModal > double delete regression", () => {
+  it("กดลบ Role 2 ครั้งติดกัน → DELETE ครั้งเดียว", async () => {
+    const wrapper = mountModal();
+    await flushPromises();
+    mockFetch.mockClear();
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    showConfirm.mockResolvedValue(true);
+    await Promise.all([
+      wrapper.vm.confirmDelete({ id: 9, name: "R" }),
+      wrapper.vm.confirmDelete({ id: 9, name: "R" }),
+    ]);
+    const deletes = mockFetch.mock.calls.filter(([, o]) => o?.method === "DELETE");
+    expect(deletes).toHaveLength(1);
+    expect(wrapper.vm.deletingRole).toBe(false);
+  });
+});

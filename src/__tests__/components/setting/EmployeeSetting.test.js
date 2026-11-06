@@ -698,3 +698,16 @@ describe("EmployeeSetting > trim regression", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe("EmployeeSetting > delete name regression", () => {
+  it("พนักงานไม่มีชื่อ → dialog ใช้รหัสพนักงาน ไม่ขึ้น null null", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ data: [] }) });
+    showConfirm.mockResolvedValue(false);
+    const wrapper = mountComp();
+    showConfirm.mockClear();
+    await wrapper.vm.confirmDelete({ id: 1, employee_id: "E01", first_name: null, last_name: null });
+    expect(showConfirm.mock.calls[0][1]).toContain("E01");
+    expect(showConfirm.mock.calls[0][1]).not.toContain("null");
+  });
+});

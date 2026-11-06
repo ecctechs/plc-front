@@ -508,3 +508,18 @@ describe('template rendering', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('onInputChange regression', () => {
+  it.each([['false', 0], ['0', 0], [false, 0], [true, 1], ['true', 1]])('onoff ค่า %s → %s', (input, expected) => {
+    const wrapper = mountComp({ isSimulate: true });
+    wrapper.vm.onInputChange(makeDevice({ data_type: 'onoff' }), input);
+    expect(wrapper.emitted('update-device')[0][0].value).toBe(expected);
+  });
+
+  it('Min มากกว่า Max → ไม่ตัดค่าเป็น 0', () => {
+    const wrapper = mountComp({ isSimulate: true });
+    wrapper.vm.onInputChange(makeDevice({ data_type: 'number', min: 100, max: 0 }), '50');
+    expect(wrapper.emitted('update-device')[0][0].value).toBe(50);
+  });
+});

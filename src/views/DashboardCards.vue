@@ -231,8 +231,8 @@ export default {
 
       addr.alarms.forEach(al => {
         let color = '#28a745'; 
-        if (al.severity === 'warning' || al.severity === 'Warning') color = '#ffc107';
-        if (al.severity === 'critical' || al.severity === 'Error') color = '#dc3545';
+        if (this.isWarningSeverity(al.severity)) color = '#ffc107';
+        if (this.isCriticalSeverity(al.severity)) color = '#dc3545';
 
         let from = 0;
         let to = 0;
@@ -254,18 +254,26 @@ export default {
       return highlights;
     },
 
+    // ฐานข้อมูลมีทั้ง Warning/warning, Error, critical/Critical
+    isCriticalSeverity(severity) {
+      return ['critical', 'error'].includes(String(severity).toLowerCase());
+    },
+    isWarningSeverity(severity) {
+      return String(severity).toLowerCase() === 'warning';
+    },
+
     getValueColor(addr) {
       if (!addr.alarms || addr.alarms.length === 0) return 'text-success';
 
       const currentValue = parseFloat(this.getDisplayValue(addr));
       
       const isCritical = addr.alarms.some(al => 
-        (al.severity === 'critical' || al.severity === 'Error') && this.checkCondition(currentValue, al)
+        this.isCriticalSeverity(al.severity) && this.checkCondition(currentValue, al)
       );
       if (isCritical) return 'text-danger';
 
       const isWarning = addr.alarms.some(al => 
-        (al.severity === 'warning' || al.severity === 'Warning') && this.checkCondition(currentValue, al)
+        this.isWarningSeverity(al.severity) && this.checkCondition(currentValue, al)
       );
       if (isWarning) return 'text-warning';
 
@@ -371,8 +379,9 @@ export default {
     },
 
     getDisplayValue(addr) {
-      const raw = addr.last_value ?? 0;
-      return Number(raw).toFixed(addr.numberConfig?.decimal_places ?? 0);
+      const num = Number(addr.last_value ?? 0);
+      // PLC ส่งค่าที่ไม่ใช่ตัวเลข (เช่น "ERR") → แสดง 0 ไม่ใช่ NaN
+      return (Number.isFinite(num) ? num : 0).toFixed(addr.numberConfig?.decimal_places ?? 0);
     },
 
     generateTicks(min, max) {

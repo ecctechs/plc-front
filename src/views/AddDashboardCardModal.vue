@@ -193,6 +193,9 @@ export default {
     },
 
     async submit() {
+      // กดรัว → ส่งครั้งเดียว
+      if (this.isLoading) return;
+
       // Validation
       const error = this.getValidationError();
       if (error) {
@@ -221,7 +224,7 @@ export default {
           });
 
           if (!response.ok) {
-            const err = await response.json();
+            const err = await response.json().catch(() => ({}));
             throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถอัปเดตการ์ดได้' : 'Failed to update card'));
           }
 
@@ -253,7 +256,7 @@ export default {
           });
 
           if (!response.ok) {
-            const err = await response.json();
+            const err = await response.json().catch(() => ({}));
             throw new Error(err.message || (this.locale.current === 'th' ? 'ไม่สามารถเพิ่มการ์ดได้' : 'Failed to add card'));
           }
 

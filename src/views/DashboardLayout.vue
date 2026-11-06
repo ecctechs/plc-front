@@ -58,6 +58,7 @@
 import { BASE_API, authH } from '../utils/api';
 import Dashboard from './DashboardCards.vue';
 import AddDashboardCard from './AddDashboardCardModal.vue';
+import { showAlert } from '../utils/swalHelper';
 
 export default {
   components: { Dashboard, AddDashboardCard },
@@ -148,12 +149,21 @@ export default {
       this.editingCard = null;
     },
     async deleteCard(card) {
-      // call API
-      await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
-        method: 'DELETE',
-        headers: authH()
-      });
-      this.$emit('delete-card', card);
+      // ลบไม่สำเร็จ → แจ้งผู้ใช้ และไม่บอก parent ว่าลบแล้ว
+      try {
+        const res = await fetch(`${BASE_API}/api/dashboard/cards/${card.card_id}`, {
+          method: 'DELETE',
+          headers: authH()
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || (this.locale.current === 'th' ? 'ลบการ์ดไม่สำเร็จ' : 'Failed to delete card'));
+        }
+        this.$emit('delete-card', card);
+      } catch (err) {
+        console.error('Failed to delete card:', err);
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
+      }
     },
     onAdd(payload) {
       this.$emit('add-card', payload);

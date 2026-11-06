@@ -290,6 +290,7 @@ export default {
       activeTab: 'roles',
       roles: [],
       loadingList: false,
+      deletingRole: false,
       showModal: false,
       isEdit: false,
       loading: false,
@@ -390,6 +391,17 @@ export default {
     },
 
     async confirmDelete(role) {
+      // กดรัว → ลบครั้งเดียว
+      if (this.deletingRole) return;
+      this.deletingRole = true;
+      try {
+        await this.deleteRole(role);
+      } finally {
+        this.deletingRole = false;
+      }
+    },
+
+    async deleteRole(role) {
       const ok = await showConfirm(
         this.locale.current === 'th' ? 'ยืนยันการลบ' : 'Confirm Delete',
         this.locale.current === 'th' ? `ลบบทบาท "${role.name}" หรือไม่?` : `Delete role "${role.name}"?`,

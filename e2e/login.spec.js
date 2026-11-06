@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 
 // ─── helpers ────────────────────────────────────────────────────
 const mockLoginAPI = (page, { ok = true, token = "fake-token", user = null, message } = {}) =>

@@ -585,3 +585,12 @@ describe("ProductForm > upload + trim regression", () => {
     expect(mockFetch.mock.calls[0][1].body.get("name")).toBe("Model A");
   });
 });
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe("ProductForm > cycle time regression", () => {
+  it("cycle_time = 0 → ฟอร์มแสดง 0 ไม่ใช่ช่องว่าง", () => {
+    const wrapper = mountForm();
+    wrapper.vm.open({ id: 1, name: "A", cycle_time: 0 });
+    expect(wrapper.vm.form.cycle_time).toBe(0);
+  });
+});

@@ -160,7 +160,7 @@
           <button class="btn btn-outline-secondary px-4" @click="$emit('close')">
             {{ locale.t('Cancel') }}
           </button>
-          <button class="btn btn-primary px-4" @click="submit">
+          <button class="btn btn-primary px-4" :disabled="saving" @click="submit">
             {{ isEdit ? locale.t('Update') : locale.t('Add Element') }}
           </button>
         </div>
@@ -171,6 +171,7 @@
 
 <script>
 import { BASE_API, authH } from '../utils/api';
+import { showAlert } from '../utils/swalHelper';
 
 export default {
   name: "AddElementModal",
@@ -194,6 +195,7 @@ export default {
     return {
       devices: [],
       validationError: "",
+      saving: false,
       form: {
         layout_id: this.layoutId,
         element_type: 'gauge_display',
@@ -289,12 +291,16 @@ export default {
     },
 
     async submit() {
+      // กดรัว → ส่งครั้งเดียว
+      if (this.saving) return;
+
       const error = this.getValidationError();
       if (error) {
         this.validationError = error;
         return;
       }
       this.validationError = "";
+      this.saving = true;
 
       try {
         const url = this.isEdit 
@@ -321,7 +327,9 @@ export default {
         this.$emit('saved', result);
       } catch (err) {
         console.error('Failed to save element:', err);
-        alert('Failed to save element: ' + err.message);
+        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
+      } finally {
+        this.saving = false;
       }
     }
   }

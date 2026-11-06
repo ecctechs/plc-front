@@ -731,3 +731,26 @@ describe('template rendering', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('deleteCard regression', () => {
+  it('ลบไม่สำเร็จ → ไม่ emit delete-card และแจ้ง error', async () => {
+    const { showAlert } = await import('../../utils/swalHelper');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const wrapper = mountComp();
+    await flushPromises();
+    const fetchMock = vi.fn(() => Promise.resolve({ ok: false, json: () => Promise.resolve({ message: 'boom' }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    await wrapper.vm.deleteCard({ card_id: 1 });
+    expect(wrapper.emitted('delete-card')).toBeUndefined();
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), 'boom', 'error');
+  });
+
+  it('ลบสำเร็จ → emit delete-card', async () => {
+    const wrapper = mountComp();
+    await flushPromises();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) })));
+    await wrapper.vm.deleteCard({ card_id: 1 });
+    expect(wrapper.emitted('delete-card')).toHaveLength(1);
+  });
+});

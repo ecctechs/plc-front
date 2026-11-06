@@ -1008,3 +1008,23 @@ describe('template rendering', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('display regression', () => {
+  it('last_value = "ERR" → แสดงตัวเลข 0 ไม่ใช่ NaN', () => {
+    const wrapper = mountComp();
+    expect(wrapper.vm.getDisplayValue(makeAddr({ last_value: 'ERR', numberConfig: { decimal_places: 1 } }))).toBe('0.0');
+  });
+
+  it.each(['Critical', 'critical', 'Error'])('severity %s → สีแดง', (severity) => {
+    const wrapper = mountComp();
+    const addr = makeAddr({ alarms: [{ severity, type: 'BTW', min: 80, max: 100 }] });
+    expect(wrapper.vm.getGaugeHighlights(addr)[0].color).toBe('#dc3545');
+  });
+
+  it.each(['Warning', 'warning'])('severity %s → สีเหลือง', (severity) => {
+    const wrapper = mountComp();
+    const addr = makeAddr({ alarms: [{ severity, type: 'BTW', min: 80, max: 100 }] });
+    expect(wrapper.vm.getGaugeHighlights(addr)[0].color).toBe('#ffc107');
+  });
+});

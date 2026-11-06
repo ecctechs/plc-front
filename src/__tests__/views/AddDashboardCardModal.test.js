@@ -574,7 +574,7 @@ describe('AddDashboardCardModal > submit(): Add Mode', () => {
     await flushPromises();
     setValidState(wrapper.vm);
     await wrapper.vm.submit();
-    expect(showAlert).toHaveBeenCalledWith('Error', 'Please try again', 'error');
+    expect(showAlert).toHaveBeenCalledWith('Error', 'Failed to add card', 'error');
     spy.mockRestore();
   });
 
@@ -592,7 +592,7 @@ describe('AddDashboardCardModal > submit(): Add Mode', () => {
     await flushPromises();
     setValidState(wrapper.vm);
     await wrapper.vm.submit();
-    expect(showAlert).toHaveBeenCalledWith('เกิดข้อผิดพลาด', 'กรุณาลองใหม่อีกครั้ง', 'error');
+    expect(showAlert).toHaveBeenCalledWith('เกิดข้อผิดพลาด', 'ไม่สามารถเพิ่มการ์ดได้', 'error');
     spy.mockRestore();
   });
 });
@@ -960,3 +960,24 @@ describe('AddDashboardCardModal > DOM Interactions', () => {
   });
 });
 
+
+// ─── Regression 6/11/69 ────────────────────────────────────────
+describe('double submit regression', () => {
+  it('กดบันทึก 2 ครั้งติดกัน → POST ครั้งเดียว', async () => {
+    mockFetch = vi.fn((url, opts) => {
+      if (opts?.method === 'POST') return new Promise(() => {}); // ยังไม่ตอบ
+      if (url.includes('/api/devices')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: MOCK_DEVICES }) });
+      if (url.includes('/api/rooms')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: MOCK_ROOMS }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    });
+    vi.stubGlobal('fetch', mockFetch);
+    const wrapper = mountModal({}, EN);
+    await flushPromises();
+    setValidState(wrapper.vm);
+    wrapper.vm.submit();
+    await flushPromises();
+    wrapper.vm.submit();
+    await flushPromises();
+    expect(mockFetch.mock.calls.filter(([, o]) => o?.method === 'POST')).toHaveLength(1);
+  });
+});
