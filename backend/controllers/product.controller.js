@@ -79,13 +79,18 @@ exports.updateProduct = async (req, res) => {
     const { id } = req.params;
 
     let updateData = { ...req.body };
+    let oldImage = null;
 
     if (req.file) {
+      const current = await service.getById(id, req.companyId);
+      oldImage = current?.image_path;
       const imageUrl = await cloudinary.uploadImage(req.file);
       updateData.image_path = imageUrl;
     }
 
     const product = await service.update(id, req.companyId, updateData);
+    // เปลี่ยนรูปสำเร็จ → ลบรูปเก่าบน Cloudinary
+    if (oldImage && oldImage !== updateData.image_path) await cloudinary.deleteImageByUrl(oldImage);
     res.json({ success: true, data: product });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });
@@ -95,7 +100,9 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const product = await service.getById(id, req.companyId);
     await service.delete(id, req.companyId);
+    await cloudinary.deleteImageByUrl(product?.image_path);
     res.json({ success: true, message: 'ลบสินค้าสำเร็จ' });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });

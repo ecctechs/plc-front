@@ -1,5 +1,5 @@
 <template>
-  <div class="rs-overlay" @click.self="$emit('close')">
+  <div class="rs-overlay" @click.self="requestClose">
     <transition name="rs-pop" appear>
       <div class="rs-card">
         
@@ -19,7 +19,7 @@
             </div>
           </div>
           <!-- Close button -->
-          <button class="btn-close-minimal" @click="$emit('close')">
+          <button class="btn-close-minimal" @click="requestClose">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -291,6 +291,7 @@ export default {
       roles: [],
       loadingList: false,
       deletingRole: false,
+      formSnapshot: null,
       showModal: false,
       isEdit: false,
       loading: false,
@@ -353,11 +354,27 @@ export default {
         this.form = { name: '', tab_permissions: defaultTab(), scope_permissions: defaultScope(), is_active: true };
       }
       this.loading = false;
+      this.formSnapshot = JSON.stringify(this.form);
       this.showModal = true;
     },
 
     closeModal() {
       this.showModal = false;
+    },
+
+    // ปิดหน้าต่างใหญ่ตอนฟอร์ม Role เปิดค้างและมีการแก้ไข → ถามก่อน
+    async requestClose() {
+      const dirty = this.showModal && JSON.stringify(this.form) !== this.formSnapshot;
+      if (dirty) {
+        const ok = await showConfirm(
+          this.locale.current === 'th' ? 'ยังไม่ได้บันทึก' : 'Unsaved changes',
+          this.locale.current === 'th' ? 'ต้องการปิดโดยไม่บันทึกการแก้ไขหรือไม่?' : 'Close without saving your changes?',
+          this.locale.current === 'th' ? 'ปิด' : 'Close',
+          this.locale.current === 'th' ? 'กลับไปแก้ไข' : 'Keep editing'
+        );
+        if (!ok) return;
+      }
+      this.$emit('close');
     },
 
     async save() {

@@ -9,8 +9,10 @@ const repo = require('./repositories/product.repo');
 const { logEvent: logDowntimeEvent } = require('./services/downtimeLog.service');
 const { logEvent: logDowntimeEventProduct } = require('./services/downtimeProduct.service');
 
-const PLC_HOST = '192.168.3.250';
-const PLC_PORT = 502;
+// อ่านจาก .env (โหลดแล้วตอน require('./models')) ถ้าไม่ตั้งไว้ใช้ค่าเดิม
+const PLC_HOST = process.env.PLC_HOST || '192.168.3.250';
+const PLC_PORT = parseInt(process.env.PLC_PORT, 10) || 502;
+const OPERATION_INTERVAL_MS = 1000;
 const POLLER_COMPANY_ID = parseInt(process.env.POLLER_COMPANY_ID, 10) || 1;
 const MODBUS_UNIT_ID = 0;
 const BULK_INSERT_INTERVAL_MS = 2000;
@@ -83,6 +85,22 @@ function enqueueDisconnectedLogs(groupItems) {
   });
 }
 
+function isModbusException(err) {
+  return err && err.err === 'ModbusException';
+}
+
+function describeModbusError(err) {
+  if (!err) return 'Unknown error';
+  if (err.err === 'Timeout') return 'PLC did not respond (timeout)';
+  if (isModbusException(err)) return `PLC rejected the request (${err.message || 'Modbus exception'})`;
+  return err.message || err.err || String(err);
+}
+
+function dropConnection() {
+  state.isPlcConnected = false;
+  if (state.socket) state.socket.destroy();
+}
+
 async function readModbusValue(plcAddr) {
   const { address, isBit } = parsePlcAddress(plcAddr);
 
@@ -110,11 +128,12 @@ async function pollGroup(groupItems) {
     );
     results.forEach(r => { roundResults[r.plcAddr] = r.val; });
   } catch (err) {
-    state.isPlcConnected = false;
-    console.error('Polling Error:', err.message);
+    console.error('Polling Error:', describeModbusError(err));
+    // PLC ตอบ exception (เช่น address ผิด) = ยังต่ออยู่ → ข้ามรอบนี้
+    // timeout / connection พัง → ปิด socket ให้ 'close' ต่อใหม่ (เดิมค้าง offline จนกว่าจะรีสตาร์ท)
+    if (!isModbusException(err)) dropConnection();
     return;
   }
-  getOpertionTime();
   const now = new Date();
   groupItems.forEach(item => {
     const rawVal = roundResults[item.plc_address];
@@ -255,14 +274,24 @@ async function reloadPolling() {
   console.log('System: Intervals cleared, waiting for PLC reconnect.');
 }
 
+class PlcError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function readSingleAddress(plcAddr) {
-  if (!state.isPlcConnected || !state.client) throw new Error('PLC not connected');
+  if (!state.isPlcConnected || !state.client) {
+    throw new PlcError(`PLC is not connected (${PLC_HOST}:${PLC_PORT})`, 503);
+  }
 
   try {
     return await readModbusValue(plcAddr);
   } catch (err) {
-    console.error(`Single Read Error [${plcAddr}]:`, err.message);
-    throw err;
+    const message = describeModbusError(err);
+    console.error(`Single Read Error [${plcAddr}]:`, message);
+    throw new PlcError(message, isModbusException(err) ? 400 : 504);
   }
 }
 
@@ -313,6 +342,8 @@ function startPollWorker() {
   state.client = new Modbus.client.TCP(state.socket, MODBUS_UNIT_ID);
 
   setInterval(flushBufferToDb, BULK_INSERT_INTERVAL_MS);
+  // ยอดผลิต / downtime อ่านรอบละครั้ง (เดิมเรียกทุก polling group → หลาย group ทำให้นับยอดซ้ำ)
+  setInterval(runOperationTime, OPERATION_INTERVAL_MS);
 
   const connectPLC = () => {
     console.log('Connecting to PLC', PLC_HOST);
@@ -341,6 +372,17 @@ function startPollWorker() {
 
 let prevComplete = 0;
 let prevReject = 0;
+let operationRunning = false;
+
+async function runOperationTime() {
+  if (!state.isPlcConnected || operationRunning) return;
+  operationRunning = true;
+  try {
+    await getOpertionTime();
+  } finally {
+    operationRunning = false;
+  }
+}
 const { Product } = require('./models');
 
 async function getOpertionTime() {
@@ -473,7 +515,12 @@ async function getOpertionTime() {
     console.error("🔥 getOpertionTime ERROR:", err);
   }
 }
-module.exports = { startPollWorker, reloadPolling, readSingleAddress, writeSingleAddress, isPlcConnected: () => state.isPlcConnected };
+module.exports = {
+  startPollWorker, reloadPolling, readSingleAddress, writeSingleAddress,
+  isPlcConnected: () => state.isPlcConnected,
+  // สำหรับเทสต์
+  _internal: { state, pollGroup, runOperationTime, isModbusException, describeModbusError }
+};
 
 if (require.main === module) {
   startPollWorker();

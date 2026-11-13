@@ -57,6 +57,13 @@ exports.checkTab = (tabName) => {
   };
 };
 
+// requireTabForWrite('setting') — อ่าน (GET) ได้ทุกคนที่ login แต่เพิ่ม/แก้/ลบ ต้องมีสิทธิ์ tab นั้น
+// (ข้อมูลอย่าง devices / rooms ถูกอ่านจากหลายหน้า จึงกันเฉพาะการเขียน)
+exports.requireTabForWrite = (tabName) => {
+  const check = exports.checkTab(tabName);
+  return (req, res, next) => (req.method === 'GET' ? next() : check(req, res, next));
+};
+
 // checkScope('edit') — ตรวจว่า user มีสิทธิ์ action นั้น
 exports.checkScope = (scopeName) => {
   return async (req, res, next) => {

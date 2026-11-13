@@ -110,7 +110,12 @@
 
     <!-- Chart -->
     <div class="chart-area border rounded p-3">
+      <div v-if="!chartComponent" class="text-center text-muted py-5">
+        {{ locale.current === 'th' ? 'ไม่รองรับกราฟสำหรับประเภทนี้' : 'Chart is not available for this type' }}
+        ({{ device?.display_type || '-' }})
+      </div>
       <component 
+        v-else
         :is="chartComponent" 
         :device="device" 
         :start-date="appliedStartDate" 

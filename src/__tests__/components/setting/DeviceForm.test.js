@@ -1610,3 +1610,12 @@ describe("DeviceForm > alarm regression", () => {
     expect(() => wrapper.vm.validateBeforeSave()).toThrow("อย่างน้อย 1");
   });
 });
+
+// ─── Regression 11/11/69 ───────────────────────────────────────
+describe("DeviceForm > empty address regression", () => {
+  it("ไม่มี Address เลย → บันทึกไม่ได้", () => {
+    const wrapper = mountForm();
+    wrapper.vm.form = { name: "D1", device_type_id: 1, addresses: [] };
+    expect(() => wrapper.vm.validateBeforeSave()).toThrow("Address");
+  });
+});

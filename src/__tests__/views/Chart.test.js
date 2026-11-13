@@ -619,3 +619,11 @@ describe('date validation regression', () => {
     expect(wrapper.vm.filterApplied).toBe(1);
   });
 });
+
+// ─── Regression 10/11/69 ───────────────────────────────────────
+describe('unsupported type regression', () => {
+  it('ประเภทที่ไม่รองรับ → มีข้อความบอก ไม่ว่างเปล่า', () => {
+    const wrapper = mountChart({ device: makeDevice({ display_type: 'unknown_type' }) });
+    expect(wrapper.find('.chart-area').text()).toContain('Chart is not available');
+  });
+});

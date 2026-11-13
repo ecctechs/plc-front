@@ -1028,3 +1028,12 @@ describe('display regression', () => {
     expect(wrapper.vm.getGaugeHighlights(addr)[0].color).toBe('#ffc107');
   });
 });
+
+// ─── Regression 10/11/69 ───────────────────────────────────────
+describe('gauge ticks regression', () => {
+  it('Min เท่ากับ Max → สเกลไม่ซ้ำกันทั้งหมด', () => {
+    const wrapper = mountComp();
+    const ticks = wrapper.vm.generateTicks(0, 0);
+    expect(new Set(ticks).size).toBeGreaterThan(1);
+  });
+});

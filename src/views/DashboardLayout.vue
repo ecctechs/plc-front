@@ -94,7 +94,7 @@ export default {
       let result = [...this.devices];
 
       if (this.allowedRoomIds !== null) {
-        result = result.filter(d => this.allowedRoomIds.includes(d.device?.room_id));
+        result = result.filter(d => this.isAllowedRoom(d.device?.room_id));
       }
 
       if (this.filters.room) {
@@ -125,18 +125,29 @@ export default {
     async loadFilters() {
       try {
         const roomsRes = await fetch(`${BASE_API}/api/rooms`, { headers: authH() });
+        if (!roomsRes.ok) throw new Error('Failed to load rooms');
         const roomsData = await roomsRes.json();
         const allRooms = roomsData.data || [];
         this.rooms = this.allowedRoomIds !== null
-          ? allRooms.filter(r => this.allowedRoomIds.includes(r.id))
+          ? allRooms.filter(r => this.isAllowedRoom(r.id))
           : allRooms;
 
         const typesRes = await fetch(`${BASE_API}/api/device-types`, { headers: authH() });
+        if (!typesRes.ok) throw new Error('Failed to load device types');
         const typesData = await typesRes.json();
         this.deviceTypes = typesData.data || [];
       } catch (err) {
         console.error('Failed to load filters:', err);
+        await showAlert(
+          this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error',
+          this.locale.current === 'th' ? 'โหลดตัวกรองห้อง / ประเภทไม่สำเร็จ' : 'Failed to load room / type filters',
+          'error'
+        );
       }
+    },
+    // id ห้องอาจมาเป็นข้อความหรือตัวเลข → เทียบเป็นตัวเลข
+    isAllowedRoom(roomId) {
+      return roomId != null && this.allowedRoomIds.some(id => Number(id) === Number(roomId));
     },
     applyFilters() {
       // Filters are reactive, computed property will update automatically

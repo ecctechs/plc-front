@@ -382,7 +382,7 @@ export default {
         this.$emit('update-device', { address_id: element.address_id, value: newValue })
       } catch (error) {
         console.error('Failed to write to PLC:', error)
-        alert('Failed to write to PLC: ' + error.message)
+        await showAlert(this.locale.current === 'th' ? 'สั่ง PLC ไม่สำเร็จ' : 'PLC write failed', error.message, 'error')
       } finally {
         this.writingAddresses.delete(element.address_id)
       }
@@ -435,7 +435,7 @@ export default {
         this.$emit('update-device', { address_id: addressId, value: value })
       } catch (error) {
         console.error('Failed to write to PLC:', error)
-        alert('Failed to write to PLC: ' + error.message)
+        await showAlert(this.locale.current === 'th' ? 'สั่ง PLC ไม่สำเร็จ' : 'PLC write failed', error.message, 'error')
       } finally {
         this.writingAddresses.delete(addressId)
       }
@@ -483,7 +483,7 @@ export default {
         this.$emit('update-device', { address_id: element.address_id, value: newValue ? 1 : 0 })
       } catch (error) {
         console.error('Failed to write to PLC:', error)
-        alert('Failed to write to PLC: ' + error.message)
+        await showAlert(this.locale.current === 'th' ? 'สั่ง PLC ไม่สำเร็จ' : 'PLC write failed', error.message, 'error')
       }
     }
   },

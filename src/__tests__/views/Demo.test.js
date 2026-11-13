@@ -214,11 +214,12 @@ describe('onInputChange()', () => {
     expect(wrapper.emitted('update-device')[0][0].value).toBe(0);
   });
 
-  it('uses 0 when newValue is undefined (parseFloat(undefined)=NaN || 0 = 0)', () => {
+  it('newValue ว่าง / undefined → ยังไม่ส่งค่า (กำลังพิมพ์ใหม่)', () => {
     const device = makeDevice({ data_type: 'number', address_id: 1, min: 0, max: 100 });
     const wrapper = mountComp({ isSimulate: true });
     wrapper.vm.onInputChange(device, undefined);
-    expect(wrapper.emitted('update-device')[0][0].value).toBe(0);
+    wrapper.vm.onInputChange(device, '');
+    expect(wrapper.emitted('update-device')).toBeUndefined();
   });
 
   it('emits correct address_id for non-onoff device', () => {
@@ -521,5 +522,19 @@ describe('onInputChange regression', () => {
     const wrapper = mountComp({ isSimulate: true });
     wrapper.vm.onInputChange(makeDevice({ data_type: 'number', min: 100, max: 0 }), '50');
     expect(wrapper.emitted('update-device')[0][0].value).toBe(50);
+  });
+});
+
+// ─── Regression 11/11/69 ───────────────────────────────────────
+describe('formatTime regression', () => {
+  it('timestamp 0 แสดงเวลา ไม่ใช่ "-"', () => {
+    const wrapper = mountComp();
+    expect(wrapper.vm.formatTime(0)).not.toBe('-');
+  });
+
+  it('ไม่มีค่า / ค่าผิด → "-"', () => {
+    const wrapper = mountComp();
+    expect(wrapper.vm.formatTime(null)).toBe('-');
+    expect(wrapper.vm.formatTime('not-a-date')).toBe('-');
   });
 });

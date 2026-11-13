@@ -749,3 +749,28 @@ describe("RoleSettingModal > double delete regression", () => {
     expect(wrapper.vm.deletingRole).toBe(false);
   });
 });
+
+// ─── Regression 11/11/69 ───────────────────────────────────────
+describe("RoleSettingModal > close confirm regression", () => {
+  it("ไม่ได้เปิดฟอร์ม → ปิดได้ทันที", async () => {
+    const wrapper = mountModal();
+    await flushPromises();
+    showConfirm.mockClear();
+    await wrapper.vm.requestClose();
+    expect(showConfirm).not.toHaveBeenCalled();
+    expect(wrapper.emitted("close")).toHaveLength(1);
+  });
+
+  it("กรอกฟอร์มค้าง → ถามก่อน ถ้าเลือกกลับไปแก้ไขจะไม่ปิด", async () => {
+    const wrapper = mountModal();
+    await flushPromises();
+    wrapper.vm.openModal();
+    wrapper.vm.form.name = "New role";
+    showConfirm.mockClear();
+    showConfirm.mockResolvedValueOnce(false);
+    await wrapper.find(".rs-overlay").trigger("click");
+    await flushPromises();
+    expect(showConfirm).toHaveBeenCalled();
+    expect(wrapper.emitted("close")).toBeUndefined();
+  });
+});

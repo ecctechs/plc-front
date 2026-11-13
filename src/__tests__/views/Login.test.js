@@ -497,3 +497,15 @@ describe("Login > email / password regression", () => {
     expect(body.password).toBe(" secret123 ");
   });
 });
+
+// ─── Regression 11/11/69 ───────────────────────────────────────
+describe("Login > incomplete server response regression", () => {
+  it("มี token แต่ไม่มีข้อมูลผู้ใช้ → แจ้งว่า response ไม่ถูกต้อง ไม่ใช่ Connection error", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({ success: true, data: { token: "t" } }) });
+    const wrapper = mountLogin();
+    wrapper.vm.email = "a@b.com";
+    wrapper.vm.password = "secret123";
+    await wrapper.vm.onSubmit();
+    expect(wrapper.vm.errorMessage).toBe("Invalid response from server");
+  });
+});

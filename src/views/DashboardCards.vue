@@ -305,7 +305,9 @@ export default {
           
           if (canvasEl && !this.gauges[addr.address_id]) {
             const min = addr.numberConfig?.min_value ?? 0;
-            const max = addr.numberConfig?.max_value ?? 100;
+            // ตั้ง Max ไม่มากกว่า Min → เกจวาดไม่ได้ ใช้ Min + 1 แทน
+            const configMax = addr.numberConfig?.max_value ?? 100;
+            const max = configMax > min ? configMax : min + 1;
             const unitLabel = addr.numberConfig?.unit || ''; 
 
             const highlights = this.getGaugeHighlights(addr);
@@ -385,6 +387,7 @@ export default {
     },
 
     generateTicks(min, max) {
+      if (!(max > min)) max = min + 1;
       const ticks = [];
       const step = (max - min) / 5;
       for (let i = 0; i <= 5; i++) ticks.push((min + (step * i)).toFixed(0));

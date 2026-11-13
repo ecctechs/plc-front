@@ -1,6 +1,6 @@
 # เคส BUG ที่ยังเหลือจากเทสต์ที่ถูกลบ (commit 107b8ef)
 
-อัปเดต 6/11/69: นำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน เหลือ **32 ข้อ** ที่ยังไม่ได้แก้
+อัปเดต 13/11/69: นำเทสต์เวอร์ชันเดิม (`7ff76db`) มารันกับโค้ดปัจจุบัน เหลือ **19 ข้อ** ที่ยังไม่ได้แก้
 ส่วนใหญ่เป็นเรื่องเล็กหรือเกิดเฉพาะค่าผิดปกติ แต่ละข้อต้องดูโค้ดยืนยันก่อนแก้ เพราะบางข้อเทสต์คาดหวังผิด
 
 ดูเทสต์เดิมได้ด้วย `git show 7ff76db:<path ของไฟล์เทสต์>`
@@ -12,25 +12,6 @@
 - [BUG-3] onDeviceSaved(): emits add-device without device payload (inconsistent with addDevice)
 - [BUG-4] reloadDevices prop crashes after Setting is unmounted (dangling ref)
 - [BUG-5] openDeviceForm: no error handling when $refs.deviceFormModal.open() throws
-
-## date-utils (4)
-
-- [BUG-3] formatThaiYear('not-a-date') ควรคืน '' ไม่ใช่ NaN string (FAIL)
-- [BUG-4] formatISO('not-a-date') ควรคืน null ไม่ใช่ NaN string (FAIL)
-- [BUG-5] formatISO(new Date('invalid')) ควรคืน null (object truthy bypass guard) (FAIL)
-- [BUG-6] toUTC7(null) ควรคืน null หรือ Invalid Date ไม่ใช่ epoch+7h (FAIL)
-
-## Demo (3)
-
-- [BUG-1] isAuto() crashes when autoTimers is plain Object (not a Map)
-- [BUG-2] formatTime(0) returns "-" because 0 is falsy — misses Unix epoch timestamp
-- [BUG-5] clearing number input (value="") immediately emits min value without user confirmation
-
-## DashboardLayout (3)
-
-- [BUG-1] dashboardAddresses computed crashes because this.dashboardCards is undefined
-- [BUG-4] loadFilters does not check res.ok — silently processes error responses
-- [BUG-5] type mismatch: string allowedRoomIds fails to match numeric room_id
 
 ## StatusLamp (3)
 
@@ -44,19 +25,23 @@
 - [BUG-3] validate: confirmPassword empty message bypasses locale.t()
 - [BUG-4] validate: email with leading/trailing spaces fails valid-format check
 
+## DashboardLayout (2)
+
+- [BUG-1] dashboardAddresses computed crashes because this.dashboardCards is undefined
+- [BUG-4] loadFilters does not check res.ok — silently processes error responses
+
 ## Chart (2)
 
 - [BUG-1] unknown display_type renders blank chart area with no error message - should fallback
 - [BUG-4] filterApplied increments on every click even when filter unchanged
 
-## DashboardCards (2)
+## Demo (1)
+
+- [BUG-1] isAuto() crashes when autoTimers is plain Object (not a Map)
+
+## DashboardCards (1)
 
 - [BUG-3] Thai locale without .current property always shows English text
-- [BUG-5] generateTicks(0, 0) produces all-identical ticks (no min=max validation)
-
-## AddDashboardCardModal (1)
-
-- [BUG-2] editingCard.position=0 → || 1 falsy trap → selectedPosition เปลี่ยนเป็น 1 (FAIL)
 
 ## AddElementModal (1)
 
@@ -65,22 +50,6 @@
 ## RoleSettingModal (1)
 
 - 🔴 [BUG-4] ปิด outer modal ขณะมีข้อมูลใน form → ควรมี confirm ก่อน
-
-## Interaction (1)
-
-- [BUG-4] calculateSize returns 5 for size_width=0 due to || fallback (should be 0)
-
-## Login (1)
-
-- [BUG-6] server ส่ง token แต่ไม่มี user → ควรแสดง 'Invalid response' ไม่ใช่ 'Connection error' (FAIL)
-
-## GaugeDisplay (1)
-
-- [BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply
-
-## DeviceForm (1)
-
-- [BUG-4] form.addresses ว่าง → validateBeforeSave ต้อง throw (FAIL - ไม่มี check)
 
 ## ตัดออกแล้ว: ไม่ต้องแก้
 
@@ -110,3 +79,6 @@
 | AddDashboardCardModal | [BUG-4] non-JSON error response → SyntaxError message โชว์ถึง user แทน friendly msg (FAIL) | แก้แล้ว: ใช้ข้อความ fallback เทสต์เก่าคาดข้อความอื่น |
 | AddElementModal | [BUG-4] submit error ใช้ native alert() แทน showAlert → inconsistent UX (FAIL) | แก้แล้ว: ใช้ showAlert แทน alert |
 | Interaction | [BUG-5] fetchLayouts failure is silently swallowed — no error shown to user | แก้แล้ว: แจ้งด้วย showAlert เทสต์เก่าคาดให้ตั้งค่า error ซึ่งจะทำให้ทั้งหน้าหาย |
+| AddDashboardCardModal | [BUG-2] editingCard.position=0 → // 1 falsy trap → selectedPosition เปลี่ยนเป็น 1 (FAIL) | ไม่เกิดจริง: backend เริ่มตำแหน่งที่ 1 เสมอ |
+| Interaction | [BUG-4] calculateSize returns 5 for size_width=0 due to // fallback (should be 0) | ไม่แก้: ขนาด 0 = ยังไม่ได้ตั้ง ถ้าใช้ 0 จริง Element จะมองไม่เห็น |
+| GaugeDisplay | [BUG-4] updateGauge: gauge=null → หลัง initGauge ค่า newVal ควรถูก apply | ไม่เกิดจริง: ตอนสร้างเกจใช้ค่าปัจจุบันอยู่แล้ว |

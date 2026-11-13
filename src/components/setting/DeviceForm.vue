@@ -307,6 +307,7 @@ export default {
     validateBeforeSave() {
       if (!this.form.name || !this.form.name.trim()) throw new Error("กรุณาระบุชื่อ Device");
       if (!this.form.device_type_id) throw new Error("กรุณาเลือก Device Type");
+      if (!this.form.addresses || this.form.addresses.length === 0) throw new Error("กรุณาเพิ่ม Address อย่างน้อย 1 รายการ");
 
       for (const [idx, addr] of this.form.addresses.entries()) {
         const pointLabel = addr.label || `Point ${idx + 1}`;

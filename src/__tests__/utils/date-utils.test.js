@@ -176,3 +176,20 @@ describe("toUTC7", () => {
   });
 });
 
+
+// ─── Regression 11/11/69 ───────────────────────────────────────
+describe("invalid date regression", () => {
+  it("formatThaiYear วันที่ผิด → ''", () => {
+    expect(formatThaiYear("not-a-date")).toBe("");
+  });
+
+  it("formatISO วันที่ผิด → null", () => {
+    expect(formatISO("not-a-date")).toBeNull();
+    expect(formatISO(new Date("invalid"))).toBeNull();
+  });
+
+  it("toUTC7 null / วันที่ผิด → Invalid Date ไม่ใช่ปี 1970", () => {
+    expect(Number.isNaN(toUTC7(null).getTime())).toBe(true);
+    expect(Number.isNaN(toUTC7("x").getTime())).toBe(true);
+  });
+});

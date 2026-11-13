@@ -159,6 +159,8 @@ export default {
       if (device.data_type === 'onoff') {
         val = newValue && newValue !== 'false' && newValue !== '0' ? 1 : 0;
       } else {
+        // ช่องว่าง (กำลังลบเพื่อพิมพ์ใหม่) → ยังไม่ส่งค่า
+        if (newValue === '' || newValue === null || newValue === undefined) return;
         val = parseFloat(newValue) || 0;
         // ตั้ง Min มากกว่า Max มา → สลับให้ถูกก่อนตัดค่า
         const low = Math.min(device.min, device.max);
@@ -173,7 +175,9 @@ export default {
     },
 
     formatTime(ts) {
-      return ts ? new Date(ts).toLocaleTimeString() : '-';
+      if (ts === null || ts === undefined || ts === '') return '-';
+      const d = new Date(ts);
+      return Number.isNaN(d.getTime()) ? '-' : d.toLocaleTimeString();
     }
   }
 };

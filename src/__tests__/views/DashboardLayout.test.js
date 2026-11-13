@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import DashboardLayout from '../../views/DashboardLayout.vue';
 
@@ -55,8 +55,8 @@ function makeDevice(overrides = {}) {
 
 function setupFetch(rooms = MOCK_ROOMS, types = MOCK_TYPES) {
   mockFetch
-    .mockResolvedValueOnce({ json: async () => ({ data: rooms }) })
-    .mockResolvedValueOnce({ json: async () => ({ data: types }) });
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ data: rooms }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ data: types }) });
 }
 
 function mountComp(props = {}, locale = EN) {
@@ -734,6 +734,9 @@ describe('template rendering', () => {
 
 // ─── Regression 6/11/69 ────────────────────────────────────────
 describe('deleteCard regression', () => {
+  // เทสต์ในกลุ่มนี้เปลี่ยน fetch → คืนค่าเดิมให้เทสต์ถัดไป
+  afterEach(() => vi.stubGlobal('fetch', mockFetch));
+
   it('ลบไม่สำเร็จ → ไม่ emit delete-card และแจ้ง error', async () => {
     const { showAlert } = await import('../../utils/swalHelper');
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -752,5 +755,26 @@ describe('deleteCard regression', () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) })));
     await wrapper.vm.deleteCard({ card_id: 1 });
     expect(wrapper.emitted('delete-card')).toHaveLength(1);
+  });
+});
+
+// ─── Regression 10/11/69 ───────────────────────────────────────
+describe('filters + room permission regression', () => {
+  it('โหลดตัวกรองไม่สำเร็จ → แจ้งผู้ใช้', async () => {
+    const { showAlert } = await import('../../utils/swalHelper');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({ ok: false, json: async () => ({}) });
+    mountComp();
+    await flushPromises();
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'error');
+  });
+
+  it('สิทธิ์ห้องเป็นข้อความ "1" → ยังเห็นห้อง id 1', async () => {
+    const wrapper = mountComp({ allowedRoomIds: ['1'] });
+    await flushPromises();
+    expect(wrapper.vm.rooms.map(r => r.id)).toContain(1);
+    expect(wrapper.vm.isAllowedRoom(1)).toBe(true);
+    expect(wrapper.vm.isAllowedRoom(2)).toBe(false);
   });
 });

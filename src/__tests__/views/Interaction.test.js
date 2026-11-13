@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import Interaction from '../../views/Interaction.vue';
+import { showAlert } from '../../utils/swalHelper';
 
 // ─── Child component mocks ────────────────────────────────────────────────────
 vi.mock('../../components/interaction/StatusLamp.vue', () => ({
@@ -710,24 +711,24 @@ describe('writePlcValue()', () => {
     expect(wrapper.emitted('update-device')[0][0].value).toBe(1);
   });
 
-  it('non-simulate: calls alert when response not ok', async () => {
+  it('non-simulate: calls showAlert when response not ok', async () => {
     const device = makeDevice({ address_id: 1, plc_address: 'D100' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
     await wrapper.vm.writePlcValue(makeElement('control_button', { address_id: 1 }));
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed to write to PLC'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
   });
 
-  it('non-simulate: calls alert when fetch throws', async () => {
+  it('non-simulate: calls showAlert when fetch throws', async () => {
     const device = makeDevice({ address_id: 1, plc_address: 'D100' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockRejectedValueOnce(new Error('Connection refused'));
     await wrapper.vm.writePlcValue(makeElement('control_button', { address_id: 1 }));
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Connection refused'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('Connection refused'), 'error');
   });
 });
 
@@ -760,24 +761,24 @@ describe('handleNumberUpdate()', () => {
     expect(wrapper.emitted('update-device')[0][0]).toEqual({ address_id: 2, value: 55 });
   });
 
-  it('non-simulate: calls alert on fetch error', async () => {
+  it('non-simulate: calls showAlert on fetch error', async () => {
     const device = makeDevice({ address_id: 2, plc_address: 'W10' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockRejectedValueOnce(new Error('Timeout'));
     await wrapper.vm.handleNumberUpdate({ addressId: 2, value: 55 });
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Timeout'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('Timeout'), 'error');
   });
 
-  it('non-simulate: calls alert when response not ok', async () => {
+  it('non-simulate: calls showAlert when response not ok', async () => {
     const device = makeDevice({ address_id: 2, plc_address: 'W10' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
     await wrapper.vm.handleNumberUpdate({ addressId: 2, value: 55 });
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
   });
 });
 
@@ -819,24 +820,24 @@ describe('handleLampToggle()', () => {
     expect(wrapper.emitted('update-device')[0][0]).toEqual({ address_id: 1, value: 1 });
   });
 
-  it('non-simulate: calls alert when response not ok', async () => {
+  it('non-simulate: calls showAlert when response not ok', async () => {
     const device = makeDevice({ address_id: 1, plc_address: 'D100' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
     await wrapper.vm.handleLampToggle(makeElement('status_lamp', { address_id: 1 }), true);
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
   });
 
-  it('non-simulate: calls alert when fetch throws', async () => {
+  it('non-simulate: calls showAlert when fetch throws', async () => {
     const device = makeDevice({ address_id: 1, plc_address: 'D100' });
     const wrapper = mountComp({ devices: [device], isSimulate: false });
     await flushPromises();
     mockFetch.mockRejectedValueOnce(new Error('LAN down'));
     await wrapper.vm.handleLampToggle(makeElement('status_lamp', { address_id: 1 }), true);
     await flushPromises();
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('LAN down'));
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('LAN down'), 'error');
   });
 
   it('non-simulate: newValue=false → emits value=0 (covers ? 0 branch on lines 450, 462, 465)', async () => {

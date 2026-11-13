@@ -128,7 +128,7 @@ export default {
         })
         const data = await res.json()
         if (res.ok && data.success) {
-          if (!data.data || !data.data.token) {
+          if (!data.data || !data.data.token || !data.data.user) {
             this.errorMessage = this.locale.t('Invalid response from server')
             return
           }

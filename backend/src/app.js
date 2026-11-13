@@ -15,6 +15,14 @@ app.use('/api/auth', require('../routes/auth.route'));
 app.use(authMiddleware.authenticate);
 app.use(tenantMiddleware.injectCompanyId);
 
+// ข้อมูลที่แก้ได้จากหน้า Setting เท่านั้น
+const settingWrite = perm.requireTabForWrite('setting');
+app.use(
+  ['/api/working-time', '/api/devices', '/api/device-types', '/api/rooms', '/api/products',
+   '/api/employees', '/api/addresses', '/api/alarms'],
+  settingWrite
+);
+
 app.use('/api/working-time', require('../routes/workingTime.route'));
 app.use('/api/devices',      require('../routes/device.route'));
 app.use('/api',              require('../routes/deviceAlarm.route'));

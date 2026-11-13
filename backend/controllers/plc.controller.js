@@ -18,7 +18,7 @@ exports.read = async (req, res) => {
     res.json({ value });
   } catch (err) {
     console.error('PLC READ ERROR:', err.message);
-    res.status(500).json({ message: 'Read failed' });
+    res.status(err.status || 500).json({ message: err.message || 'Read failed' });
   }
 };
 

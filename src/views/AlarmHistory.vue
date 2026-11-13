@@ -355,7 +355,7 @@ export default {
       if (this.allowedRoomIds !== null) {
         result = result.filter(item => {
           const roomId = item.device?.room?.id
-          return roomId != null && this.allowedRoomIds.includes(roomId)
+          return roomId != null && this.allowedRoomIds.some(id => Number(id) === Number(roomId))
         });
       }
 
@@ -583,7 +583,7 @@ export default {
         const data = await res.json();
         const allRooms = data.data || [];
         this.rooms = this.allowedRoomIds !== null
-          ? allRooms.filter(r => this.allowedRoomIds.includes(r.id))
+          ? allRooms.filter(r => this.allowedRoomIds.some(id => Number(id) === Number(r.id)))
           : allRooms;
       } catch (err) {
         console.error("Load rooms error:", err);
