@@ -1,5 +1,10 @@
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
+// โหลด .env.<NODE_ENV> ก่อน require module อื่น — ไม่งั้น module ที่อ่าน env ตอนโหลด (เช่น auth.middleware) จะได้ค่า undefined
+require('dotenv').config({
+  path: require('path').resolve(__dirname, '..', `.env.${process.env.NODE_ENV}`)
+});
+
 const app = require('./app');
 
 const { startPollWorker } = require('../plcPoller');
