@@ -120,11 +120,14 @@ function makeDevice(overrides = {}) {
   };
 }
 
+// รายการ layout ที่มีอยู่ — component จะเลือกตัวแรก (id 3) ตอน mount
+const DEFAULT_LAYOUTS = [{ id: 3, name: 'L3' }];
+
 function okJson(data) {
   return { ok: true, json: vi.fn().mockResolvedValue(data) };
 }
 
-function setupFetch(layouts = [], layoutData = makeLayout()) {
+function setupFetch(layouts = DEFAULT_LAYOUTS, layoutData = makeLayout()) {
   mockFetch.mockReset();
   mockFetch
     .mockResolvedValueOnce(okJson(layouts))
@@ -177,7 +180,7 @@ describe('computed: containerStyle', () => {
   });
 
   it('returns style object with aspectRatio and backgroundImage when layoutData is set', async () => {
-    setupFetch([], makeLayout({ aspect_ratio_width: 16, aspect_ratio_height: 9 }));
+    setupFetch(DEFAULT_LAYOUTS, makeLayout({ aspect_ratio_width: 16, aspect_ratio_height: 9 }));
     const wrapper = mountComp();
     await flushPromises();
     wrapper.vm.backgroundImage = 'http://img.png';
@@ -252,13 +255,32 @@ describe('mounted', () => {
     );
   });
 
-  it('calls fetchLayoutData with selectedLayoutId=3 on mount', async () => {
-    mountComp();
+  it('selects the first available layout on mount and fetches it', async () => {
+    setupFetch([{ id: 7, name: 'L7' }, { id: 9, name: 'L9' }]);
+    const wrapper = mountComp();
     await flushPromises();
+    expect(wrapper.vm.selectedLayoutId).toBe(7);
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/interaction/layouts/3'),
+      expect.stringContaining('/api/interaction/layouts/7'),
       expect.any(Object)
     );
+  });
+
+  it('plcWriteErrorMessage maps HTTP status to a readable message', () => {
+    const vm = mountComp().vm;
+    expect(vm.plcWriteErrorMessage(403)).toBe('You do not have permission to control this machine');
+    expect(vm.plcWriteErrorMessage(401)).toBe('You do not have permission to control this machine');
+    expect(vm.plcWriteErrorMessage(400)).toBe('Invalid PLC address or value');
+    expect(vm.plcWriteErrorMessage(500)).toBe('Cannot write to PLC. Please check the PLC connection');
+    expect(vm.plcWriteErrorMessage(404)).toBe('Cannot write to PLC. Please check the PLC connection');
+  });
+
+  it('shows "no layouts" message (no layout fetch) when the company has no layouts', async () => {
+    setupFetch([]);
+    const wrapper = mountComp();
+    await flushPromises();
+    expect(wrapper.vm.error).toBe('No layouts yet. Please create a layout first');
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it('calls updatePlcValuesFromDevices with initial devices on mount', async () => {
@@ -436,7 +458,7 @@ describe('fetchLayoutData()', () => {
 
   it('sets layoutData from API response', async () => {
     const layout = makeLayout({ name: 'My Layout' });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp();
     await flushPromises();
     expect(wrapper.vm.layoutData.name).toBe('My Layout');
@@ -444,7 +466,7 @@ describe('fetchLayoutData()', () => {
 
   it('sets backgroundImage when machine_image is present', async () => {
     const layout = makeLayout({ machine_image: 'http://img.test/bg.png' });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp();
     await flushPromises();
     expect(wrapper.vm.backgroundImage).toBe('http://img.test/bg.png');
@@ -452,7 +474,7 @@ describe('fetchLayoutData()', () => {
 
   it('does not change backgroundImage when machine_image is absent', async () => {
     const layout = makeLayout({ machine_image: null });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp();
     wrapper.vm.backgroundImage = 'existing.png';
     await flushPromises();
@@ -462,7 +484,7 @@ describe('fetchLayoutData()', () => {
   it('sets error message on fetch rejection', async () => {
     mockFetch.mockReset();
     mockFetch
-      .mockResolvedValueOnce(okJson([]))
+      .mockResolvedValueOnce(okJson(DEFAULT_LAYOUTS))
       .mockRejectedValueOnce(new Error('Fetch failed'));
     const wrapper = mountComp();
     await flushPromises();
@@ -472,17 +494,17 @@ describe('fetchLayoutData()', () => {
   it('sets error message when response not ok', async () => {
     mockFetch.mockReset();
     mockFetch
-      .mockResolvedValueOnce(okJson([]))
+      .mockResolvedValueOnce(okJson(DEFAULT_LAYOUTS))
       .mockResolvedValueOnce({ ok: false, status: 404 });
     const wrapper = mountComp();
     await flushPromises();
-    expect(wrapper.vm.error).toContain('404');
+    expect(wrapper.vm.error).toBe('Layout not found. Please select another layout');
   });
 
   it('always sets loading=false in finally block', async () => {
     mockFetch.mockReset();
     mockFetch
-      .mockResolvedValueOnce(okJson([]))
+      .mockResolvedValueOnce(okJson(DEFAULT_LAYOUTS))
       .mockRejectedValueOnce(new Error('Err'));
     const wrapper = mountComp();
     await flushPromises();
@@ -718,7 +740,7 @@ describe('writePlcValue()', () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
     await wrapper.vm.writePlcValue(makeElement('control_button', { address_id: 1 }));
     await flushPromises();
-    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), 'Cannot write to PLC. Please check the PLC connection', 'error');
   });
 
   it('non-simulate: calls showAlert when fetch throws', async () => {
@@ -778,7 +800,7 @@ describe('handleNumberUpdate()', () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
     await wrapper.vm.handleNumberUpdate({ addressId: 2, value: 55 });
     await flushPromises();
-    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), 'Cannot write to PLC. Please check the PLC connection', 'error');
   });
 });
 
@@ -827,7 +849,7 @@ describe('handleLampToggle()', () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
     await wrapper.vm.handleLampToggle(makeElement('status_lamp', { address_id: 1 }), true);
     await flushPromises();
-    expect(showAlert).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('HTTP error'), 'error');
+    expect(showAlert).toHaveBeenCalledWith(expect.any(String), 'Cannot write to PLC. Please check the PLC connection', 'error');
   });
 
   it('non-simulate: calls showAlert when fetch throws', async () => {
@@ -863,7 +885,7 @@ describe('template rendering', () => {
   it('shows error div when error is set', async () => {
     mockFetch.mockReset();
     mockFetch
-      .mockResolvedValueOnce(okJson([]))
+      .mockResolvedValueOnce(okJson(DEFAULT_LAYOUTS))
       .mockRejectedValueOnce(new Error('Server error'));
     const wrapper = mountComp();
     await flushPromises();
@@ -892,7 +914,7 @@ describe('template rendering', () => {
 
   it('renders StatusLamp for status_lamp element', async () => {
     const layout = makeLayout({ elements: [makeElement('status_lamp', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp({ devices: [makeDevice({ address_id: 1 })] });
     await flushPromises();
     expect(wrapper.find('.status-lamp-stub').exists()).toBe(true);
@@ -900,7 +922,7 @@ describe('template rendering', () => {
 
   it('renders NumberDisplay for number_display element', async () => {
     const layout = makeLayout({ elements: [makeElement('number_display', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp({ devices: [makeDevice({ address_id: 1 })] });
     await flushPromises();
     expect(wrapper.find('.number-display-stub').exists()).toBe(true);
@@ -908,7 +930,7 @@ describe('template rendering', () => {
 
   it('renders GaugeDisplay for gauge_display element', async () => {
     const layout = makeLayout({ elements: [makeElement('gauge_display', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp({ devices: [makeDevice({ address_id: 1 })] });
     await flushPromises();
     expect(wrapper.find('.gauge-display-stub').exists()).toBe(true);
@@ -916,7 +938,7 @@ describe('template rendering', () => {
 
   it('renders ControlButton for control_button element', async () => {
     const layout = makeLayout({ elements: [makeElement('control_button', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp({ devices: [makeDevice({ address_id: 1 })] });
     await flushPromises();
     expect(wrapper.find('.control-button-stub').exists()).toBe(true);
@@ -924,7 +946,7 @@ describe('template rendering', () => {
 
   it('renders LevelProgressBar for level_progress_bar element', async () => {
     const layout = makeLayout({ elements: [makeElement('level_progress_bar', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const wrapper = mountComp({ devices: [makeDevice({ address_id: 1 })] });
     await flushPromises();
     expect(wrapper.find('.level-progress-bar-stub').exists()).toBe(true);
@@ -956,7 +978,7 @@ describe('template rendering', () => {
 
   it('StatusLamp @toggle: canControlElement=true — arrow fn (line 53) invoked via VNode handler chain', async () => {
     const layout = makeLayout({ elements: [makeElement('status_lamp', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const device = makeDevice({ address_id: 1, plc_address: 'D1' });
     const wrapper = mountComp({ devices: [device], userRole: 'admin', isSimulate: true });
     await flushPromises();
@@ -978,7 +1000,7 @@ describe('template rendering', () => {
 
   it('StatusLamp @toggle: canControlElement=false sets undefined handler (no call)', async () => {
     const layout = makeLayout({ elements: [makeElement('status_lamp', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const device = makeDevice({ address_id: 1, plc_address: 'D1' });
     const wrapper = mountComp({ devices: [device], userRole: 'user', isSimulate: true });
     await flushPromises();
@@ -989,7 +1011,7 @@ describe('template rendering', () => {
 
   it('ControlButton @click: canControlElement=true calls writePlcValue', async () => {
     const layout = makeLayout({ elements: [makeElement('control_button', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const device = makeDevice({ address_id: 1, plc_address: 'D1' });
     const wrapper = mountComp({ devices: [device], userRole: 'admin', isSimulate: true });
     await flushPromises();
@@ -1000,7 +1022,7 @@ describe('template rendering', () => {
 
   it('ControlButton @click: canControlElement=false short-circuits (no write)', async () => {
     const layout = makeLayout({ elements: [makeElement('control_button', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const device = makeDevice({ address_id: 1, plc_address: 'D1' });
     const wrapper = mountComp({ devices: [device], userRole: 'user', isSimulate: true });
     await flushPromises();
@@ -1011,7 +1033,7 @@ describe('template rendering', () => {
 
   it('NumberDisplay @update-value triggers handleNumberUpdate', async () => {
     const layout = makeLayout({ elements: [makeElement('number_display', { address_id: 1 })] });
-    setupFetch([], layout);
+    setupFetch(DEFAULT_LAYOUTS, layout);
     const device = makeDevice({ address_id: 1, plc_address: 'D1' });
     const wrapper = mountComp({ devices: [device], isSimulate: true });
     await flushPromises();

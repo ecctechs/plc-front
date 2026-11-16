@@ -218,8 +218,13 @@
   "Affected Devices": "Affected Devices",
   "Top 5 Most Problematic Devices": "Top 5 Most Problematic Devices",
   "times": "times",
-  "min": "min",
   "Alarm History Trend": "Alarm History Trend",
   "Alarm Count": "Alarm Count",
-  "Downtime (sec)": "Downtime (sec)"
+  "Downtime (sec)": "Downtime (sec)",
+  "Failed to load layout": "Failed to load layout",
+  "Layout not found. Please select another layout": "Layout not found. Please select another layout",
+  "No layouts yet. Please create a layout first": "No layouts yet. Please create a layout first",
+  "You do not have permission to control this machine": "You do not have permission to control this machine",
+  "Invalid PLC address or value": "Invalid PLC address or value",
+  "Cannot write to PLC. Please check the PLC connection": "Cannot write to PLC. Please check the PLC connection"
 }

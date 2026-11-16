@@ -223,8 +223,13 @@
   "Affected Devices": "เครื่องที่มีปัญหา",
   "Top 5 Most Problematic Devices": "Top 5 เครื่องที่มีปัญหามากสุด",
   "times": "ครั้ง",
-  "min": "นาที",
   "Alarm History Trend": "แนวโน้มประวัติแจ้งเตือน",
   "Alarm Count": "จำนวนแจ้งเตือน",
-  "Downtime (sec)": "เวลาหยุด (วิ)"
+  "Downtime (sec)": "เวลาหยุด (วิ)",
+  "Failed to load layout": "โหลดเลย์เอาต์ไม่สำเร็จ",
+  "Layout not found. Please select another layout": "ไม่พบเลย์เอาต์นี้ กรุณาเลือกเลย์เอาต์อื่น",
+  "No layouts yet. Please create a layout first": "ยังไม่มีเลย์เอาต์ กรุณาสร้างเลย์เอาต์ก่อน",
+  "You do not have permission to control this machine": "คุณไม่มีสิทธิ์สั่งงานเครื่องจักรนี้",
+  "Invalid PLC address or value": "ที่อยู่ PLC หรือค่าที่ส่งไม่ถูกต้อง",
+  "Cannot write to PLC. Please check the PLC connection": "สั่งงาน PLC ไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ PLC"
 }

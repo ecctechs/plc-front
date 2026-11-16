@@ -172,7 +172,8 @@ export default {
       plcValues: {},
       backgroundImage: null,
       layouts: [],
-      selectedLayoutId: 3,
+      // เริ่มว่าง แล้วเลือก layout แรกหลังโหลดรายการ (เดิม hardcode 3 → 404 ถ้า DB ไม่มี id นี้)
+      selectedLayoutId: '',
       showAddElementModal: false,
       // address ที่กำลังส่งค่าไป PLC อยู่ — กันกดรัวแล้วยิงซ้ำ
       writingAddresses: new Set()
@@ -228,6 +229,12 @@ export default {
       const baseSize = element.size_width || 50
       return baseSize / 10
     },
+    // แปลง HTTP status ของ /api/plc/write เป็นข้อความที่ผู้ใช้เข้าใจ
+    plcWriteErrorMessage(status) {
+      if (status === 401 || status === 403) return this.locale.t('You do not have permission to control this machine')
+      if (status === 400) return this.locale.t('Invalid PLC address or value')
+      return this.locale.t('Cannot write to PLC. Please check the PLC connection')
+    },
     getValue(addressId) {
       if (addressId === null || addressId === undefined) return 0
       return this.plcValues[addressId] ?? 0
@@ -237,10 +244,11 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/interaction/layouts`, { headers: authH() })
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(this.locale.t('Failed to load layout'))
         }
-        
+
         this.layouts = await response.json()
+        return true
       } catch (error) {
         console.error('Failed to fetch layouts:', error)
         await showAlert(
@@ -248,6 +256,7 @@ export default {
           this.locale.current === 'th' ? 'โหลดรายการ Layout ไม่สำเร็จ' : 'Failed to load layouts',
           'error'
         )
+        return false
       }
     },
     onLayoutChange() {
@@ -272,9 +281,11 @@ export default {
         const response = await fetch(`${API_BASE_URL}/api/interaction/layouts/${id}`, { headers: authH() })
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(this.locale.t(response.status === 404
+            ? 'Layout not found. Please select another layout'
+            : 'Failed to load layout'))
         }
-        
+
         this.layoutData = await response.json()
         
         // Set background image from API response
@@ -369,7 +380,7 @@ export default {
         })
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(this.plcWriteErrorMessage(response.status))
         }
 
         const result = await response.json()
@@ -422,7 +433,7 @@ export default {
         })
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(this.plcWriteErrorMessage(response.status))
         }
 
         const result = await response.json()
@@ -470,7 +481,7 @@ export default {
         })
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(this.plcWriteErrorMessage(response.status))
         }
 
         const result = await response.json()
@@ -487,10 +498,18 @@ export default {
       }
     }
   },
-  mounted() {
-    this.fetchLayouts()
-    this.fetchLayoutData()
+  async mounted() {
     this.updatePlcValuesFromDevices(this.devices)
+    const loaded = await this.fetchLayouts()
+    // ยังไม่ได้เลือก → ใช้ layout แรกที่มีจริง
+    if (!this.selectedLayoutId && this.layouts.length) {
+      this.selectedLayoutId = this.layouts[0].id
+    }
+    // โหลดสำเร็จแต่ไม่มี layout เลย (ถ้าโหลดพัง showAlert แจ้งไปแล้ว)
+    if (loaded && !this.layouts.length) {
+      this.error = this.locale.t('No layouts yet. Please create a layout first')
+    }
+    this.fetchLayoutData()
   },
   beforeUnmount() {
     if (this.pollingInterval) {
