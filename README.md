@@ -84,7 +84,7 @@
 
 | Category | Technology |
 | :--- | :--- |
-| **Frontend** | Vue 3 (Composition API), Vite |
+| **Frontend** | Vue 3 (Options API), Vite |
 | **Styling** | Bootstrap 5 (Modern Industrial Theme) |
 | **UI Framework** | Font Awesome 6, SweetAlert2 |
 | **Charts** | Chart.js, ApexCharts, Canvas-gauges |
