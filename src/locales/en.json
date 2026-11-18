@@ -226,5 +226,18 @@
   "No layouts yet. Please create a layout first": "No layouts yet. Please create a layout first",
   "You do not have permission to control this machine": "You do not have permission to control this machine",
   "Invalid PLC address or value": "Invalid PLC address or value",
-  "Cannot write to PLC. Please check the PLC connection": "Cannot write to PLC. Please check the PLC connection"
+  "Cannot write to PLC. Please check the PLC connection": "Cannot write to PLC. Please check the PLC connection",
+  "Error": "Error",
+  "Success": "Success",
+  "Failed to update user": "Failed to update user",
+  "Failed to update user status": "Failed to update user status",
+  "Failed to reset password": "Failed to reset password",
+  "Failed to load roles": "Failed to load roles",
+  "Failed to save role": "Failed to save role",
+  "Failed to delete role": "Failed to delete role",
+  "Failed to change password": "Failed to change password",
+  "You do not have permission to save this element": "You do not have permission to save this element",
+  "Invalid element data. Please check the form": "Invalid element data. Please check the form",
+  "Element not found. It may have been deleted": "Element not found. It may have been deleted",
+  "Failed to save element": "Failed to save element"
 }

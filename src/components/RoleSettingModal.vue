@@ -332,7 +332,7 @@ export default {
         this.roles = json.data || [];
       } catch (err) {
         console.error(err);
-        await showAlert('Error', 'Cannot load roles', 'error');
+        await showAlert(this.locale.t('Error'), this.locale.t('Failed to load roles'), 'error');
       } finally {
         this.loadingList = false;
       }
@@ -379,7 +379,7 @@ export default {
 
     async save() {
       if (!this.form.name.trim()) {
-        await showAlert('Error', this.locale.current === 'th' ? 'กรุณากรอกชื่อบทบาท' : 'Role name is required', 'warning');
+        await showAlert(this.locale.t('Error'), this.locale.current === 'th' ? 'กรุณากรอกชื่อบทบาท' : 'Role name is required', 'warning');
         return;
       }
       this.loading = true;
@@ -395,13 +395,13 @@ export default {
         if (this.isEdit) body.is_active = this.form.is_active;
 
         const res = await fetch(url, { method: this.isEdit ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(body) });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Save failed'); }
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to save role')); }
 
-        await showAlert('Success', this.locale.current === 'th' ? 'บันทึกบทบาทสำเร็จ' : 'Role saved successfully', 'success');
+        await showAlert(this.locale.t('Success'), this.locale.current === 'th' ? 'บันทึกบทบาทสำเร็จ' : 'Role saved successfully', 'success');
         this.closeModal();
         this.loadRoles();
       } catch (err) {
-        await showAlert('Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       } finally {
         this.loading = false;
       }
@@ -428,11 +428,11 @@ export default {
       if (!ok) return;
       try {
         const res = await fetch(`${BASE_API}/api/settings/roles/${role.id}`, { method: 'DELETE', headers: authHeaders() });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Delete failed'); }
-        await showAlert('Success', this.locale.current === 'th' ? 'ลบบทบาทสำเร็จ' : 'Role deleted', 'success');
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to delete role')); }
+        await showAlert(this.locale.t('Success'), this.locale.current === 'th' ? 'ลบบทบาทสำเร็จ' : 'Role deleted', 'success');
         this.loadRoles();
       } catch (err) {
-        await showAlert('Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       }
     }
   }

@@ -231,5 +231,18 @@
   "No layouts yet. Please create a layout first": "ยังไม่มีเลย์เอาต์ กรุณาสร้างเลย์เอาต์ก่อน",
   "You do not have permission to control this machine": "คุณไม่มีสิทธิ์สั่งงานเครื่องจักรนี้",
   "Invalid PLC address or value": "ที่อยู่ PLC หรือค่าที่ส่งไม่ถูกต้อง",
-  "Cannot write to PLC. Please check the PLC connection": "สั่งงาน PLC ไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ PLC"
+  "Cannot write to PLC. Please check the PLC connection": "สั่งงาน PLC ไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ PLC",
+  "Error": "ข้อผิดพลาด",
+  "Success": "สำเร็จ",
+  "Failed to update user": "อัปเดตผู้ใช้ไม่สำเร็จ",
+  "Failed to update user status": "เปลี่ยนสถานะผู้ใช้ไม่สำเร็จ",
+  "Failed to reset password": "รีเซ็ตรหัสผ่านไม่สำเร็จ",
+  "Failed to load roles": "โหลดรายการบทบาทไม่สำเร็จ",
+  "Failed to save role": "บันทึกบทบาทไม่สำเร็จ",
+  "Failed to delete role": "ลบบทบาทไม่สำเร็จ",
+  "Failed to change password": "เปลี่ยนรหัสผ่านไม่สำเร็จ",
+  "You do not have permission to save this element": "คุณไม่มีสิทธิ์บันทึก Element นี้",
+  "Invalid element data. Please check the form": "ข้อมูล Element ไม่ถูกต้อง กรุณาตรวจสอบฟอร์ม",
+  "Element not found. It may have been deleted": "ไม่พบ Element นี้ อาจถูกลบไปแล้ว",
+  "Failed to save element": "บันทึก Element ไม่สำเร็จ"
 }

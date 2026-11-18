@@ -1027,7 +1027,7 @@ describe("UserSettingModal > Edit User", () => {
     });
     await wrapper.vm.saveEdit();
     await waitFor(() => {
-      expect(showAlert).toHaveBeenCalledWith("Error", "Update failed", "error");
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to update user", "error");
     });
   });
 });
@@ -1158,7 +1158,7 @@ describe("UserSettingModal > Toggle Active", () => {
     });
     await wrapper.vm.toggleActive(mockUsers[0]);
     await waitFor(() => {
-      expect(showAlert).toHaveBeenCalledWith("Error", "Failed", "error");
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to update user status", "error");
     });
   });
 });
@@ -1333,7 +1333,7 @@ describe("UserSettingModal > Reset Password", () => {
     });
     await wrapper.vm.confirmReset();
     await waitFor(() => {
-      expect(showAlert).toHaveBeenCalledWith("Error", "Reset failed", "error");
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to reset password", "error");
     });
   });
 });

@@ -250,7 +250,7 @@ export default {
           headers: { 'Content-Type': 'application/json', ...authH() },
           body: JSON.stringify({ current_password: this.pwForm.current, new_password: this.pwForm.newPw })
         });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Failed'); }
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to change password')); }
         await showAlert('', this.locale.current === 'th' ? 'เปลี่ยนรหัสผ่านสำเร็จ' : 'Password changed successfully', 'success');
         this.cancelMode();
       } catch (err) {

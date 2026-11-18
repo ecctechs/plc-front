@@ -549,7 +549,7 @@ describe('AddElementModal > submit(): Add Mode', () => {
     logSpy.mockRestore();
   });
 
-  it('POST !response.ok → throw Error → catch → showAlert', async () => {
+  it('POST !response.ok (500) → แสดงข้อความบันทึกไม่สำเร็จ', async () => {
     setupFetch({ elementResponse: { ok: false, status: 500, json: () => Promise.resolve({}) } });
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const wrapper = mountModal({}, EN);
@@ -557,7 +557,7 @@ describe('AddElementModal > submit(): Add Mode', () => {
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
     expect(spy).toHaveBeenCalledWith('Failed to save element:', expect.any(Error));
-    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('HTTP error'), 'error');
+    expect(showAlert).toHaveBeenCalledWith('Error', 'Failed to save element', 'error');
     spy.mockRestore();
   });
 
@@ -603,25 +603,21 @@ describe('AddElementModal > submit(): Edit Mode', () => {
     expect(wrapper.emitted('saved')).toBeTruthy();
   });
 
-  it('PUT !response.ok → catch → showAlert', async () => {
-    setupFetch({ elementResponse: { ok: false, status: 404, json: () => Promise.resolve({}) } });
+  // status → ข้อความที่ผู้ใช้อ่านเข้าใจ (ไม่ใช่ "HTTP error! status: N")
+  it.each([
+    [404, 'Element not found. It may have been deleted'],
+    [403, 'You do not have permission to save this element'],
+    [401, 'You do not have permission to save this element'],
+    [400, 'Invalid element data. Please check the form'],
+    [500, 'Failed to save element'],
+  ])('PUT !response.ok (%i) → showAlert "%s"', async (status, message) => {
+    setupFetch({ elementResponse: { ok: false, status, json: () => Promise.resolve({}) } });
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const wrapper = mountModal({ editData: baseEdit }, EN);
     await flushPromises();
     setValidForm(wrapper.vm);
     await wrapper.vm.submit();
-    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('HTTP error'), 'error');
-    spy.mockRestore();
-  });
-
-  it('isEdit → error message ใช้ response.status (HTTP error! status: 404)', async () => {
-    setupFetch({ elementResponse: { ok: false, status: 404, json: () => Promise.resolve({}) } });
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const wrapper = mountModal({ editData: baseEdit }, EN);
-    await flushPromises();
-    setValidForm(wrapper.vm);
-    await wrapper.vm.submit();
-    expect(showAlert).toHaveBeenCalledWith('Error', expect.stringContaining('404'), 'error');
+    expect(showAlert).toHaveBeenCalledWith('Error', message, 'error');
     spy.mockRestore();
   });
 });

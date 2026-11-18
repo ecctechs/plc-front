@@ -181,7 +181,7 @@ describe("RoleSettingModal > Load Roles", () => {
       global: { provide: { locale: mockLocaleEn }, stubs: { transition: false } },
     });
     await vi.waitFor(() =>
-      expect(showAlert).toHaveBeenCalledWith("Error", "Cannot load roles", "error")
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to load roles", "error")
     );
   });
 
@@ -591,7 +591,7 @@ describe("RoleSettingModal > Save", () => {
     );
   });
 
-  it("save ล้มเหลว API ไม่มี message → fallback 'Save failed'", async () => {
+  it("save ล้มเหลว API ไม่มี message → fallback 'Failed to save role'", async () => {
     const wrapper = mountModal();
     await wrapper.find(".btn-primary-minimal").trigger("click");
     wrapper.vm.form.name = "Bad Role";
@@ -601,7 +601,7 @@ describe("RoleSettingModal > Save", () => {
     });
     await wrapper.vm.save();
     await vi.waitFor(() =>
-      expect(showAlert).toHaveBeenCalledWith("Error", "Save failed", "error")
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to save role", "error")
     );
   });
 });
@@ -686,7 +686,7 @@ describe("RoleSettingModal > Delete", () => {
     );
   });
 
-  it("delete ล้มเหลว API ไม่มี message → fallback 'Delete failed'", async () => {
+  it("delete ล้มเหลว API ไม่มี message → fallback 'Failed to delete role'", async () => {
     const wrapper = mountModal();
     await vi.waitFor(() => expect(wrapper.vm.roles.length).toBe(2));
     showConfirm.mockResolvedValue(true);
@@ -696,7 +696,7 @@ describe("RoleSettingModal > Delete", () => {
     });
     await wrapper.vm.confirmDelete(mockRoles[0]);
     await vi.waitFor(() =>
-      expect(showAlert).toHaveBeenCalledWith("Error", "Delete failed", "error")
+      expect(showAlert).toHaveBeenCalledWith("Error", "Failed to delete role", "error")
     );
   });
 

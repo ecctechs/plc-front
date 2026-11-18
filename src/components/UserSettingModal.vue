@@ -378,7 +378,7 @@ export default {
         this.employees = (await empRes.json()).data || [];
       } catch (err) {
         console.error(err);
-        await showAlert('Error', this.locale.current === 'th' ? 'โหลดข้อมูลไม่สำเร็จ' : 'Cannot load data', 'error');
+        await showAlert(this.locale.t('Error'), this.locale.current === 'th' ? 'โหลดข้อมูลไม่สำเร็จ' : 'Cannot load data', 'error');
       } finally {
         this.loadingList = false;
         this.loadingRoles = false;
@@ -435,12 +435,12 @@ export default {
             rooms:       this.editForm.rooms
           })
         });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Update failed'); }
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to update user')); }
         await showAlert('', this.locale.current === 'th' ? 'อัปเดตผู้ใช้สำเร็จ' : 'User updated', 'success');
         this.showEditModal = false;
         this.loadAll();
       } catch (err) {
-        await showAlert('Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       } finally {
         this.savingEdit = false;
       }
@@ -463,11 +463,11 @@ export default {
           headers: { ...JSON_H, ...authHeader() },
           body: JSON.stringify({ is_active: !user.is_active })
         });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Failed'); }
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to update user status')); }
         await showAlert('', this.locale.current === 'th' ? 'อัปเดตสำเร็จ' : 'Updated', 'success');
         this.loadAll();
       } catch (err) {
-        await showAlert('Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       }
     },
 
@@ -494,11 +494,11 @@ export default {
           headers: { ...JSON_H, ...authHeader() },
           body: JSON.stringify({ password: this.resetPw })
         });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Reset failed'); }
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || this.locale.t('Failed to reset password')); }
         await showAlert('', this.locale.current === 'th' ? 'รีเซ็ตรหัสผ่านสำเร็จ' : 'Password reset successfully', 'success');
         this.showResetModal = false;
       } catch (err) {
-        await showAlert('Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       } finally {
         this.savingReset = false;
       }

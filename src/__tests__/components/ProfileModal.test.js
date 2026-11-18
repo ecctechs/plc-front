@@ -544,7 +544,7 @@ describe("ProfileModal > Save Password (Async)", () => {
     expect(wrapper.find(".err-text").text()).toBe("Current password is wrong");
   });
 
-  it("API ไม่มี message → แสดง 'Failed'", async () => {
+  it("API ไม่มี message → แสดง 'Failed to change password'", async () => {
     mockFetch.mockResolvedValue({
       ok: false,
       json: () => Promise.resolve({}),
@@ -556,7 +556,7 @@ describe("ProfileModal > Save Password (Async)", () => {
     await wrapper.find(".btn-save-action").trigger("click");
 
     await vi.waitFor(() => expect(wrapper.find(".err-text").exists()).toBe(true));
-    expect(wrapper.find(".err-text").text()).toBe("Failed");
+    expect(wrapper.find(".err-text").text()).toBe("Failed to change password");
   });
 });
 

@@ -290,6 +290,14 @@ export default {
       });
     },
 
+    // แปลง HTTP status ตอนบันทึก Element เป็นข้อความที่ผู้ใช้เข้าใจ
+    saveErrorMessage(status) {
+      if (status === 401 || status === 403) return this.locale.t('You do not have permission to save this element');
+      if (status === 400) return this.locale.t('Invalid element data. Please check the form');
+      if (status === 404) return this.locale.t('Element not found. It may have been deleted');
+      return this.locale.t('Failed to save element');
+    },
+
     async submit() {
       // กดรัว → ส่งครั้งเดียว
       if (this.saving) return;
@@ -318,7 +326,7 @@ export default {
 
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(this.saveErrorMessage(response.status));
         }
 
         const result = await response.json();
@@ -327,7 +335,7 @@ export default {
         this.$emit('saved', result);
       } catch (err) {
         console.error('Failed to save element:', err);
-        await showAlert(this.locale.current === 'th' ? 'ข้อผิดพลาด' : 'Error', err.message, 'error');
+        await showAlert(this.locale.t('Error'), err.message, 'error');
       } finally {
         this.saving = false;
       }
