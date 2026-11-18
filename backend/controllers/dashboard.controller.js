@@ -17,12 +17,12 @@ exports.createCard = async (req, res) => {
     const { address_id, display_type, position } = req.body;
 
     if (!address_id || !display_type) {
-      return res.status(400).json({ message: 'address_id and display_type are required' });
+      return res.status(400).json({ message: 'กรุณาเลือก Address และรูปแบบการแสดงผล' });
     }
 
     const address = await DeviceAddress.findByPk(address_id);
     if (!address) {
-      return res.status(404).json({ message: 'Address not found' });
+      return res.status(404).json({ message: 'ไม่พบ Address' });
     }
 
     let finalPosition;
@@ -62,7 +62,7 @@ exports.deleteCard = async (req, res) => {
     await dashboardService.deleteCard(id);
     await dashboardService.reindexAll(userId);
 
-    res.json({ success: true, message: 'Dashboard card deleted' });
+    res.json({ success: true, message: 'ลบการ์ดสำเร็จ' });
   } catch (err) {
     console.error(err);
     res.status(400).json({ success: false, message: err.message });
@@ -81,7 +81,7 @@ exports.updateCard = async (req, res) => {
     const position = selectedPosition;
 
     if (!device_id && !address_id && !display_type && position === undefined && !card_id) {
-      return res.status(400).json({ success: false, message: 'At least one field to update is required' });
+      return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลที่ต้องแก้ไข' });
     }
 
     const card = await dashboardService.updateCard(id, userId, {

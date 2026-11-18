@@ -20,7 +20,8 @@ function evaluateCondition(value, rule) {
 }
 
 // Process all alarm rules for a given address and value
-async function processAlarms(addressId, deviceId, value) {
+// companyId ใช้ตอนบันทึก Downtime (logEvent ตรวจว่า device เป็นของบริษัทนี้)
+async function processAlarms(addressId, deviceId, value, companyId) {
   // Value is already processed from plcPoller (applied offset/scale/decimal)
   // We still fetch address for potential future use, but use value directly
   const rules = await DeviceAlarmRule.findAll({
@@ -63,7 +64,8 @@ async function processAlarms(addressId, deviceId, value) {
               value: value
             }, { transaction: t });
 
-            await logDowntimeEvent(deviceId, 'START', rule.name, addressId);
+            // signature: (deviceId, eventType, companyId, reason, addressId) — เดิมส่ง rule.name ไปช่อง companyId → error → transaction rollback
+            await logDowntimeEvent(deviceId, 'START', companyId, rule.name, addressId);
           }
 
           const shouldSendEmail = (secondsSinceLastEmail === null) || (secondsSinceLastEmail >= (rule.repeat_interval_sec || 900));
@@ -118,7 +120,7 @@ async function processAlarms(addressId, deviceId, value) {
             value: value
           }, { transaction: t });
 
-          await logDowntimeEvent(deviceId, 'END', rule.name, addressId);
+          await logDowntimeEvent(deviceId, 'END', companyId, rule.name, addressId);
         }
       });
 

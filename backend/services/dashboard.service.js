@@ -50,11 +50,11 @@ exports.createCard = async (userId, payload, companyId) => {
   const { address_id, display_type } = payload;
 
   if (!address_id || !display_type) {
-    throw { status: 400, message: 'address_id and display_type are required' };
+    throw { status: 400, message: 'กรุณาเลือก Address และรูปแบบการแสดงผล' };
   }
 
   const exists = await dashboardRepo.findByUserAndAddress(userId, address_id);
-  if (exists) throw { status: 409, message: 'Card already exists' };
+  if (exists) throw { status: 409, message: 'การ์ดนี้มีอยู่แล้ว' };
 
   const nextPos = await dashboardRepo.getNextPosition(userId);
 
@@ -71,7 +71,7 @@ exports.createCard = async (userId, payload, companyId) => {
 exports.deleteCard = async (cardId) => {
   const card = await dashboardRepo.findById(cardId);
 
-  if (!card) throw new Error('Dashboard card not found');
+  if (!card) throw new Error('ไม่พบการ์ด');
 
   await dashboardRepo.softDelete(cardId);
 };
@@ -84,12 +84,12 @@ exports.updateCard = async (cardId, userId, payload) => {
   const { device_id, address_id, display_type, position } = payload;
 
   const card = await dashboardRepo.findById(cardId);
-  if (!card) throw { status: 404, message: 'Dashboard card not found' };
+  if (!card) throw { status: 404, message: 'ไม่พบการ์ด' };
 
   // Validate address_id if provided
   if (address_id) {
     const address = await DeviceAddress.findByPk(address_id);
-    if (!address) throw { status: 404, message: 'Address not found' };
+    if (!address) throw { status: 404, message: 'ไม่พบ Address' };
   }
 
   const updateData = {};

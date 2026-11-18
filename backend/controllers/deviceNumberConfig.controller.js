@@ -24,7 +24,7 @@ exports.update = async (req, res) => {
 exports.getByAddressId = async (req, res) => {
   try {
     const data = await service.getByAddressId(req.params.addressId);
-    if (!data) return res.status(404).json({ message: 'Number config not found' });
+    if (!data) return res.status(404).json({ message: 'ไม่พบการตั้งค่าตัวเลขของ Address นี้' });
     res.json(data);
   } catch (err) {
     res.status(400).json({ message: err.message });

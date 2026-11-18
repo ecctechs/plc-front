@@ -9,7 +9,7 @@ exports.listAll = () => {
 exports.create = async (data) => {
   const existing = await repo.findByName(data.name);
   if (existing) {
-    const err = new Error('Company name already in use');
+    const err = new Error('ชื่อบริษัทนี้ถูกใช้แล้ว');
     err.status = 409;
     throw err;
   }
@@ -19,14 +19,14 @@ exports.create = async (data) => {
 exports.update = async (id, data) => {
   const company = await repo.findById(id);
   if (!company) {
-    const err = new Error('Company not found');
+    const err = new Error('ไม่พบบริษัท');
     err.status = 404;
     throw err;
   }
   if (data.name && data.name !== company.name) {
     const existing = await repo.findByName(data.name);
     if (existing) {
-      const err = new Error('Company name already in use');
+      const err = new Error('ชื่อบริษัทนี้ถูกใช้แล้ว');
       err.status = 409;
       throw err;
     }
@@ -38,13 +38,13 @@ exports.update = async (id, data) => {
 exports.delete = async (id) => {
   const company = await repo.findById(id);
   if (!company) {
-    const err = new Error('Company not found');
+    const err = new Error('ไม่พบบริษัท');
     err.status = 404;
     throw err;
   }
   const userCount = await repo.countUsers(id);
   if (userCount > 0) {
-    const err = new Error(`Cannot delete: ${userCount} user(s) are assigned to this company`);
+    const err = new Error(`ลบไม่ได้ มีผู้ใช้ ${userCount} คนอยู่ในบริษัทนี้`);
     err.status = 409;
     throw err;
   }

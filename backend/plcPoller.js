@@ -149,7 +149,9 @@ async function pollGroup(groupItems) {
       status: 1,
       created_at: now
     });
-    processAlarms(item.id, item.device_id, processedVal).catch(() => {});
+    // เดิม .catch(() => {}) กลืน error เงียบ ทำให้ไม่รู้ว่า Alarm บันทึกไม่สำเร็จ
+    processAlarms(item.id, item.device_id, processedVal, item.device?.company_id)
+      .catch(err => console.error(`Alarm Error [${item.plc_address}]:`, err?.message || err));
   });
 }
 
@@ -193,9 +195,11 @@ async function flushBufferToDb() {
     let batch;
     if (state.dataBuffer.length > MAX_BUFFER_SIZE) {
       // Take the last MAX_BUFFER_SIZE items and discard older ones
+      // นับจำนวนที่ทิ้งก่อนล้าง buffer (เดิมนับหลังล้าง → ได้ค่าติดลบ)
+      const discarded = state.dataBuffer.length - MAX_BUFFER_SIZE;
       batch = state.dataBuffer.slice(-MAX_BUFFER_SIZE);
       state.dataBuffer = [];
-      console.warn(`Buffer overflow: discarded ${state.dataBuffer.length - MAX_BUFFER_SIZE} records`);
+      console.warn(`Buffer overflow: discarded ${discarded} records`);
     } else {
       batch = [...state.dataBuffer];
       state.dataBuffer = [];
@@ -241,9 +245,11 @@ async function flushBufferToDb() {
     let productBatch;
     if (state.productLogBuffer.length > MAX_BUFFER_SIZE) {
       // Take the last MAX_BUFFER_SIZE items and discard older ones
+      // นับจำนวนที่ทิ้งก่อนล้าง buffer (เดิมนับหลังล้าง → ได้ค่าติดลบ)
+      const discarded = state.productLogBuffer.length - MAX_BUFFER_SIZE;
       productBatch = state.productLogBuffer.slice(-MAX_BUFFER_SIZE);
       state.productLogBuffer = [];
-      console.warn(`Product buffer overflow: discarded ${state.productLogBuffer.length - MAX_BUFFER_SIZE} records`);
+      console.warn(`Product buffer overflow: discarded ${discarded} records`);
     } else {
       productBatch = [...state.productLogBuffer];
       state.productLogBuffer = [];

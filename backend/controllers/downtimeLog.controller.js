@@ -7,7 +7,7 @@ exports.getDowntimeSummary = async (req, res) => {
 
     if (!deviceId || !start || !end) {
       return res.status(400).json({
-        message: 'deviceId, start, end are required'
+        message: 'กรุณาระบุอุปกรณ์และช่วงเวลาเริ่มต้น / สิ้นสุด'
       });
     }
 
@@ -31,7 +31,7 @@ exports.logDowntimeEvent = async (req, res) => {
 
     if (!event_type || !['START', 'END'].includes(event_type)) {
       return res.status(400).json({
-        message: 'event_type is required and must be START or END'
+        message: 'ประเภทเหตุการณ์ต้องเป็น START หรือ END'
       });
     }
 

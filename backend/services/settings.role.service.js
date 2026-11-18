@@ -25,12 +25,12 @@ exports.listAll = (company_id) => {
 exports.findById = async (id, company_id) => {
   const role = await repo.findById(id);
   if (!role) {
-    const err = new Error('Role not found');
+    const err = new Error('ไม่พบบทบาท');
     err.status = 404;
     throw err;
   }
   if (role.company_id !== company_id) {
-    const err = new Error('Role not found');
+    const err = new Error('ไม่พบบทบาท');
     err.status = 404;
     throw err;
   }
@@ -39,12 +39,12 @@ exports.findById = async (id, company_id) => {
 
 exports.create = async ({ name, tab_permissions, scope_permissions }, company_id) => {
   if (!name) {
-    const err = new Error('name is required');
+    const err = new Error('กรุณาระบุชื่อ');
     err.status = 400;
     throw err;
   }
   if (!tab_permissions || !scope_permissions) {
-    const err = new Error('tab_permissions and scope_permissions are required');
+    const err = new Error('กรุณากำหนดสิทธิ์การเข้าถึงหน้าและการใช้งาน');
     err.status = 400;
     throw err;
   }
@@ -53,7 +53,7 @@ exports.create = async ({ name, tab_permissions, scope_permissions }, company_id
 
   const existing = await repo.findByName(name, company_id);
   if (existing) {
-    const err = new Error('Role name already in use');
+    const err = new Error('ชื่อบทบาทนี้ถูกใช้แล้ว');
     err.status = 409;
     throw err;
   }
@@ -66,7 +66,7 @@ exports.update = async (id, { name, tab_permissions, scope_permissions, is_activ
   if (name && name !== role.name) {
     const existing = await repo.findByName(name, company_id);
     if (existing) {
-      const err = new Error('Role name already in use');
+      const err = new Error('ชื่อบทบาทนี้ถูกใช้แล้ว');
       err.status = 409;
       throw err;
     }
@@ -89,7 +89,7 @@ exports.delete = async (id, company_id) => {
 
   const userCount = await repo.countUsers(id);
   if (userCount > 0) {
-    const err = new Error(`Cannot delete: ${userCount} user(s) are assigned to this role`);
+    const err = new Error(`ลบไม่ได้ มีผู้ใช้ ${userCount} คนใช้บทบาทนี้อยู่`);
     err.status = 409;
     throw err;
   }

@@ -6,7 +6,7 @@ const { invalidateRoleCache } = require('../middleware/permission.middleware');
 function getCompanyId(req, res) {
   const company_id = req.user.company_id;
   if (!company_id) {
-    res.status(400).json({ success: false, message: 'Your account is not assigned to a company. Please contact system administrator.' });
+    res.status(400).json({ success: false, message: 'บัญชีนี้ยังไม่ได้ผูกกับบริษัท กรุณาติดต่อผู้ดูแลระบบ' });
     return null;
   }
   return company_id;
@@ -65,7 +65,7 @@ exports.deleteRole = async (req, res) => {
     if (!company_id) return;
     await service.delete(req.params.id, company_id);
     invalidateRoleCache(Number(req.params.id));
-    res.json({ success: true, message: 'Role deleted' });
+    res.json({ success: true, message: 'ลบบทบาทสำเร็จ' });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });
   }

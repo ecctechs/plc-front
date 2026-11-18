@@ -7,7 +7,7 @@ exports.getDowntimeSummary = async (req, res) => {
 
     if (!productId || !start || !end) {
       return res.status(400).json({
-        message: 'productId, start, end are required'
+        message: 'กรุณาระบุสินค้าและช่วงเวลาเริ่มต้น / สิ้นสุด'
       });
     }
 
@@ -31,7 +31,7 @@ exports.logDowntimeEvent = async (req, res) => {
 
     if (!event_type || !['START', 'END'].includes(event_type)) {
       return res.status(400).json({
-        message: 'event_type is required and must be START or END'
+        message: 'ประเภทเหตุการณ์ต้องเป็น START หรือ END'
       });
     }
 

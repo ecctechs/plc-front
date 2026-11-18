@@ -26,7 +26,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     await service.deleteAlarm(req.params.alarmId, req.companyId);
-    res.json({ message: 'Alarm deactivated successfully' });
+    res.json({ message: 'ปิด Alarm สำเร็จ' });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -58,7 +58,7 @@ exports.getAlarmEventHistory = async (req, res) => {
     const days = parseInt(req.query.days, 10) || 7;
 
     if (days !== 7 && days !== 30) {
-      return res.status(400).json({ success: false, message: 'days ต้องเป็น 7 หรือ 30' });
+      return res.status(400).json({ success: false, message: 'ช่วงเวลาต้องเป็น 7 หรือ 30 วัน' });
     }
 
     const data = await service.getAlarmEventHistory(days, req.companyId);
@@ -75,10 +75,10 @@ exports.getAlarmEventHistoryByDevice = async (req, res) => {
     const days     = parseInt(req.query.days, 10) || 7;
 
     if (isNaN(deviceId)) {
-      return res.status(400).json({ success: false, message: 'device_id ไม่ถูกต้อง' });
+      return res.status(400).json({ success: false, message: 'รหัสอุปกรณ์ไม่ถูกต้อง' });
     }
     if (days !== 7 && days !== 30) {
-      return res.status(400).json({ success: false, message: 'days ต้องเป็น 7 หรือ 30' });
+      return res.status(400).json({ success: false, message: 'ช่วงเวลาต้องเป็น 7 หรือ 30 วัน' });
     }
 
     const data = await service.getAlarmEventHistoryByDevice(deviceId, days, req.companyId);

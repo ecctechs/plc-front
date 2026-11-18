@@ -5,25 +5,24 @@ const jwt = require('jsonwebtoken');
 const userService = require('../services/user.service');
 const userRepo = require('../repositories/user.repository');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ChangeThisSecretToAStrongValue';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'email and password are required' });
+      return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมลและรหัสผ่าน' });
     }
 
     const user = await userService.findByEmail(email);
     if (!user || !user.is_active) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
     }
 
     await userService.updateLastLogin(user.id);
@@ -82,26 +81,26 @@ exports.changePassword = async (req, res) => {
     const { current_password, new_password } = req.body;
 
     if (!current_password || !new_password) {
-      return res.status(400).json({ success: false, message: 'current_password and new_password are required' });
+      return res.status(400).json({ success: false, message: 'กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่' });
     }
     if (new_password.length < 6) {
-      return res.status(400).json({ success: false, message: 'new_password must be at least 6 characters' });
+      return res.status(400).json({ success: false, message: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
     }
 
     const user = await userRepo.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'ไม่พบผู้ใช้' });
     }
 
     const matches = await bcrypt.compare(current_password, user.password_hash);
     if (!matches) {
-      return res.status(400).json({ success: false, message: 'current_password is incorrect' });
+      return res.status(400).json({ success: false, message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
     }
 
     const password_hash = await bcrypt.hash(new_password, 10);
     await userRepo.update(req.user.id, { password_hash });
 
-    res.json({ success: true, message: 'Password changed successfully' });
+    res.json({ success: true, message: 'เปลี่ยนรหัสผ่านสำเร็จ' });
   } catch (err) {
     console.error(err);
     res.status(err.status || 500).json({ success: false, message: err.message });

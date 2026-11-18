@@ -5,15 +5,15 @@ const addressRepo = require('../repositories/deviceAddress.repo');
 
 const verifyAddressOwnership = async (addressId, companyId) => {
   const address = await addressRepo.findById(addressId);
-  if (!address || address.device.company_id !== companyId) throw new Error('Address not found');
+  if (!address || address.device.company_id !== companyId) throw new Error('ไม่พบ Address');
   return address;
 };
 
 const verifyAlarmOwnership = async (alarmId, companyId) => {
   const alarm = await repo.findById(alarmId);
-  if (!alarm) throw new Error('Alarm rule not found');
+  if (!alarm) throw new Error('ไม่พบกฎ Alarm');
   const address = await addressRepo.findById(alarm.address_id);
-  if (!address || address.device.company_id !== companyId) throw new Error('Alarm rule not found');
+  if (!address || address.device.company_id !== companyId) throw new Error('ไม่พบกฎ Alarm');
   return alarm;
 };
 
@@ -22,7 +22,7 @@ exports.createAlarm = async (addressId, payload, companyId) => {
   const address = await verifyAddressOwnership(addressId, companyId);
 
   if (payload.data_type !== address.data_type) {
-    throw new Error('data_type does not match address data type');
+    throw new Error('ประเภทข้อมูลไม่ตรงกับ Address');
   }
 
   return repo.createRule({
@@ -40,12 +40,12 @@ exports.updateAlarm = async (alarmId, payload, companyId) => {
   if (payload.address_id) {
     const address = await verifyAddressOwnership(payload.address_id, companyId);
     if (payload.data_type && payload.data_type !== address.data_type) {
-      throw new Error('data_type does not match address data type');
+      throw new Error('ประเภทข้อมูลไม่ตรงกับ Address');
     }
   } else if (payload.data_type) {
     const address = await addressRepo.findById(alarm.address_id);
     if (payload.data_type !== address.data_type) {
-      throw new Error('data_type does not match address data type');
+      throw new Error('ประเภทข้อมูลไม่ตรงกับ Address');
     }
   }
 

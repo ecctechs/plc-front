@@ -24,7 +24,7 @@ exports.getIntradayHistory = async (req, res) => {
   try {
     const productId = parseInt(req.params.product_id, 10);
     if (isNaN(productId)) {
-      return res.status(400).json({ success: false, message: 'product_id ไม่ถูกต้อง' });
+      return res.status(400).json({ success: false, message: 'รหัสสินค้าไม่ถูกต้อง' });
     }
     const data = await oeeService.getIntradayHistory(productId, req.query.date || null, req.companyId);
     res.json({ success: true, product_id: productId, date: req.query.date || null, data });
@@ -39,10 +39,10 @@ exports.getSnapshotHistory = async (req, res) => {
     const days      = parseInt(req.query.days, 10) || 7;
 
     if (isNaN(productId)) {
-      return res.status(400).json({ success: false, message: 'product_id ไม่ถูกต้อง' });
+      return res.status(400).json({ success: false, message: 'รหัสสินค้าไม่ถูกต้อง' });
     }
     if (days !== 7 && days !== 30) {
-      return res.status(400).json({ success: false, message: 'days ต้องเป็น 7 หรือ 30' });
+      return res.status(400).json({ success: false, message: 'ช่วงเวลาต้องเป็น 7 หรือ 30 วัน' });
     }
 
     const data = await oeeService.getSnapshotHistory(productId, days, req.companyId);

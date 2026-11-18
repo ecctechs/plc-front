@@ -8,7 +8,7 @@ exports.getAll = async (companyId) => {
 
 exports.getById = async (id, companyId) => {
   const deviceType = await deviceTypeRepo.findById(id);
-  if (!deviceType || deviceType.company_id !== companyId) throw { status: 404, message: 'Device type not found' };
+  if (!deviceType || deviceType.company_id !== companyId) throw { status: 404, message: 'ไม่พบประเภทอุปกรณ์' };
   return deviceType;
 };
 
@@ -71,7 +71,7 @@ exports.update = async (id, companyId, data) => {
 exports.delete = async (id, companyId) => {
   const deviceType = await deviceTypeRepo.findById(id);
   if (!deviceType || deviceType.company_id !== companyId) {
-    throw { status: 404, message: 'Device type not found' };
+    throw { status: 404, message: 'ไม่พบประเภทอุปกรณ์' };
   }
 
   const displayTypes = deviceType.display_types || [];
@@ -86,5 +86,5 @@ exports.delete = async (id, companyId) => {
   }
 
   await deviceTypeRepo.delete(id);
-  return { success: true, message: 'Device type deleted' };
+  return { success: true, message: 'ลบประเภทอุปกรณ์สำเร็จ' };
 };

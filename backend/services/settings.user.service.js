@@ -17,14 +17,14 @@ exports.create = async (body, createdBy, company_id) => {
   const { email, password, role = 'operator', role_id, employee_id, is_active, rooms } = body;
 
   if (!email || !password) {
-    const err = new Error('email and password are required');
+    const err = new Error('กรุณากรอกอีเมลและรหัสผ่าน');
     err.status = 400;
     throw err;
   }
   if (rooms && Array.isArray(rooms)) {
     for (const room of rooms) {
       if (room.scope && !allowedScopes.includes(room.scope)) {
-        const err = new Error(`scope must be one of: ${allowedScopes.join(', ')}`);
+        const err = new Error(`สิทธิ์ต้องเป็นหนึ่งใน: ${allowedScopes.join(', ')}`);
         err.status = 400;
         throw err;
       }
@@ -33,7 +33,7 @@ exports.create = async (body, createdBy, company_id) => {
   if (role_id) {
     const roleRecord = await roleRepo.findById(role_id);
     if (!roleRecord || roleRecord.company_id !== company_id) {
-      const err = new Error('role_id not found');
+      const err = new Error('ไม่พบบทบาทที่เลือก');
       err.status = 400;
       throw err;
     }
@@ -41,7 +41,7 @@ exports.create = async (body, createdBy, company_id) => {
 
   const existing = await baseUserService.findByEmail(email);
   if (existing) {
-    const err = new Error('Email already in use');
+    const err = new Error('อีเมลนี้ถูกใช้แล้ว');
     err.status = 409;
     throw err;
   }
@@ -87,19 +87,19 @@ async function createWithRoomAssignment(userData, roomAssignments) {
 exports.update = async (id, data, company_id) => {
   const user = await userRepo.findById(id);
   if (!user) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (user.company_id !== company_id) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (data.role_id) {
     const roleRecord = await roleRepo.findById(data.role_id);
     if (!roleRecord || roleRecord.company_id !== company_id) {
-      const err = new Error('role_id not found');
+      const err = new Error('ไม่พบบทบาทที่เลือก');
       err.status = 400;
       throw err;
     }
@@ -107,7 +107,7 @@ exports.update = async (id, data, company_id) => {
   if (data.rooms && Array.isArray(data.rooms)) {
     for (const room of data.rooms) {
       if (room.scope && !allowedScopes.includes(room.scope)) {
-        const err = new Error(`scope must be one of: ${allowedScopes.join(', ')}`);
+        const err = new Error(`สิทธิ์ต้องเป็นหนึ่งใน: ${allowedScopes.join(', ')}`);
         err.status = 400;
         throw err;
       }
@@ -149,12 +149,12 @@ exports.update = async (id, data, company_id) => {
 exports.delete = async (id, company_id) => {
   const user = await userRepo.findById(id);
   if (!user) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (user.company_id !== company_id) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
@@ -164,12 +164,12 @@ exports.delete = async (id, company_id) => {
 exports.toggleActive = async (id, company_id) => {
   const user = await userRepo.findById(id);
   if (!user) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (user.company_id !== company_id) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
@@ -180,17 +180,17 @@ exports.toggleActive = async (id, company_id) => {
 exports.resetPassword = async (id, newPassword, company_id) => {
   const user = await userRepo.findById(id);
   if (!user) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (user.company_id !== company_id) {
-    const err = new Error('User not found');
+    const err = new Error('ไม่พบผู้ใช้');
     err.status = 404;
     throw err;
   }
   if (!newPassword || newPassword.length < 6) {
-    const err = new Error('password must be at least 6 characters');
+    const err = new Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
     err.status = 400;
     throw err;
   }

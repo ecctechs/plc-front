@@ -63,14 +63,14 @@ exports.getLogsByAddressAndDate = async (req, res) => {
     const { address_id, start, end } = req.query;
 
     if (!address_id || !start || !end) {
-      return res.status(400).json({ message: 'address_id, start, end are required' });
+      return res.status(400).json({ message: 'กรุณาระบุ Address และช่วงเวลาเริ่มต้น / สิ้นสุด' });
     }
 
     const logs = await service.getLogsByAddressAndDate({ address_id, start, end });
     res.json(logs);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่' });
   }
 };
 
@@ -80,13 +80,13 @@ exports.getChartByAlarm = async (req, res) => {
     const { address_id, alarm_time, expand } = req.query;
 
     if (!address_id || !alarm_time) {
-      return res.status(400).json({ message: 'address_id and alarm_time are required' });
+      return res.status(400).json({ message: 'กรุณาระบุ Address และเวลาที่เกิด Alarm' });
     }
 
     const data = await service.getChartByAlarm(address_id, alarm_time, expand);
     res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่' });
   }
 };

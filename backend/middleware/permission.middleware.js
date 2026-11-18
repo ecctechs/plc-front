@@ -38,16 +38,16 @@ exports.checkTab = (tabName) => {
       if (role === 'super_admin') return next();
 
       if (!role_id) {
-        return res.status(403).json({ success: false, message: `Access denied: no role assigned` });
+        return res.status(403).json({ success: false, message: 'บัญชีนี้ยังไม่ได้กำหนดบทบาท กรุณาติดต่อผู้ดูแลระบบ' });
       }
 
       const permissions = await getRolePermissions(role_id);
       if (!permissions) {
-        return res.status(403).json({ success: false, message: 'Role not found' });
+        return res.status(403).json({ success: false, message: 'ไม่พบบทบาท' });
       }
 
       if (!permissions.tab_permissions[tabName]) {
-        return res.status(403).json({ success: false, message: `Access denied: tab "${tabName}" is not visible for your role` });
+        return res.status(403).json({ success: false, message: `คุณไม่มีสิทธิ์ใช้งานหน้า ${tabName}` });
       }
 
       next();
@@ -74,16 +74,16 @@ exports.checkScope = (scopeName) => {
       if (role === 'super_admin') return next();
 
       if (!role_id) {
-        return res.status(403).json({ success: false, message: `Access denied: no role assigned` });
+        return res.status(403).json({ success: false, message: 'บัญชีนี้ยังไม่ได้กำหนดบทบาท กรุณาติดต่อผู้ดูแลระบบ' });
       }
 
       const permissions = await getRolePermissions(role_id);
       if (!permissions) {
-        return res.status(403).json({ success: false, message: 'Role not found' });
+        return res.status(403).json({ success: false, message: 'ไม่พบบทบาท' });
       }
 
       if (!permissions.scope_permissions[scopeName]) {
-        return res.status(403).json({ success: false, message: `Access denied: scope "${scopeName}" not permitted for your role` });
+        return res.status(403).json({ success: false, message: `คุณไม่มีสิทธิ์ ${scopeName}` });
       }
 
       next();

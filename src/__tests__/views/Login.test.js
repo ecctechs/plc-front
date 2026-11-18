@@ -228,6 +228,19 @@ describe("Login > API Call", () => {
     expect(wrapper.find(".error-banner").text()).toContain("Invalid email or password");
   });
 
+  it("401 → ใช้ข้อความตามภาษาที่เลือก ไม่ใช้ข้อความจาก backend", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({ success: false, message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }),
+    });
+    const wrapper = mountLogin();
+    await wrapper.setData({ email: "test@mail.com", password: "wrongpass" });
+    await wrapper.find("form").trigger("submit");
+    await vi.waitFor(() => { expect(wrapper.find(".error-banner").exists()).toBe(true); });
+    expect(wrapper.vm.errorMessage).toBe("Invalid email or password");
+  });
+
   it("login ล้มเหลว ไม่มี message → ใช้ fallback locale.t (|| branch)", async () => {
     // ครอบคลุม: data.message || locale.t('Invalid email or password') → falsy → fallback
     mockFetch.mockResolvedValue({

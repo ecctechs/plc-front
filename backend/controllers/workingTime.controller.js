@@ -33,7 +33,7 @@ exports.getPlannedProductionTimeRange = async (req, res) => {
     const { start, end } = req.query;
 
     if (!start || !end) {
-      return res.status(400).json({ message: 'start and end dates are required' });
+      return res.status(400).json({ message: 'กรุณาระบุวันที่เริ่มต้นและสิ้นสุด' });
     }
 
     const result = await service.getPlannedProductionTimeRange(start, end, req.companyId);

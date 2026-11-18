@@ -8,7 +8,7 @@ exports.getAll = async (companyId) => {
 
 exports.getById = async (id, companyId) => {
   const emp = await repo.findById(id, companyId);
-  if (!emp) throw { status: 404, message: 'Employee not found' };
+  if (!emp) throw { status: 404, message: 'ไม่พบพนักงาน' };
   return emp;
 };
 
@@ -16,22 +16,22 @@ exports.create = async (data, companyId) => {
   const { employee_id, first_name, last_name, department, position, phone } = data;
 
   if (!employee_id || !first_name || !last_name) {
-    throw { status: 400, message: 'employee_id, first_name, last_name are required' };
+    throw { status: 400, message: 'กรุณากรอกรหัสพนักงาน ชื่อ และนามสกุล' };
   }
 
   const existing = await repo.findByEmployeeId(employee_id, companyId);
-  if (existing) throw { status: 409, message: 'employee_id already exists' };
+  if (existing) throw { status: 409, message: 'รหัสพนักงานนี้มีอยู่แล้ว' };
 
   return await repo.create({ employee_id, first_name, last_name, department, position, phone, is_active: true, company_id: companyId });
 };
 
 exports.update = async (id, companyId, data) => {
   const emp = await repo.findById(id, companyId);
-  if (!emp) throw { status: 404, message: 'Employee not found' };
+  if (!emp) throw { status: 404, message: 'ไม่พบพนักงาน' };
 
   if (data.employee_id && data.employee_id !== emp.employee_id) {
     const existing = await repo.findByEmployeeId(data.employee_id, companyId);
-    if (existing) throw { status: 409, message: 'employee_id already exists' };
+    if (existing) throw { status: 409, message: 'รหัสพนักงานนี้มีอยู่แล้ว' };
   }
 
   const { employee_id, first_name, last_name, department, position, phone, is_active } = data;
@@ -41,7 +41,7 @@ exports.update = async (id, companyId, data) => {
 
 exports.delete = async (id, companyId) => {
   const emp = await repo.findById(id, companyId);
-  if (!emp) throw { status: 404, message: 'Employee not found' };
+  if (!emp) throw { status: 404, message: 'ไม่พบพนักงาน' };
 
   const linked = await repo.countLinkedUsers(id);
   if (linked > 0) {

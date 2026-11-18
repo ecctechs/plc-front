@@ -22,7 +22,7 @@ exports.getLayoutById = async (id, companyId) => {
   });
 
   if (!layout) {
-    throw new Error('Layout not found');
+    throw new Error('ไม่พบ Layout');
   }
 
   return layout;
@@ -33,7 +33,7 @@ exports.createLayout = async (data) => {
   const { name, machine_image, aspect_ratio_width, aspect_ratio_height, company_id } = data;
 
   if (!name) {
-    throw new Error('name is required');
+    throw new Error('กรุณาระบุชื่อ');
   }
 
   return await InteractionLayout.create({
@@ -70,21 +70,21 @@ exports.createElement = async (data) => {
   } = data;
   
   if (!layout_id) {
-    throw new Error('layout_id is required');
+    throw new Error('กรุณาเลือก Layout');
   }
   
   if (!element_type) {
-    throw new Error('element_type is required');
+    throw new Error('กรุณาเลือกประเภท Element');
   }
   
   if (x_percent == null || y_percent == null) {
-    throw new Error('x_percent and y_percent are required');
+    throw new Error('กรุณาระบุตำแหน่งของ Element');
   }
   
   // Verify layout exists
   const layout = await InteractionLayout.findByPk(layout_id);
   if (!layout) {
-    throw new Error('Layout not found');
+    throw new Error('ไม่พบ Layout');
   }
   
   // Verify device exists if provided
@@ -92,7 +92,7 @@ exports.createElement = async (data) => {
     const { Device } = require('../models');
     const device = await Device.findByPk(device_id);
     if (!device) {
-      throw new Error('Device not found');
+      throw new Error('ไม่พบอุปกรณ์');
     }
   }
   
@@ -101,7 +101,7 @@ exports.createElement = async (data) => {
     const { DeviceAddress } = require('../models');
     const address = await DeviceAddress.findByPk(address_id);
     if (!address) {
-      throw new Error('Address not found');
+      throw new Error('ไม่พบ Address');
     }
   }
   

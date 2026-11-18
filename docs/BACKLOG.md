@@ -9,16 +9,16 @@
 - [x] (18/11/69) **หน้า SETTING (ผู้ใช้ / บทบาท)** — หัวข้อแจ้งเตือนเป็น "Error" ภาษาอังกฤษตลอด และข้อความสำรอง "Update failed / Reset failed / Save failed / Delete failed / Cannot load roles" ยังไม่แปลไทย (`UserSettingModal.vue`, `RoleSettingModal.vue`, `ProfileModal.vue`)
 
 ## วันที่ 2 — ข้อความจาก Backend ที่ผู้ใช้เห็น
-- [ ] **BACKEND (ข้อความ)** — ข้อความ error ที่ส่งกลับไปให้หน้าเว็บยังปนอังกฤษ/ศัพท์โค้ด เช่น `name is required`, `Room not found`, `Email already in use`, `employee_id already exists`, `address_id and display_type are required` → เปลี่ยนเป็นภาษาไทยที่อ่านเข้าใจ ให้เข้ากับข้อความไทยที่มีอยู่แล้ว
-- [ ] **หน้า LOGIN** — ตรวจข้อความ "Invalid credentials" / "Your account is not assigned to a company" ให้เป็นภาษาไทยเมื่อเลือกภาษาไทย
+- [x] (18/11/69) **BACKEND (ข้อความ)** — ข้อความ error ที่ส่งกลับไปให้หน้าเว็บยังปนอังกฤษ/ศัพท์โค้ด เช่น `name is required`, `Room not found`, `Email already in use`, `employee_id already exists`, `address_id and display_type are required` → เปลี่ยนเป็นภาษาไทยที่อ่านเข้าใจ ให้เข้ากับข้อความไทยที่มีอยู่แล้ว
+- [x] (18/11/69) **หน้า LOGIN** — ตรวจข้อความ "Invalid credentials" / "Your account is not assigned to a company" ให้เป็นภาษาไทยเมื่อเลือกภาษาไทย
 
 ## วันที่ 3 — Alarm ไม่ถูกบันทึก (บั๊กสำคัญ)
-- [ ] **BACKEND (ALARM)** — แก้ Alarm ระดับ error/critical ไม่ถูกบันทึกและไม่ส่งอีเมล เพราะส่งค่าให้ฟังก์ชันบันทึก Downtime ผิดตำแหน่ง แล้ว error ถูกกลืนเงียบ (C1)
-- [ ] **BACKEND (PLC)** — แก้ข้อความแจ้งเตือน buffer เต็มที่นับจำนวนผิด (P5)
+- [x] (18/11/69) **BACKEND (ALARM)** — แก้ Alarm ระดับ error/critical ไม่ถูกบันทึกและไม่ส่งอีเมล เพราะส่งค่าให้ฟังก์ชันบันทึก Downtime ผิดตำแหน่ง แล้ว error ถูกกลืนเงียบ (C1)
+- [x] (18/11/69) **BACKEND (PLC)** — แก้ข้อความแจ้งเตือน buffer เต็มที่นับจำนวนผิด (P5)
 
 ## วันที่ 4 — ความปลอดภัยที่เป็นบั๊ก (ไม่เปลี่ยนการใช้งาน)
-- [ ] **BACKEND (LOGIN)** — ลบรหัสลับ JWT ค่าสำรองที่เขียนไว้ในโค้ด ให้ระบบแจ้งชัดถ้าไม่ได้ตั้งค่า และเพิ่มใน `.env.example` (S2)
-- [ ] **BACKEND (EMAIL)** — ลบรหัสผ่าน SMTP ที่เขียนไว้ในโค้ด (S1) — *ผู้ใช้ต้องเปลี่ยนรหัสผ่านอีเมลจริงเองด้วย*
+- [x] (18/11/69) **BACKEND (LOGIN)** — ลบรหัสลับ JWT ค่าสำรองที่เขียนไว้ในโค้ด ให้ระบบแจ้งชัดถ้าไม่ได้ตั้งค่า และเพิ่มใน `.env.example` (S2)
+- [x] (18/11/69) **BACKEND (EMAIL)** — ลบรหัสผ่าน SMTP ที่เขียนไว้ในโค้ด (S1) — *ผู้ใช้ต้องเปลี่ยนรหัสผ่านอีเมลจริงเองด้วย*
 
 ## วันที่ 5 — ข้อมูลข้ามบริษัท
 - [ ] **BACKEND (บริษัท)** — แก้ให้แก้ไข/ลบการ์ด Dashboard, สร้าง Element ใน Interaction และตั้งค่า Level/Number ตรวจว่าเป็นข้อมูลของบริษัทตัวเองก่อน (S3)

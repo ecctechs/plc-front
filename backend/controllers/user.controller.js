@@ -11,11 +11,11 @@ exports.createUser = async (req, res) => {
     const { email, password, role, employee_id, is_active, rooms } = req.body;
 
     if (!email || !password || !role) {
-      return res.status(400).json({ success: false, message: 'email, password, and role are required' });
+      return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมล รหัสผ่าน และบทบาท' });
     }
 
     if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: `role must be one of: ${allowedRoles.join(', ')}` });
+      return res.status(400).json({ success: false, message: `บทบาทต้องเป็นหนึ่งใน: ${allowedRoles.join(', ')}` });
     }
 
     // Validate rooms if provided
@@ -25,7 +25,7 @@ exports.createUser = async (req, res) => {
         //   return res.status(400).json({ success: false, message: 'room_id is required for each room' });
         // }
         if (room.scope && !allowedScopes.includes(room.scope)) {
-          return res.status(400).json({ success: false, message: `scope must be one of: ${allowedScopes.join(', ')}` });
+          return res.status(400).json({ success: false, message: `สิทธิ์ต้องเป็นหนึ่งใน: ${allowedScopes.join(', ')}` });
         }
       }
     }
@@ -33,7 +33,7 @@ exports.createUser = async (req, res) => {
     const existingUser = await userService.findByEmail(email);
     console.log('Email check:', { email, existingUserFound: !!existingUser });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: 'Email already in use' });
+      return res.status(409).json({ success: false, message: 'อีเมลนี้ถูกใช้แล้ว' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -76,7 +76,7 @@ exports.createUser = async (req, res) => {
     
     // Handle unique constraint errors
     if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(409).json({ success: false, message: 'Email already in use' });
+      return res.status(409).json({ success: false, message: 'อีเมลนี้ถูกใช้แล้ว' });
     }
 
     res.status(err.status || 500).json({ success: false, message: err.message });

@@ -1,18 +1,24 @@
 'use strict';
-require('dotenv').config(); // โหลดค่าจาก .env
+// โหลด .env.<NODE_ENV> แบบเดียวกับ server (ค่าอีเมลต้องมาจาก .env เท่านั้น)
+require('dotenv').config({ path: require('path').resolve(__dirname, `.env.${process.env.NODE_ENV || 'development'}`) });
 const nodemailer = require('nodemailer');
 
 async function testEmail() {
   console.log("--- Starting Email Test ---");
 
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('ยังไม่ได้ตั้ง EMAIL_HOST / EMAIL_USER / EMAIL_PASS ใน .env');
+    process.exit(1);
+  }
+
   // คอนฟิกตามที่คุณให้มา
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'mail.eccsolutions.co.th',
-  port: process.env.EMAIL_PORT || 587,
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT) || 587,
   secure: false, // ใช้ false สำหรับ port 587 (STARTTLS)
   auth: {
-    user: process.env.EMAIL_USER || 'techs@eccsolutions.co.th',
-    pass: process.env.EMAIL_PASS || 'T4ch@ECC!solutions',
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
   tls: {
     rejectUnauthorized: false // ช่วยแก้ปัญหาใบรับรอง SSL ในบางเคส
@@ -21,7 +27,7 @@ const transporter = nodemailer.createTransport({
 
   try {
     const info = await transporter.sendMail({
-      from: '"PLC Test System" <techs@eccsolutions.co.th>',
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: 'eccerp2568@gmail.com', // 👈 ใส่เมลของคุณตรงนี้เพื่อรับเมลทดสอบ
       subject: 'Test Alarm System ✔',
       text: 'Hello, this is a test email from your PLC Alarm system.',

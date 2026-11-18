@@ -7,7 +7,7 @@ exports.getAll = async (companyId) => {
 
 exports.getById = async (id, companyId) => {
   const room = await roomRepo.findById(id);
-  if (!room || room.company_id !== companyId) throw { status: 404, message: 'Room not found' };
+  if (!room || room.company_id !== companyId) throw { status: 404, message: 'ไม่พบห้อง' };
   return room;
 };
 
@@ -15,12 +15,12 @@ exports.create = async (data, companyId) => {
   const { name } = data;
 
   if (!name) {
-    throw { status: 400, message: 'name is required' };
+    throw { status: 400, message: 'กรุณาระบุชื่อ' };
   }
 
   const existing = await roomRepo.findByName(name, companyId);
   if (existing) {
-    throw { status: 409, message: 'Room name already exists' };
+    throw { status: 409, message: 'ชื่อห้องนี้มีอยู่แล้ว' };
   }
 
   return await roomRepo.create({ name, is_active: true, company_id: companyId });
@@ -29,13 +29,13 @@ exports.create = async (data, companyId) => {
 exports.update = async (id, companyId, data) => {
   const room = await roomRepo.findById(id);
   if (!room || room.company_id !== companyId) {
-    throw { status: 404, message: 'Room not found' };
+    throw { status: 404, message: 'ไม่พบห้อง' };
   }
 
   if (data.name) {
     const existing = await roomRepo.findByName(data.name, companyId);
     if (existing && existing.id !== parseInt(id)) {
-      throw { status: 409, message: 'Room name already exists' };
+      throw { status: 409, message: 'ชื่อห้องนี้มีอยู่แล้ว' };
     }
   }
 
@@ -46,7 +46,7 @@ exports.update = async (id, companyId, data) => {
 exports.delete = async (id, companyId) => {
   const room = await roomRepo.findById(id);
   if (!room || room.company_id !== companyId) {
-    throw { status: 404, message: 'Room not found' };
+    throw { status: 404, message: 'ไม่พบห้อง' };
   }
 
   const devices = await deviceRepo.findByRoomId(id);
@@ -56,5 +56,5 @@ exports.delete = async (id, companyId) => {
   }
 
   await roomRepo.delete(id);
-  return { success: true, message: 'Room deleted' };
+  return { success: true, message: 'ลบห้องสำเร็จ' };
 };

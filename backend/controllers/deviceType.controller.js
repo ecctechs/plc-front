@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
     const { name, description, display_types } = req.body;
 
     if (!name) {
-      return res.status(400).json({ success: false, message: 'name is required' });
+      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อ' });
     }
 
     const deviceType = await deviceTypeService.create(
@@ -64,7 +64,7 @@ exports.delete = async (req, res) => {
   try {
     const { id } = req.params;
     await deviceTypeService.delete(id, req.companyId);
-    res.json({ success: true, message: 'Device type deleted' });
+    res.json({ success: true, message: 'ลบประเภทอุปกรณ์สำเร็จ' });
   } catch (err) {
     console.error(err);
     res.status(err.status || 500).json({ success: false, message: err.message });

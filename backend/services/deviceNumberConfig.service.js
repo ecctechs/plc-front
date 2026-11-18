@@ -9,15 +9,15 @@ const addressRepo = require('../repositories/deviceAddress.repo');
 // POST /api/addresses/:addressId/number-config - Save numeric display config
 exports.create = async (addressId, payload) => {
   const address = await addressRepo.findById(addressId);
-  if (!address) throw new Error('Address not found');
+  if (!address) throw new Error('ไม่พบ Address');
 
   const allowedTypes = ['number', 'number_gauge'];
   if (!allowedTypes.includes(address.data_type)) {
-    throw new Error(`This address type (${address.data_type}) does not support number configuration`);
+    throw new Error(`Address ประเภท ${address.data_type} ตั้งค่าตัวเลขไม่ได้`);
   }
 
   const exists = await repo.findByAddressId(addressId);
-  if (exists) throw new Error('Number config already exists for this address');
+  if (exists) throw new Error('Address นี้มีการตั้งค่าตัวเลขอยู่แล้ว');
 
   return repo.create({
     address_id: addressId,
@@ -33,11 +33,11 @@ exports.create = async (addressId, payload) => {
 // PUT /api/addresses/:addressId/number-config - Update numeric display config
 exports.update = async (addressId, payload) => {
   const address = await addressRepo.findById(addressId);
-  if (!address) throw new Error('Address not found');
+  if (!address) throw new Error('ไม่พบ Address');
 
   const allowedTypes = ['number', 'number_gauge'];
   if (!allowedTypes.includes(address.data_type)) {
-    throw new Error(`This address type (${address.data_type}) does not support number configuration`);
+    throw new Error(`Address ประเภท ${address.data_type} ตั้งค่าตัวเลขไม่ได้`);
   }
 
   const existing = await repo.findByAddressId(addressId);

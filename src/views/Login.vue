@@ -138,6 +138,9 @@ export default {
           const perms = u.permissions?.tab_permissions || u.tab_permissions || {}
           localStorage.setItem('permissions', JSON.stringify(perms))
           window.location.reload()
+        } else if (res.status === 401) {
+          // อีเมล/รหัสผ่านผิด → ใช้ข้อความตามภาษาที่เลือก (ข้อความจาก backend เป็นภาษาไทยเสมอ)
+          this.errorMessage = this.locale.t('Invalid email or password')
         } else {
           this.errorMessage = data.message || this.locale.t('Invalid email or password')
         }

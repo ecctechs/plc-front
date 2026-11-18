@@ -11,7 +11,7 @@ exports.read = async (req, res) => {
     const { address } = req.query;
 
     if (!address) {
-      return res.status(400).json({ message: 'address is required' });
+      return res.status(400).json({ message: 'กรุณาระบุ Address' });
     }
 
     const value = await plcService.readSingleAddress(address);
@@ -28,11 +28,11 @@ exports.write = async (req, res) => {
     const { address, value } = req.body;
 
     if (!address) {
-      return res.status(400).json({ message: 'address is required' });
+      return res.status(400).json({ message: 'กรุณาระบุ Address' });
     }
 
     if (value === undefined) {
-      return res.status(400).json({ message: 'value is required' });
+      return res.status(400).json({ message: 'กรุณาระบุค่าที่จะส่ง' });
     }
 
     await plcService.writeSingleAddress(address, Number(value));

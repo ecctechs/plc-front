@@ -42,14 +42,14 @@ exports.update = async (companyId, payload) => {
   if (payload.schedule) {
     for (const [day, config] of Object.entries(payload.schedule)) {
       if (!validDays.includes(day.toLowerCase())) {
-        throw new Error(`Invalid day: ${day}`);
+        throw new Error(`วันไม่ถูกต้อง: ${day}`);
       }
 
       // Validate working_hours
       if (config.working_hours && Array.isArray(config.working_hours)) {
         for (const wh of config.working_hours) {
           if (!wh.start || !wh.end) {
-            throw new Error(`Working hours must have start and end for ${day}`);
+            throw new Error(`กรุณากรอกเวลาเริ่มและเวลาเลิกงานของวัน ${day}`);
           }
         }
       }
@@ -58,7 +58,7 @@ exports.update = async (companyId, payload) => {
       if (config.break_times && Array.isArray(config.break_times)) {
         for (const bt of config.break_times) {
           if (!bt.start || !bt.end) {
-            throw new Error(`Break times must have start and end for ${day}`);
+            throw new Error(`กรุณากรอกเวลาเริ่มและสิ้นสุดช่วงพักของวัน ${day}`);
           }
         }
       }

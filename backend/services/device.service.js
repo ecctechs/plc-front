@@ -187,12 +187,12 @@ exports.create = async (payload) => {
   const { name, device_type_id, room_id, refresh_rate_ms, addresses } = payload;
 
   if (!name || !device_type_id || !addresses || !addresses.length) {
-    throw new Error('Name, device_type_id, and at least one address are required');
+    throw new Error('กรุณากรอกชื่อ เลือกประเภทอุปกรณ์ และเพิ่ม Address อย่างน้อย 1 รายการ');
   }
 
   const companyId = payload.company_id;
   const exists = await repo.findByName(name, companyId);
-  if (exists) throw new Error(`Device name "${name}" already exists`);
+  if (exists) throw new Error(`ชื่ออุปกรณ์ "${name}" มีอยู่แล้ว`);
 
   const device = await repo.create({ name, device_type_id, room_id, refresh_rate_ms, company_id: companyId, addresses });
   await reloadPolling();
@@ -259,13 +259,13 @@ exports.getLogsByAddressAndDate = async (params) => {
   }
   
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    throw new Error('Invalid date format');
+    throw new Error('รูปแบบวันที่ไม่ถูกต้อง');
   }
   
   // Get the device address to check data_type
   const deviceAddress = await DeviceAddress.findByPk(address_id);
   if (!deviceAddress) {
-    throw new Error('Device address not found');
+    throw new Error('ไม่พบ Address ของอุปกรณ์');
   }
   
   const logs = await repo.findByAddressAndDate({ address_id, start: startDate, end: endDate });
@@ -300,7 +300,7 @@ exports.getLogsByAddressAndDate = async (params) => {
 // Get chart data centered around an alarm time
 exports.getChartByAlarm = async (address_id, alarm_time, expand) => {
   const device = await DeviceAddress.findByPk(address_id);
-  if (!device) throw new Error('Device not found');
+  if (!device) throw new Error('ไม่พบอุปกรณ์');
 
   const refreshRateMs = device.refresh_rate_ms || 1000;
   const expandSeconds = parseInt(expand) || 20;

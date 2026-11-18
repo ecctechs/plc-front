@@ -15,7 +15,7 @@ exports.createCompany = async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) {
-      return res.status(400).json({ success: false, message: 'name is required' });
+      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อ' });
     }
     const company = await service.create({ name });
     res.status(201).json({ success: true, data: company });
@@ -39,7 +39,7 @@ exports.deleteCompany = async (req, res) => {
   try {
     const { id } = req.params;
     await service.delete(id);
-    res.json({ success: true, message: 'Company deleted' });
+    res.json({ success: true, message: 'ลบบริษัทสำเร็จ' });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });
   }

@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
     const { name } = req.body;
 
     if (!name) {
-      return res.status(400).json({ success: false, message: 'name is required' });
+      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อ' });
     }
 
     const room = await roomService.create({ name }, req.companyId);
@@ -56,7 +56,7 @@ exports.delete = async (req, res) => {
   try {
     const { id } = req.params;
     await roomService.delete(id, req.companyId);
-    res.json({ success: true, message: 'Room deleted' });
+    res.json({ success: true, message: 'ลบห้องสำเร็จ' });
   } catch (err) {
     console.error(err);
     res.status(err.status || 500).json({ success: false, message: err.message });

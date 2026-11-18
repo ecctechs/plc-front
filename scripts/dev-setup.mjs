@@ -11,13 +11,20 @@ const exampleFile = path.join(backendDir, ".env.example");
 
 if (!existsSync(envFile)) {
   copyFileSync(exampleFile, envFile);
-  console.error(`สร้าง ${path.relative(".", envFile)} จาก .env.example แล้ว — ใส่ค่า DB_NAME / DB_USER / DB_PASS แล้วรันใหม่`);
+  console.error(`สร้าง ${path.relative(".", envFile)} จาก .env.example แล้ว — ใส่ค่า DB_NAME / DB_USER / DB_PASS / JWT_SECRET แล้วรันใหม่`);
   process.exit(1);
 }
 
 // ใช้ dependency ของ backend (dotenv, pg)
 const requireBackend = createRequire(path.join(backendDir, "package.json"));
 requireBackend("dotenv").config({ path: envFile, quiet: true });
+
+// backend ไม่ยอมเริ่มถ้าไม่มี JWT_SECRET (ไม่มีค่าสำรองในโค้ดแล้ว)
+if (!process.env.JWT_SECRET) {
+  console.error(`✗ ยังไม่ได้ตั้ง JWT_SECRET ใน ${path.relative(".", envFile)}`);
+  console.error("  สร้างค่าสุ่มได้ด้วย: node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\"");
+  process.exit(1);
+}
 const { Client } = requireBackend("pg");
 
 const client = new Client({

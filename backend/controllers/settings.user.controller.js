@@ -5,7 +5,7 @@ const service = require('../services/settings.user.service');
 function getCompanyId(req, res) {
   const company_id = req.user.company_id;
   if (!company_id) {
-    res.status(400).json({ success: false, message: 'Your account is not assigned to a company. Please contact system administrator.' });
+    res.status(400).json({ success: false, message: 'บัญชีนี้ยังไม่ได้ผูกกับบริษัท กรุณาติดต่อผู้ดูแลระบบ' });
     return null;
   }
   return company_id;
@@ -33,7 +33,7 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ success: false, message: err.errors.map(e => e.message).join(', ') });
     }
     if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(409).json({ success: false, message: 'Email already in use' });
+      return res.status(409).json({ success: false, message: 'อีเมลนี้ถูกใช้แล้ว' });
     }
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
@@ -55,7 +55,7 @@ exports.deleteUser = async (req, res) => {
     const company_id = getCompanyId(req, res);
     if (!company_id) return;
     await service.delete(req.params.id, company_id);
-    res.json({ success: true, message: 'User deleted' });
+    res.json({ success: true, message: 'ลบผู้ใช้สำเร็จ' });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });
   }
@@ -78,7 +78,7 @@ exports.resetPassword = async (req, res) => {
     if (!company_id) return;
     const { password } = req.body;
     await service.resetPassword(req.params.id, password, company_id);
-    res.json({ success: true, message: 'Password reset successfully' });
+    res.json({ success: true, message: 'รีเซ็ตรหัสผ่านสำเร็จ' });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, message: err.message });
   }

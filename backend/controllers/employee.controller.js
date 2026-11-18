@@ -35,7 +35,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     await service.delete(req.params.id, req.companyId);
-    res.json({ success: true, message: 'Employee deleted' });
+    res.json({ success: true, message: 'ลบพนักงานสำเร็จ' });
   } catch (err) {
     console.error(err);
     res.status(err.status || 500).json({ success: false, message: err.message });

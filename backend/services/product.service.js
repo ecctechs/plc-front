@@ -15,7 +15,7 @@ exports.create = async (payload) => {
     plc_address_complete, plc_address_reject, target_oee, target_output, company_id } = payload;
 
   if (!name) {
-    throw new Error('name is required');
+    throw new Error('กรุณาระบุชื่อ');
   }
 
   const exists = await repo.findByName(name, company_id);
@@ -68,7 +68,7 @@ exports.updatePlcAddresses = async (payload, companyId) => {
 
   if (plc_address_output === undefined && plc_address_active === undefined &&
       plc_address_complete === undefined && plc_address_reject === undefined) {
-    throw new Error('plc_address_output, plc_address_active, plc_address_complete, or plc_address_reject is required');
+    throw new Error('กรุณากรอก PLC Address อย่างน้อย 1 ช่อง');
   }
 
   const products = await repo.findAll({ company_id: companyId });
